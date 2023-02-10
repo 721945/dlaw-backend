@@ -6,6 +6,7 @@ var Module = fx.Options(
 	fx.Provide(NewDatabaseTrx),
 	fx.Provide(NewMiddlewares),
 	fx.Provide(NewCorsMiddleware),
+	fx.Provide(NewJWTAuthMiddleware),
 )
 
 type IMiddleware interface {

@@ -39,6 +39,16 @@ func (j JWTAuthService) GenerateToken(user models.User) string {
 	return tokenString
 }
 
+func (j JWTAuthService) Authorize(tokenString string) (bool, error) {
+	_, err := j.VerifyToken(tokenString)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (j JWTAuthService) VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -58,4 +68,18 @@ func (j JWTAuthService) VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	}
 
 	return claims, nil
+}
+
+//
+
+func (j JWTAuthService) GetUserIDFromToken(tokenString string) (uint, error) {
+	claims, err := j.VerifyToken(tokenString)
+
+	if err != nil {
+		return 0, err
+	}
+
+	id := claims["id"].(float64)
+
+	return uint(id), nil
 }

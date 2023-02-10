@@ -12,6 +12,7 @@ type UserRepository interface {
 	UpdateUser(id uint, user models.User) error
 	DeleteUser(id uint) error
 	GetUser(id uint) (*models.User, error)
+	GetUserByEmail(email string) (models.User, error)
 	GetUsers() ([]models.User, error)
 }
 
@@ -34,26 +35,25 @@ func (r *userRepository) WithTrx(trxHandle *gorm.DB) UserRepository {
 }
 
 func (r *userRepository) CreateUser(user models.User) (models.User, error) {
-	//TODO implement me
-	panic("implement me")
+	return user, r.db.DB.Create(&user).Error
 }
 
 func (r *userRepository) UpdateUser(id uint, user models.User) error {
-	//TODO implement me
-	panic("implement me")
+	return r.db.DB.Model(&models.User{}).Where("id = ?", id).Updates(user).Error
 }
 
 func (r *userRepository) DeleteUser(id uint) error {
-	//TODO implement me
-	panic("implement me")
+	return r.db.DB.Delete(&models.User{}, id).Error
 }
 
-func (r *userRepository) GetUser(id uint) (*models.User, error) {
-	//TODO implement me
-	panic("implement me")
+func (r *userRepository) GetUser(id uint) (user *models.User, err error) {
+	return user, r.db.DB.First(&user, id).Error
 }
 
-func (r *userRepository) GetUsers() ([]models.User, error) {
-	//TODO implement me
-	panic("implement me")
+func (r *userRepository) GetUsers() (users []models.User, err error) {
+	return users, r.db.DB.Find(&users).Error
+}
+
+func (r *userRepository) GetUserByEmail(email string) (user models.User, err error) {
+	return user, r.db.DB.Where("email = ?", email).First(&user).Error
 }
