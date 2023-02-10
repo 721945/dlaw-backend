@@ -16,10 +16,10 @@ type Config struct {
 }
 
 type Database struct {
-	*gorm.DB
+	DB *gorm.DB
 }
 
-func NewDatabase(env Env, logger Logger) *Database {
+func NewDatabase(env Env, logger Logger) Database {
 	var url string
 
 	url = fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=verify-full TimeZone=Asia/Bangkok", env.DBHost, env.DBUser, env.DBPassword, env.DBName)
@@ -31,7 +31,7 @@ func NewDatabase(env Env, logger Logger) *Database {
 		logger.Fatal("👹 Can't connect to database: ", err)
 	}
 
-	return &Database{db}
+	return Database{DB: db}
 }
 
 //func (db *Database) Migrates(x uint) {

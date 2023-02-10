@@ -12,7 +12,7 @@ type UserRepository interface {
 	UpdateUser(id uint, user models.User) error
 	DeleteUser(id uint) error
 	GetUser(id uint) (*models.User, error)
-	GetUserByEmail(email string) (models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
 	GetUsers() ([]models.User, error)
 }
 
@@ -21,8 +21,8 @@ type userRepository struct {
 	logger libs.Logger
 }
 
-func NewUserRepository(db *libs.Database, logger libs.Logger) UserRepository {
-	return &userRepository{db: *db, logger: logger}
+func NewUserRepository(db libs.Database, logger libs.Logger) UserRepository {
+	return &userRepository{db: db, logger: logger}
 }
 
 func (r *userRepository) WithTrx(trxHandle *gorm.DB) UserRepository {
@@ -54,6 +54,6 @@ func (r *userRepository) GetUsers() (users []models.User, err error) {
 	return users, r.db.DB.Find(&users).Error
 }
 
-func (r *userRepository) GetUserByEmail(email string) (user models.User, err error) {
+func (r *userRepository) GetUserByEmail(email string) (user *models.User, err error) {
 	return user, r.db.DB.Where("email = ?", email).First(&user).Error
 }

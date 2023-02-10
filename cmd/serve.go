@@ -1,11 +1,20 @@
 package cmd
 
 import (
+	"github.com/721945/dlaw-backend/api/middlewares"
 	"github.com/721945/dlaw-backend/api/routes"
 	"github.com/721945/dlaw-backend/libs"
 )
 
-func RunInit(env libs.Env, router libs.RequestHandler, logger libs.Logger, route routes.Routes) {
+func RunInit(
+	env libs.Env,
+	router libs.RequestHandler,
+	logger libs.Logger,
+	route routes.Routes,
+	middlewares middlewares.Middlewares,
+) {
+
+	middlewares.Setup()
 	route.Setup()
 	println("🚀 Server is running on port " + env.ServerPort)
 	router.Gin.Run(":" + env.ServerPort)

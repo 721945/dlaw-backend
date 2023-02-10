@@ -1,0 +1,1 @@
+Environment=development,SERVER_PORT=8080,LOG_OUTPUT=./server.log,DB_HOST=ep-snowy-recipe-194295.ap-southeast-1.aws.neon.tech,DB_PORT=,DB_USER=721945,DB_PASSWORD=JL37zxHgiDjV,DB_NAME=dlaw-database,JWT_SECRET=dlaw-secret-eiei-za

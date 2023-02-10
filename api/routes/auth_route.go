@@ -11,7 +11,8 @@ type AuthRoutes struct {
 	authController controllers.AuthController
 }
 
-func NewAuthRoutes(logger libs.Logger,
+func NewAuthRoutes(
+	logger libs.Logger,
 	handler libs.RequestHandler,
 	authController controllers.AuthController,
 ) AuthRoutes {

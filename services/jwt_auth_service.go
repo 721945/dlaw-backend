@@ -25,12 +25,9 @@ func (j JWTAuthService) GenerateToken(user models.User) string {
 		"email":      user.Email,
 		"first_name": user.Firstname,
 		"last_name":  user.Lastname,
-		//
-		//"exp":        time.Now().Add(time.Hour * 24).Unix(),
-
 	})
 
-	tokenString, err := token.SignedString(j.env.JWTSecret)
+	tokenString, err := token.SignedString([]byte(j.env.JWTSecret))
 
 	if err != nil {
 		j.logger.Error(err)
@@ -54,7 +51,7 @@ func (j JWTAuthService) VerifyToken(tokenString string) (jwt.MapClaims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return j.env.JWTSecret, nil
+		return []byte(j.env.JWTSecret), nil
 	})
 
 	if err != nil {

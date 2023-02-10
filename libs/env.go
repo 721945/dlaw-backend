@@ -19,16 +19,37 @@ type Env struct {
 }
 
 func NewEnv() Env {
-	env := Env{}
-	viper.SetConfigFile(".env")
+	viper.AutomaticEnv()
+
+	env := Env{
+		ServerPort:  viper.GetString("SERVER_PORT"),
+		LogOutput:   viper.GetString("LOG_OUTPUT"),
+		DBHost:      viper.GetString("DB_HOST"),
+		DBPort:      viper.GetString("DB_PORT"),
+		DBUser:      viper.GetString("DB_USER"),
+		DBPassword:  viper.GetString("DB_PASSWORD"),
+		DBName:      viper.GetString("DB_NAME"),
+		JWTSecret:   viper.GetString("JWT_SECRET"),
+		Environment: viper.GetString("ENVIRONMENT"),
+	}
+
+	//log.Fatal("ERROR 1")
+
+	//viper.SetConfigType("env")
+
+	//viper.SetConfigFile(".env")
+
+	log.Println(viper.GetString("DB_HOST"))
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal("👹 Can't read .env file")
+		log.Println("👹 Can't read .env file")
 	}
 
 	if err := viper.Unmarshal(&env); err != nil {
-		log.Fatal("👹 Can't loaded: ", err)
+		log.Println("👹 Can't loaded: ", err)
 	}
+
+	log.Println(env)
 
 	return env
 }

@@ -24,7 +24,7 @@ func (l Logger) Info(message string) {
 }
 
 func (l Logger) Error(v ...any) {
-	l.Logger.Panic(v)
+	l.Logger.Println(v)
 }
 
 func (l Logger) Fatal(v ...any) {

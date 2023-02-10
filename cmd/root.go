@@ -6,6 +6,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/joho/godotenv"
 	"go.uber.org/fx"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -29,11 +30,11 @@ to quickly create a Cobra application.`,
 
 			logger := libs.NewLogger()
 			ctx := context.Background()
-
 			app := fx.New(
 				opt,
 				fx.Invoke(RunInit),
 			)
+			//log.Fatal("ERROR HERE")
 
 			err := app.Start(ctx)
 
@@ -64,10 +65,10 @@ func Execute() {
 }
 
 func init() {
-	err := godotenv.Load()
+	err := godotenv.Load(".env.abc.asb")
 
 	if err != nil {
-		panic(err)
+		log.Println("Error loading .env.abc file")
 	}
 
 	// Here you will define your flags and configuration settings.
