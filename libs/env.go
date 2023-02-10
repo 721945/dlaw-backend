@@ -37,7 +37,7 @@ func NewEnv() Env {
 
 	//viper.SetConfigType("env")
 
-	//viper.SetConfigFile(".env")
+	viper.SetConfigFile(".env")
 
 	log.Println(viper.GetString("DB_HOST"))
 

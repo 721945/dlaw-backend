@@ -65,10 +65,10 @@ func Execute() {
 }
 
 func init() {
-	err := godotenv.Load(".env.abc.asb")
+	err := godotenv.Load(".env.asb")
 
 	if err != nil {
-		log.Println("Error loading .env.abc file")
+		log.Println("Error loading .env file")
 	}
 
 	// Here you will define your flags and configuration settings.
