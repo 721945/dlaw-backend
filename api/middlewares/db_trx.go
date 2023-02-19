@@ -13,7 +13,7 @@ import (
 // DatabaseTrx middleware for transactions support for database
 type DatabaseTrx struct {
 	handler libs.RequestHandler
-	logger  libs.Logger
+	logger  *libs.Logger
 	db      libs.Database
 }
 
@@ -30,7 +30,7 @@ func statusInList(status int, statusList []int) bool {
 // NewDatabaseTrx creates new database transactions middleware
 func NewDatabaseTrx(
 	handler libs.RequestHandler,
-	logger libs.Logger,
+	logger *libs.Logger,
 	db libs.Database,
 ) DatabaseTrx {
 	return DatabaseTrx{

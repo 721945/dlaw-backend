@@ -16,11 +16,11 @@ import (
 
 type UserController struct {
 	service    services.UserService
-	logger     libs.Logger
+	logger     *libs.Logger
 	jwtService services.JWTAuthService
 }
 
-func NewUserController(service services.UserService, logger libs.Logger, jwtService services.JWTAuthService) UserController {
+func NewUserController(service services.UserService, logger *libs.Logger, jwtService services.JWTAuthService) UserController {
 	return UserController{service: service, logger: logger, jwtService: jwtService}
 }
 
@@ -35,7 +35,7 @@ func (u UserController) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := u.service.GetUser(uint(id))
+	user, err := (u.service).GetUser(uint(id))
 
 	if err != nil {
 		//u.logger.Error(err)
@@ -71,7 +71,7 @@ func (u UserController) GetMe(c *gin.Context) {
 		return
 	}
 
-	user, err := u.service.GetUser(id)
+	user, err := (u.service).GetUser(id)
 
 	if err != nil {
 		//u.logger.Error(err)
@@ -85,7 +85,7 @@ func (u UserController) GetMe(c *gin.Context) {
 
 func (u UserController) CreateUser(c *gin.Context) {
 	var input dtos.CreateUserDto
-	//trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
+	trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
 	if err := c.ShouldBindJSON(&input); err != nil {
 		//u.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -105,8 +105,8 @@ func (u UserController) CreateUser(c *gin.Context) {
 		Lastname:  input.LastName,
 	}
 
-	user, err = u.service.CreateUser(user)
-	//user, err = u.service.WithTrx(trxHandle).CreateUser(user)
+	//user, err =(u.service).CreateUser(user)
+	user, err = (u.service).WithTrx(trxHandle).CreateUser(user)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -117,14 +117,28 @@ func (u UserController) CreateUser(c *gin.Context) {
 }
 
 func (u UserController) GetUsers(c *gin.Context) {
-	users, err := u.service.GetUsers()
+	users, err := (u.service).GetUsers()
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": users})
+	//dto := dtos.UserDto{}
+	// Change from model to dto
+
+	usersDto := make([]dtos.UserDto, len(users))
+
+	for i, user := range users {
+		usersDto[i] = dtos.UserDto{
+			ID:        user.ID,
+			Email:     user.Email,
+			FirstName: user.Firstname,
+			LastName:  user.Lastname,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": usersDto})
 }
 
 func (u UserController) UpdateUser(c *gin.Context) {
@@ -136,16 +150,15 @@ func (u UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 	// Get id from jwt token
-	tokenPrefix := c.GetHeader("Authorization")
-	token := strings.TrimPrefix(tokenPrefix, "Bearer ")
-	id, err := u.jwtService.GetUserIDFromToken(token)
+	us, existed := c.Get("id")
 
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if existed {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing id in jwt token"})
 		return
 	}
 
-	//claims := u.jwtService.VerifyToken()
+	id := us.(uint)
+
 	user := models.User{
 		Email:     input.Email,
 		Password:  input.Password,
@@ -153,7 +166,7 @@ func (u UserController) UpdateUser(c *gin.Context) {
 		Lastname:  input.LastName,
 	}
 
-	err = u.service.WithTrx(trxHandle).UpdateUser(id, user)
+	err := (u.service).WithTrx(trxHandle).UpdateUser(id, user)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

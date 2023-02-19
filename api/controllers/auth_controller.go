@@ -10,12 +10,12 @@ import (
 )
 
 type AuthController struct {
-	logger      libs.Logger
+	logger      *libs.Logger
 	userService services.UserService
 	jwtService  services.JWTAuthService
 }
 
-func NewAuthController(logger libs.Logger, userService services.UserService, jwtService services.JWTAuthService) AuthController {
+func NewAuthController(logger *libs.Logger, userService services.UserService, jwtService services.JWTAuthService) AuthController {
 	return AuthController{logger: logger, userService: userService, jwtService: jwtService}
 }
 

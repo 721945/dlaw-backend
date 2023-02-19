@@ -19,7 +19,7 @@ type UserService interface {
 
 type userService struct {
 	repository repositories.UserRepository
-	logger     libs.Logger
+	logger     *libs.Logger
 }
 
 func (u userService) WithTrx(trxHandle *gorm.DB) UserService {
@@ -55,6 +55,6 @@ func (u userService) GetUserByEmail(email string) (user *models.User, err error)
 	return u.repository.GetUserByEmail(email)
 }
 
-func NewUserService(r repositories.UserRepository, logger libs.Logger) UserService {
+func NewUserService(r repositories.UserRepository, logger *libs.Logger) UserService {
 	return &userService{repository: r, logger: logger}
 }

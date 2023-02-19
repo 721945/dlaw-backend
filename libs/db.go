@@ -19,7 +19,7 @@ type Database struct {
 	DB *gorm.DB
 }
 
-func NewDatabase(env Env, logger Logger) Database {
+func NewDatabase(env Env, logger *Logger) Database {
 	var url string
 
 	url = fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=verify-full TimeZone=Asia/Bangkok", env.DBHost, env.DBUser, env.DBPassword, env.DBName)

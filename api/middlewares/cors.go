@@ -8,12 +8,12 @@ import (
 // CorsMiddleware middleware for cors
 type CorsMiddleware struct {
 	handler libs.RequestHandler
-	logger  libs.Logger
+	logger  *libs.Logger
 	env     libs.Env
 }
 
 // NewCorsMiddleware creates new cors middleware
-func NewCorsMiddleware(handler libs.RequestHandler, logger libs.Logger, env libs.Env) CorsMiddleware {
+func NewCorsMiddleware(handler libs.RequestHandler, logger *libs.Logger, env libs.Env) CorsMiddleware {
 	return CorsMiddleware{
 		handler: handler,
 		logger:  logger,
@@ -27,7 +27,7 @@ func (m CorsMiddleware) Setup() {
 
 	debug := m.env.Environment == "development"
 	if debug {
-		//m.logger.Warn("Cors is enabled in development mode")
+		m.logger.Info("Cors is enabled in development mode")
 	}
 	m.handler.Gin.Use(cors.New(cors.Config{
 		AllowCredentials: true,

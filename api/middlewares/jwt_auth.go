@@ -9,17 +9,19 @@ import (
 )
 
 type JWTAuthMiddleware struct {
-	service services.JWTAuthService
-	logger  libs.Logger
+	service *services.JWTAuthService
+	logger  *libs.Logger
 }
 
-func NewJWTAuthMiddleware(service services.JWTAuthService, logger libs.Logger) JWTAuthMiddleware {
+func NewJWTAuthMiddleware(
+	service *services.JWTAuthService,
+	logger *libs.Logger,
+) JWTAuthMiddleware {
 	return JWTAuthMiddleware{service: service, logger: logger}
 }
 
 func (m JWTAuthMiddleware) Setup() {
 	m.logger.Info("Setting up jwt auth middleware")
-
 }
 
 func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
@@ -28,21 +30,28 @@ func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 		t := strings.Split(authHeader, " ")
 		if len(t) == 2 {
 			authToken := t[1]
-			authorized, err := m.service.Authorize(authToken)
-			if authorized {
+			user, err := m.service.VerifyToken(authToken)
+
+			if err != nil {
+				c.Set("user", user)
+				c.Set("id", user.ID)
 				c.Next()
 				return
 			}
+
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})
+
 			m.logger.Error(err)
 			c.Abort()
 			return
 		}
+
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "you are not authorized",
 		})
+
 		c.Abort()
 	}
 }

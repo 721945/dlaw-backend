@@ -7,14 +7,14 @@ import (
 )
 
 type UserRoutes struct {
-	logger         libs.Logger
+	logger         *libs.Logger
 	handler        libs.RequestHandler
 	userController controllers.UserController
 	authMiddleware middlewares.JWTAuthMiddleware
 }
 
 func NewUserRoutes(
-	logger libs.Logger,
+	logger *libs.Logger,
 	handler libs.RequestHandler,
 	userController controllers.UserController,
 	authMiddleware middlewares.JWTAuthMiddleware,

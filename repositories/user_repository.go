@@ -18,10 +18,10 @@ type UserRepository interface {
 
 type userRepository struct {
 	db     libs.Database
-	logger libs.Logger
+	logger *libs.Logger
 }
 
-func NewUserRepository(db libs.Database, logger libs.Logger) UserRepository {
+func NewUserRepository(db libs.Database, logger *libs.Logger) UserRepository {
 	return &userRepository{db: db, logger: logger}
 }
 

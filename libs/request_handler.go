@@ -7,12 +7,15 @@ import (
 )
 
 type RequestHandler struct {
-	Gin *gin.Engine
+	Gin    *gin.Engine
+	logger *Logger
 }
 
-func NewRequestHandler(logger Logger) RequestHandler {
+func NewRequestHandler(logger *Logger) RequestHandler {
 	//gin.DefaultWriter = logger.GetGinLogger()
 	engine := gin.New()
+
+	gin.ForceConsoleColor()
 
 	engine.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 
@@ -31,7 +34,8 @@ func NewRequestHandler(logger Logger) RequestHandler {
 	}))
 
 	return RequestHandler{
-		Gin: engine,
+		Gin:    engine,
+		logger: logger,
 	}
 
 }
