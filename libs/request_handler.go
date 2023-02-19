@@ -2,7 +2,9 @@ package libs
 
 import (
 	"fmt"
+	"github.com/721945/dlaw-backend/api/controllers"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"time"
 )
 
@@ -17,6 +19,8 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 
 	gin.ForceConsoleColor()
 
+	//engine.Use(gin.Recovery())
+	engine.Use(gin.CustomRecovery(errorHandler))
 	engine.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 
 		// your custom format
@@ -37,5 +41,13 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 		Gin:    engine,
 		logger: logger,
 	}
+}
 
+func errorHandler(c *gin.Context, err any) {
+	// check if err is error type
+	if _, ok := err.(error); ok {
+		// do something
+		c.AbortWithStatusJSON(controllers.StatusCode(err.(error)), gin.H{"error": err.(error).Error()})
+	}
+	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 }
