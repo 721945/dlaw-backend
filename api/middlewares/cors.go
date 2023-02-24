@@ -29,6 +29,7 @@ func (m CorsMiddleware) Setup() {
 	if debug {
 		m.logger.Info("Cors is enabled in development mode")
 	}
+
 	m.handler.Gin.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowOriginFunc:  func(origin string) bool { return true },

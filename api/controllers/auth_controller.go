@@ -23,6 +23,7 @@ func (a AuthController) Login(c *gin.Context) {
 	var input dtos.LoginDto
 
 	if err := c.ShouldBindJSON(&input); err != nil {
+		//panic(libs.ErrBadRequest)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -32,12 +33,14 @@ func (a AuthController) Login(c *gin.Context) {
 	user, err := a.userService.GetUserByEmail(input.Email)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		panic(libs.ErrUnauthorized)
+		//c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		//return
 	}
 
 	if !util.CheckPasswordHash(input.Password, user.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials"})
+		panic(libs.ErrUnauthorized)
+		//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials"})
 		return
 	}
 	//

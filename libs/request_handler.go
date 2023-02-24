@@ -2,8 +2,8 @@ package libs
 
 import (
 	"fmt"
-	"github.com/721945/dlaw-backend/api/controllers"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"time"
 )
@@ -44,10 +44,13 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 }
 
 func errorHandler(c *gin.Context, err any) {
+	log.Default().Println("Error handler")
+	//Logger{}.Info(err)
+	log.Default().Println(err)
 	// check if err is error type
 	if _, ok := err.(error); ok {
-		// do something
-		c.AbortWithStatusJSON(controllers.StatusCode(err.(error)), gin.H{"error": err.(error).Error()})
+		c.AbortWithStatusJSON(StatusCode(err.(error)), gin.H{"error": err.(error).Error()})
+		return
 	}
 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 }

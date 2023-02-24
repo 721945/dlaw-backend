@@ -8,13 +8,13 @@ import (
 type AuthRoutes struct {
 	logger         *libs.Logger
 	handler        libs.RequestHandler
-	authController *controllers.AuthController
+	authController controllers.AuthController
 }
 
 func NewAuthRoutes(
 	logger *libs.Logger,
 	handler libs.RequestHandler,
-	authController *controllers.AuthController,
+	authController controllers.AuthController,
 ) AuthRoutes {
 	return AuthRoutes{
 		logger:         logger,

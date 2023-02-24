@@ -9,12 +9,12 @@ import (
 )
 
 type JWTAuthMiddleware struct {
-	service *services.JWTAuthService
+	service services.JWTAuthService
 	logger  *libs.Logger
 }
 
 func NewJWTAuthMiddleware(
-	service *services.JWTAuthService,
+	service services.JWTAuthService,
 	logger *libs.Logger,
 ) JWTAuthMiddleware {
 	return JWTAuthMiddleware{service: service, logger: logger}
