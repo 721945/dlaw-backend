@@ -19,32 +19,34 @@ func NewAuthController(logger *libs.Logger, userService services.UserService, jw
 	return AuthController{logger: logger, userService: userService, jwtService: jwtService}
 }
 
-func (a AuthController) Login(c *gin.Context) {
+func (ctrl AuthController) Login(c *gin.Context) {
 	var input dtos.LoginDto
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		//panic(libs.ErrBadRequest)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(libs.ErrBadRequest)
+		//c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	a.logger.Info(input.Email)
+	ctrl.logger.Info(input.Email)
 
-	user, err := a.userService.GetUserByEmail(input.Email)
+	user, err := ctrl.userService.GetUserByEmail(input.Email)
 
 	if err != nil {
-		panic(libs.ErrUnauthorized)
+		_ = c.Error(libs.ErrUnauthorized)
+
+		//panic(libs.ErrUnauthorized)
 		//c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		//return
+		return
 	}
 
 	if !util.CheckPasswordHash(input.Password, user.Password) {
-		panic(libs.ErrUnauthorized)
+		_ = c.Error(libs.ErrUnauthorized)
 		//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials"})
 		return
 	}
 	//
-	token := a.jwtService.GenerateToken(*user)
+	token := ctrl.jwtService.GenerateToken(*user)
 
 	c.JSON(http.StatusOK, gin.H{"data": token})
 

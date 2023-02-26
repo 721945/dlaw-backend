@@ -10,7 +10,6 @@ var Module = fx.Options(
 	fx.Provide(NewFileRoute),
 	fx.Provide(NewFileTypeRoute),
 	fx.Provide(NewFolderRoute),
-	fx.Provide(NewTagRoute),
 	fx.Provide(NewPermissionRoute),
 	fx.Provide(NewTagRoute),
 	fx.Provide(NewUserRoute),

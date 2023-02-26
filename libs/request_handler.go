@@ -2,9 +2,8 @@ package libs
 
 import (
 	"fmt"
+	"github.com/JosephWoodward/gin-errorhandling/middleware"
 	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
 	"time"
 )
 
@@ -18,11 +17,17 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 	engine := gin.New()
 
 	gin.ForceConsoleColor()
+	logger.Info("Setting up request handler")
+	engine.Use(gin.Recovery())
+	engine.Use(middleware.ErrorHandler(
+		middleware.Map(ErrInternalServerError).ToResponse(func(c *gin.Context, err error) {
+			logger.Error(err)
+			c.AbortWithStatusJSON(StatusCode(err.(error)), gin.H{"error": err.Error()})
+			return
+		}),
+	))
 
-	//engine.Use(gin.Recovery())
-	engine.Use(gin.CustomRecovery(errorHandler))
 	engine.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-
 		// your custom format
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
@@ -41,16 +46,4 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 		Gin:    engine,
 		logger: logger,
 	}
-}
-
-func errorHandler(c *gin.Context, err any) {
-	log.Default().Println("Error handler")
-	//Logger{}.Info(err)
-	log.Default().Println(err)
-	// check if err is error type
-	if _, ok := err.(error); ok {
-		c.AbortWithStatusJSON(StatusCode(err.(error)), gin.H{"error": err.(error).Error()})
-		return
-	}
-	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 }

@@ -1,18 +1,18 @@
 package libs
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 )
 
 var (
-	ErrInternalServerError = errors.New("internal server error")
-	ErrBadRequest          = errors.New("bad request")
-	ErrUnauthorized        = errors.New("unauthorized")
-	ErrForbidden           = errors.New("forbidden")
-	ErrNotFound            = errors.New("not found")
-	ErrConflict            = errors.New("conflict")
-	ErrBadParamInput       = errors.New("bad param input")
+	ErrInternalServerError = fmt.Errorf("internal server error")
+	ErrBadRequest          = fmt.Errorf("bad request")
+	ErrUnauthorized        = fmt.Errorf("unauthorized")
+	ErrForbidden           = fmt.Errorf("forbidden")
+	ErrNotFound            = fmt.Errorf("not found")
+	ErrConflict            = fmt.Errorf("conflict")
+	ErrBadParamInput       = fmt.Errorf("bad param input")
 )
 
 func StatusCode(err error) int {
@@ -39,3 +39,7 @@ func StatusCode(err error) int {
 		return http.StatusInternalServerError
 	}
 }
+
+//var (
+//	NotFoundError = fmt.Errorf("resource could not be found")
+//)

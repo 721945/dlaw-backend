@@ -31,7 +31,6 @@ func (u UserRoute) Setup() {
 		api.GET("", u.userController.GetUsers)
 		api.GET("/:id", u.userController.GetUser)
 		api.GET("/me", u.userController.GetMe).Use(u.authMiddleware.Handler())
-
-		//api.GET("/ping", u.userController.Ping)
+		api.PUT("/:id", u.userController.UpdateUser)
 	}
 }

@@ -29,6 +29,5 @@ func (u AuthRoute) Setup() {
 		u.handler.Gin.POST("/login", u.authController.Login)
 		u.handler.Gin.POST("/forget-password", nil)
 		u.handler.Gin.POST("/reset-password", nil)
-		//u.handler.Gin.POST("/register", u.authController.Register)
 	}
 }
