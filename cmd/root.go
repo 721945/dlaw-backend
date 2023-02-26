@@ -26,7 +26,6 @@ to quickly create a Cobra application.`,
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		Run: func(cmd *cobra.Command, args []string) {
-			//isMigrate := cmd.Flag("migrate").Value.String() == "true"
 
 			logger := libs.NewLogger()
 			ctx := context.Background()
@@ -34,7 +33,6 @@ to quickly create a Cobra application.`,
 				opt,
 				fx.Invoke(RunInit),
 			)
-			//log.Fatal("ERROR HERE")
 
 			err := app.Start(ctx)
 

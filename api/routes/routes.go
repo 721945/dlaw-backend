@@ -3,8 +3,17 @@ package routes
 import "go.uber.org/fx"
 
 var Module = fx.Options(
-	fx.Provide(NewUserRoutes),
-	fx.Provide(NewAuthRoutes),
+	fx.Provide(NewActionRoute),
+	fx.Provide(NewAppointmentRoute),
+	fx.Provide(NewAuthRoute),
+	fx.Provide(NewCaseRoute),
+	fx.Provide(NewFileRoute),
+	fx.Provide(NewFileTypeRoute),
+	fx.Provide(NewFolderRoute),
+	fx.Provide(NewTagRoute),
+	fx.Provide(NewPermissionRoute),
+	fx.Provide(NewTagRoute),
+	fx.Provide(NewUserRoute),
 	fx.Provide(NewRoutes),
 )
 
@@ -15,12 +24,28 @@ type Route interface {
 }
 
 func NewRoutes(
-	userRoute UserRoutes,
-	authRoute AuthRoutes,
+	actionRoute ActionRoute,
+	appointmentRoute AppointmentRoute,
+	authRoute AuthRoute,
+	caseRoute CaseRoute,
+	fileRoute FileRoute,
+	fileTypeRoute FileTypeRoute,
+	folderRoute FolderRoute,
+	permissionRoute PermissionRoute,
+	tagRoute TagRoute,
+	userRoute UserRoute,
 ) Routes {
 	return Routes{
-		userRoute,
+		actionRoute,
+		appointmentRoute,
 		authRoute,
+		caseRoute,
+		fileRoute,
+		fileTypeRoute,
+		folderRoute,
+		permissionRoute,
+		tagRoute,
+		userRoute,
 	}
 }
 

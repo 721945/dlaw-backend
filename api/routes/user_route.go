@@ -6,23 +6,23 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 )
 
-type UserRoutes struct {
+type UserRoute struct {
 	logger         *libs.Logger
 	handler        libs.RequestHandler
 	userController controllers.UserController
 	authMiddleware middlewares.JWTAuthMiddleware
 }
 
-func NewUserRoutes(
+func NewUserRoute(
 	logger *libs.Logger,
 	handler libs.RequestHandler,
 	userController controllers.UserController,
 	authMiddleware middlewares.JWTAuthMiddleware,
-) UserRoutes {
-	return UserRoutes{logger: logger, handler: handler, userController: userController, authMiddleware: authMiddleware}
+) UserRoute {
+	return UserRoute{logger: logger, handler: handler, userController: userController, authMiddleware: authMiddleware}
 }
 
-func (u UserRoutes) Setup() {
+func (u UserRoute) Setup() {
 	u.logger.Info("Setting user routes")
 	api := u.handler.Gin.Group("/users")
 	//.Use(u.authMiddleware.Handler())
