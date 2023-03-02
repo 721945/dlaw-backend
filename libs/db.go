@@ -31,6 +31,29 @@ func NewDatabase(env Env, logger *Logger) Database {
 		logger.Fatal("👹 Can't connect to database: ", err)
 	}
 
+	logger.Info("👻 Connected to database")
+
+	// Uncomment if want to Migrate the schema
+	//err = db.AutoMigrate(
+	//	&models.Action{},
+	//	&models.Permission{},
+	//	&models.ActionLog{},
+	//	&models.Appointment{},
+	//	&models.Case{},
+	//	&models.CasePermission{},
+	//	&models.CasePermissionLog{},
+	//	&models.FileType{},
+	//	&models.File{},
+	//	&models.FileUrl{},
+	//	&models.Folder{},
+	//	&models.Tag{},
+	//	&models.User{},
+	//)
+
+	if err != nil {
+		logger.Fatal("👹 Can't migrate database: ", err)
+	}
+
 	return Database{DB: db}
 }
 
