@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/721945/dlaw-backend/api/dtos"
-	"github.com/721945/dlaw-backend/api/util"
+	"github.com/721945/dlaw-backend/api/utils"
 	"github.com/721945/dlaw-backend/constants"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
@@ -91,7 +91,8 @@ func (u UserController) CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	hashPassword, err := util.HashPassword(input.Password)
+
+	hashPassword, err := utils.HashPassword(input.Password)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

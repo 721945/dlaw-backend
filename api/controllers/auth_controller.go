@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/721945/dlaw-backend/api/dtos"
-	"github.com/721945/dlaw-backend/api/util"
+	"github.com/721945/dlaw-backend/api/utils"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
@@ -40,7 +40,7 @@ func (ctrl AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	if !util.CheckPasswordHash(input.Password, user.Password) {
+	if !utils.CheckPasswordHash(input.Password, user.Password) {
 		_ = c.Error(libs.ErrUnauthorized)
 		//c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials"})
 		return
