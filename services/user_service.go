@@ -18,8 +18,8 @@ type UserService interface {
 }
 
 type userService struct {
-	repository repositories.UserRepository
-	logger     *libs.Logger
+	userRepo repositories.UserRepository
+	logger   *libs.Logger
 }
 
 func (u userService) WithTrx(trxHandle *gorm.DB) UserService {
@@ -27,34 +27,34 @@ func (u userService) WithTrx(trxHandle *gorm.DB) UserService {
 		return u
 	}
 
-	u.repository = u.repository.WithTrx(trxHandle)
+	u.userRepo = u.userRepo.WithTrx(trxHandle)
 	return u
 }
 
 func (u userService) CreateUser(user models.User) (models.User, error) {
-	return u.repository.CreateUser(user)
+	return u.userRepo.CreateUser(user)
 }
 
 func (u userService) UpdateUser(id uint, user models.User) error {
-	return u.repository.UpdateUser(id, user)
+	return u.userRepo.UpdateUser(id, user)
 }
 
 func (u userService) DeleteUser(id uint) error {
-	return u.repository.DeleteUser(id)
+	return u.userRepo.DeleteUser(id)
 }
 
 func (u userService) GetUser(id uint) (*models.User, error) {
-	return u.repository.GetUser(id)
+	return u.userRepo.GetUser(id)
 }
 
 func (u userService) GetUsers() ([]models.User, error) {
-	return u.repository.GetUsers()
+	return u.userRepo.GetUsers()
 }
 
 func (u userService) GetUserByEmail(email string) (user *models.User, err error) {
-	return u.repository.GetUserByEmail(email)
+	return u.userRepo.GetUserByEmail(email)
 }
 
 func NewUserService(r repositories.UserRepository, logger *libs.Logger) UserService {
-	return &userService{repository: r, logger: logger}
+	return &userService{userRepo: r, logger: logger}
 }
