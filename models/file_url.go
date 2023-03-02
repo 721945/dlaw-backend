@@ -6,4 +6,5 @@ type FileUrl struct {
 	gorm.Model
 	Url          string
 	PublishedUrl string
+	FileId       *uint
 }

@@ -2,10 +2,11 @@ package models
 
 import "gorm.io/gorm"
 
-type FolderPermissionLog struct {
+type CasePermissionLog struct {
 	gorm.Model
-	Permission Permission
-	Action     Action
-	User       User
-	Case       Case
+	PermissionId uint
+	ActionId     uint
+	ActorUserId  uint
+	TargetUserId uint
+	CaseId       uint
 }
