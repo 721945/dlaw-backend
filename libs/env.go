@@ -15,6 +15,7 @@ type Env struct {
 	DBName      string `mapstructure:"DB_NAME"`
 	JWTSecret   string `mapstructure:"JWT_SECRET"`
 	Environment string `mapstructure:"ENVIRONMENT"`
+	Bucket      string `mapstructure:"BUCKET"`
 	//DSN        string `mapstructure:"DSN"`
 }
 
@@ -31,6 +32,7 @@ func NewEnv() Env {
 		DBName:      viper.GetString("DB_NAME"),
 		JWTSecret:   viper.GetString("JWT_SECRET"),
 		Environment: viper.GetString("ENVIRONMENT"),
+		Bucket:      viper.GetString("BUCKET"),
 	}
 
 	//log.Fatal("ERROR 1")

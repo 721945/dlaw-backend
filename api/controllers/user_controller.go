@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type UserController struct {
@@ -48,39 +47,20 @@ func (u UserController) GetUser(c *gin.Context) {
 }
 
 func (u UserController) GetMe(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-
-	if authHeader == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing Authorization Header"})
+	id, isExisted := c.Get("id")
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
 		return
 	}
 
-	bearerToken := strings.Split(authHeader, " ")
-
-	if len(bearerToken) != 2 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Authorization Header"})
-		return
-	}
-
-	token := bearerToken[1]
-
-	id, err := u.jwtService.GetUserIDFromToken(token)
+	user, err := (u.service).GetUser(id.(uint))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	user, err := (u.service).GetUser(id)
-
-	if err != nil {
-		//u.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
-
 }
 
 func (u UserController) CreateUser(c *gin.Context) {
@@ -114,7 +94,7 @@ func (u UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusCreated, gin.H{"data": user})
 }
 
 func (u UserController) GetUsers(c *gin.Context) {

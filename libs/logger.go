@@ -18,7 +18,7 @@ func (l Logger) GetGinLogger() *log.Logger {
 	return l.Logger
 }
 
-func (l Logger) Info(message string) {
+func (l Logger) Info(message ...any) {
 	l.Logger.Println(message)
 }
 

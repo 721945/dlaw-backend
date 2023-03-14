@@ -15,11 +15,11 @@ func NewCaseRepository(logger *libs.Logger, db libs.Database) CaseRepository {
 }
 
 func (r *CaseRepository) GetCases() (cases []models.Case, err error) {
-	return cases, r.db.DB.Find(&cases).Error
+	return cases, r.db.DB.Find(&cases).Preload("Folders").Error
 }
 
 func (r *CaseRepository) GetCase(id uint) (mCase *models.Case, err error) {
-	return mCase, r.db.DB.First(&mCase, id).Error
+	return mCase, r.db.DB.Preload("Folders").First(&mCase, id).Error
 }
 
 func (r *CaseRepository) CreateCase(mCase models.Case) (models.Case, error) {

@@ -1,26 +1,29 @@
 package routes
 
-import "github.com/721945/dlaw-backend/libs"
+import (
+	"github.com/721945/dlaw-backend/api/controllers"
+	"github.com/721945/dlaw-backend/libs"
+)
 
 type ActionRoute struct {
 	handler libs.RequestHandler
 	logger  *libs.Logger
+	ctrl    controllers.ActionController
 }
 
-func NewActionRoute(handler libs.RequestHandler, logger *libs.Logger) ActionRoute {
-	return ActionRoute{handler: handler, logger: logger}
+func NewActionRoute(handler libs.RequestHandler, logger *libs.Logger, ctrl controllers.ActionController) ActionRoute {
+	return ActionRoute{handler: handler, logger: logger, ctrl: ctrl}
 }
 
 func (r ActionRoute) Setup() {
 	r.logger.Info("Setting action routes")
 	api := r.handler.Gin.Group("/actions")
 	{
-		api.GET("", nil)
-		api.POST("", nil)
-		api.GET("/:id", nil)
-		api.DELETE("", nil)
-		api.PUT("", nil)
-
+		api.GET("", r.ctrl.GetActions)
+		api.POST("", r.ctrl.CreateAction)
+		api.GET("/:id", r.ctrl.GetAction)
+		api.DELETE("", r.ctrl.DeleteAction)
+		api.PUT("", r.ctrl.UpdateAction)
 	}
 
 }

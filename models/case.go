@@ -7,9 +7,9 @@ type Case struct {
 	CaseNumber     string
 	Title          string
 	Folder         Folder `gorm:"foreignKey:CaseId"`
-	Email          string
-	CaseTitle      string
-	CaseDetail     string
+	CaseTitle      *string
+	CaseDetail     *string
+	Email          *string
 	AppointmentId  *uint
 	CasePermission []CasePermission    `gorm:"foreignKey:CaseId"`
 	PermissionLogs []CasePermissionLog `gorm:"foreignKey:CaseId"`

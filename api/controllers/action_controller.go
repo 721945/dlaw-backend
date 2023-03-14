@@ -18,6 +18,19 @@ func NewActionController(logger *libs.Logger, s services.ActionService) ActionCo
 	return ActionController{logger: logger, actionService: s}
 }
 
+// GetActions godoc
+// @summary Get all actions
+// @description Get all actions in database
+// @tags actions
+// @security ApiKeyAuth
+// @id GetActions
+// @accept json
+// @produce json
+// @response 200 {string} string "OK"
+// @response 400 {string}  "Bad Request"
+// @response 401 {string}  "Unauthorized"
+// @response 500 {string}  "Internal Server Error"
+// @Router /actions [get]
 func (a ActionController) GetActions(ctx *gin.Context) {
 	actions, err := a.actionService.GetActions()
 	if err != nil {
@@ -25,7 +38,14 @@ func (a ActionController) GetActions(ctx *gin.Context) {
 		_ = ctx.Error(err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"data": actions})
+
+	actionsDto := make([]dtos.ActionDto, len(actions))
+
+	for i, action := range actions {
+		actionsDto[i] = dtos.ToActionDto(action)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": actionsDto})
 
 }
 
@@ -41,12 +61,14 @@ func (a ActionController) GetAction(c *gin.Context) {
 	}
 
 	action, err := a.actionService.GetAction(uint(id))
+
 	if err != nil {
 		a.logger.Error(err)
 		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": action})
+
+	c.JSON(http.StatusOK, gin.H{"data": dtos.ToActionDto(*action)})
 }
 
 func (a ActionController) CreateAction(c *gin.Context) {
@@ -64,7 +86,53 @@ func (a ActionController) CreateAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": action})
+	c.JSON(http.StatusCreated, gin.H{"data": dtos.ToActionDto(action)})
 }
 
+func (a ActionController) UpdateAction(c *gin.Context) {
+	var input dtos.UpdateActionDto
+	if err := c.ShouldBindJSON(&input); err != nil {
+		a.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
+	paramId := c.Param("id")
+	id, err := strconv.Atoi(paramId)
+
+	if err != nil {
+		a.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = a.actionService.UpdateAction(uint(id), input.ToModel())
+
+	if err != nil {
+		a.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (a ActionController) DeleteAction(c *gin.Context) {
+	paramId := c.Param("id")
+	id, err := strconv.Atoi(paramId)
+
+	if err != nil {
+		a.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = a.actionService.DeleteAction(uint(id))
+	if err != nil {
+		a.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}

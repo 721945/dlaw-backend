@@ -14,6 +14,7 @@ var Module = fx.Options(
 	fx.Provide(NewTagRoute),
 	fx.Provide(NewUserRoute),
 	fx.Provide(NewRoutes),
+	fx.Provide(NewSwaggerRoute),
 )
 
 type Routes []Route
@@ -33,6 +34,7 @@ func NewRoutes(
 	permissionRoute PermissionRoute,
 	tagRoute TagRoute,
 	userRoute UserRoute,
+	swaggerRoute SwaggerRoute,
 ) Routes {
 	return Routes{
 		actionRoute,
@@ -45,6 +47,7 @@ func NewRoutes(
 		permissionRoute,
 		tagRoute,
 		userRoute,
+		swaggerRoute,
 	}
 }
 

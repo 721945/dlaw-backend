@@ -2,6 +2,7 @@ package libs
 
 import (
 	"fmt"
+	_ "github.com/721945/dlaw-backend/docs"
 	"github.com/JosephWoodward/gin-errorhandling/middleware"
 	"github.com/gin-gonic/gin"
 	"time"

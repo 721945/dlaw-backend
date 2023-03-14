@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/api/controllers"
 	"github.com/721945/dlaw-backend/api/middlewares"
 	"github.com/721945/dlaw-backend/api/routes"
+	"github.com/721945/dlaw-backend/infrastructure"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/721945/dlaw-backend/services"
@@ -17,4 +18,5 @@ var CommonModules = fx.Options(
 	libs.Module,
 	middlewares.Module,
 	routes.Module,
+	infrastructure.Module,
 )
