@@ -8,5 +8,6 @@ var Module = fx.Options(
 	fx.Provide(NewActionController),
 	fx.Provide(NewFileController),
 	fx.Provide(NewTagController),
+	fx.Provide(NewPermissionController),
 	fx.Provide(NewCaseController),
 )
