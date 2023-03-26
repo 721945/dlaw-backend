@@ -28,6 +28,11 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     steps:
+      - name: Sleep for 30 seconds
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '30s'
+
       - name: Deploy
         run: echo "Deploy"
 
