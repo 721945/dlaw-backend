@@ -25,6 +25,7 @@ jobs:
         run: go build -v ./...
 
   deploy:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: Deploy
