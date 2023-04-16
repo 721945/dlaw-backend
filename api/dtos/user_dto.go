@@ -15,7 +15,7 @@ type UpdateUserDto struct {
 }
 
 type UserDto struct {
-	ID        uint   `json:"id"`
+	ID        string `json:"id"`
 	Email     string `json:"email"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`

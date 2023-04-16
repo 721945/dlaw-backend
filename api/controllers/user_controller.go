@@ -8,9 +8,9 @@ import (
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"net/http"
-	"strconv"
 )
 
 type UserController struct {
@@ -26,7 +26,7 @@ func NewUserController(service services.UserService, logger *libs.Logger, jwtSer
 func (u UserController) GetUser(c *gin.Context) {
 	paramID := c.Param("id")
 
-	id, err := strconv.Atoi(paramID)
+	id, err := uuid.Parse(paramID)
 
 	if err != nil {
 		//u.logger.Error(err)
@@ -34,7 +34,7 @@ func (u UserController) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := (u.service).GetUser(uint(id))
+	user, err := (u.service).GetUser(id)
 
 	if err != nil {
 		//u.logger.Error(err)
@@ -53,7 +53,7 @@ func (u UserController) GetMe(c *gin.Context) {
 		return
 	}
 
-	user, err := (u.service).GetUser(id.(uint))
+	user, err := (u.service).GetUser(id.(uuid.UUID))
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -112,7 +112,7 @@ func (u UserController) GetUsers(c *gin.Context) {
 
 	for i, user := range users {
 		usersDto[i] = dtos.UserDto{
-			ID:        user.ID,
+			ID:        user.ID.String(),
 			Email:     user.Email,
 			FirstName: user.Firstname,
 			LastName:  user.Lastname,
@@ -138,7 +138,7 @@ func (u UserController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	id := us.(uint)
+	id := us.(uuid.UUID)
 
 	user := models.User{
 		Email:     input.Email,

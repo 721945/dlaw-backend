@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Permission struct {
-	gorm.Model
+	Base
 	Name            string
 	CasePermissions []CasePermission    `gorm:"foreignKey:PermissionId"`
 	PermissionLogs  []CasePermissionLog `gorm:"foreignKey:PermissionId"`

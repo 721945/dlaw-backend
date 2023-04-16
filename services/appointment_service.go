@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
+	"github.com/google/uuid"
 )
 
 type AppointmentService struct {
@@ -19,7 +20,7 @@ func (s *AppointmentService) GetAppointments() (appointments []models.Appointmen
 	return s.appointmentRepo.GetAppointments()
 }
 
-func (s *AppointmentService) GetAppointment(id uint) (appointment *models.Appointment, err error) {
+func (s *AppointmentService) GetAppointment(id uuid.UUID) (appointment *models.Appointment, err error) {
 	return s.appointmentRepo.GetAppointment(id)
 }
 
@@ -27,10 +28,10 @@ func (s *AppointmentService) CreateAppointment(appointment models.Appointment) (
 	return s.appointmentRepo.CreateAppointment(appointment)
 }
 
-func (s *AppointmentService) UpdateAppointment(id uint, appointment models.Appointment) error {
+func (s *AppointmentService) UpdateAppointment(id uuid.UUID, appointment models.Appointment) error {
 	return s.appointmentRepo.UpdateAppointment(id, appointment)
 }
 
-func (s *AppointmentService) DeleteAppointment(id uint) error {
+func (s *AppointmentService) DeleteAppointment(id uuid.UUID) error {
 	return s.appointmentRepo.DeleteAppointment(id)
 }

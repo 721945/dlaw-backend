@@ -10,14 +10,15 @@ type CreateFileDto struct {
 }
 
 type FileDto struct {
-	Id   uint   `json:"id"`
-	Name string `json:"name"`
-	Url  string `json:"url"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Url        string `json:"url"`
+	PreviewUrl string `json:"previewUrl"`
 }
 
 func ToFileDto(file models.File) FileDto {
 	return FileDto{
-		Id:   file.ID,
+		Id:   file.ID.String(),
 		Name: file.Name,
 		Url:  file.Urls[0].Url,
 	}

@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type FileType struct {
-	gorm.Model
+	Base
 	Name  string
 	Files []File `gorm:"foreignKey:TypeId"`
 }

@@ -32,20 +32,22 @@ func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 			authToken := t[1]
 			user, err := m.service.VerifyToken(authToken)
 
+			m.logger.Info(user)
 			if err != nil {
-				c.Set("user", user)
-				c.Set("id", user.ID)
-				c.Next()
+				_ = c.Error(libs.ErrUnauthorized)
+				c.Abort()
 				return
 			}
 
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
+			m.logger.Info(user)
+			m.logger.Info(user.ID)
 
-			m.logger.Error(err)
-			c.Abort()
+			c.Set("user", user)
+			c.Set("id", user.ID)
+			c.Next()
+
 			return
+
 		}
 
 		c.JSON(http.StatusUnauthorized, gin.H{

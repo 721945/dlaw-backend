@@ -5,7 +5,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/golang-jwt/jwt/v4"
-	"gorm.io/gorm"
+	"github.com/google/uuid"
 )
 
 type JWTAuthService struct {
@@ -26,6 +26,7 @@ func (j JWTAuthService) GenerateToken(user models.User) string {
 		"email":      user.Email,
 		"first_name": user.Firstname,
 		"last_name":  user.Lastname,
+		//"iat":        time.Now().AddDate(0, 0, 7).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(j.env.JWTSecret))
@@ -65,25 +66,46 @@ func (j JWTAuthService) VerifyToken(tokenString string) (*models.User, error) {
 		return nil, err
 	}
 
-	return &models.User{
-		Model:     gorm.Model{ID: uint(claims["id"].(float64))},
+	id, err := uuid.Parse(claims["id"].(string))
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := models.User{
+		Base:      models.Base{ID: id},
 		Email:     claims["email"].(string),
 		Firstname: claims["first_name"].(string),
 		Lastname:  claims["last_name"].(string),
-	}, nil
+	}
+
+	//var tm time.Time
+	//switch iat := claims["iat"].(type) {
+	//case float64:
+	//	tm = time.Unix(int64(iat), 0)
+	//case json.Number:
+	//	v, _ := iat.Int64()
+	//	tm = time.Unix(v, 0)
+	//}
+	//
+	//if tm.Before(time.Now()) {
+	//	return nil, errors.New("token expired")
+	//}
+
+	return &user, nil
 }
 
 //
 
-func (j JWTAuthService) GetUserIDFromToken(tokenString string) (uint, error) {
+func (j JWTAuthService) GetUserIDFromToken(tokenString string) (*uuid.UUID, error) {
 	user, err := j.VerifyToken(tokenString)
 
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	//id := user["id"].(float64)
 	id := user.ID
 
-	return uint(id), nil
+	return &id, nil
 }

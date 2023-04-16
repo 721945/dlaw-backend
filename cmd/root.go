@@ -63,9 +63,11 @@ func Execute() {
 }
 
 func init() {
-	err := godotenv.Load(".env.asb")
+	log.Println("------------------------->>>")
+	err := godotenv.Load(".env")
 
 	if err != nil {
+		log.Println(err)
 		log.Println("Error loading .env file")
 	}
 

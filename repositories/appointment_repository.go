@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
+	"github.com/google/uuid"
 )
 
 type AppointmentRepository struct {
@@ -19,7 +20,7 @@ func (r *AppointmentRepository) GetAppointments() (appointments []models.Appoint
 
 }
 
-func (r *AppointmentRepository) GetAppointment(id uint) (appointment *models.Appointment, err error) {
+func (r *AppointmentRepository) GetAppointment(id uuid.UUID) (appointment *models.Appointment, err error) {
 	return appointment, r.db.DB.First(&appointment, id).Error
 }
 
@@ -27,10 +28,10 @@ func (r *AppointmentRepository) CreateAppointment(appointment models.Appointment
 	return appointment, r.db.DB.Create(&appointment).Error
 }
 
-func (r *AppointmentRepository) UpdateAppointment(id uint, appointment models.Appointment) error {
+func (r *AppointmentRepository) UpdateAppointment(id uuid.UUID, appointment models.Appointment) error {
 	return r.db.DB.Model(&models.Appointment{}).Where("id = ?", id).Updates(appointment).Error
 }
 
-func (r *AppointmentRepository) DeleteAppointment(id uint) error {
+func (r *AppointmentRepository) DeleteAppointment(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Appointment{}, id).Error
 }

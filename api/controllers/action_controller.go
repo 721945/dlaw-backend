@@ -5,8 +5,8 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
-	"strconv"
 )
 
 type ActionController struct {
@@ -52,7 +52,7 @@ func (a ActionController) GetActions(ctx *gin.Context) {
 func (a ActionController) GetAction(c *gin.Context) {
 	paramId := c.Param("id")
 
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		a.logger.Error(err)
@@ -60,7 +60,7 @@ func (a ActionController) GetAction(c *gin.Context) {
 		return
 	}
 
-	action, err := a.actionService.GetAction(uint(id))
+	action, err := a.actionService.GetAction(id)
 
 	if err != nil {
 		a.logger.Error(err)
@@ -98,7 +98,7 @@ func (a ActionController) UpdateAction(c *gin.Context) {
 	}
 
 	paramId := c.Param("id")
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		a.logger.Error(err)
@@ -106,7 +106,7 @@ func (a ActionController) UpdateAction(c *gin.Context) {
 		return
 	}
 
-	err = a.actionService.UpdateAction(uint(id), input.ToModel())
+	err = a.actionService.UpdateAction(id, input.ToModel())
 
 	if err != nil {
 		a.logger.Error(err)
@@ -119,7 +119,7 @@ func (a ActionController) UpdateAction(c *gin.Context) {
 
 func (a ActionController) DeleteAction(c *gin.Context) {
 	paramId := c.Param("id")
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		a.logger.Error(err)
@@ -127,7 +127,7 @@ func (a ActionController) DeleteAction(c *gin.Context) {
 		return
 	}
 
-	err = a.actionService.DeleteAction(uint(id))
+	err = a.actionService.DeleteAction(id)
 	if err != nil {
 		a.logger.Error(err)
 		_ = c.Error(err)

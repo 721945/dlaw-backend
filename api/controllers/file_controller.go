@@ -5,9 +5,9 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"mime/multipart"
 	"net/http"
-	"strconv"
 )
 
 type FileController struct {
@@ -40,7 +40,7 @@ func (f FileController) GetFiles(c *gin.Context) {
 func (f FileController) GetFile(c *gin.Context) {
 	paramId := c.Param("id")
 
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -48,7 +48,7 @@ func (f FileController) GetFile(c *gin.Context) {
 		return
 	}
 
-	action, err := f.fileService.GetFile(uint(id))
+	action, err := f.fileService.GetFile(id)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -86,7 +86,7 @@ func (f FileController) UpdateFile(c *gin.Context) {
 	}
 
 	paramId := c.Param("id")
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -94,7 +94,7 @@ func (f FileController) UpdateFile(c *gin.Context) {
 		return
 	}
 
-	err = f.fileService.UpdateFile(uint(id), input.ToModel())
+	err = f.fileService.UpdateFile(id, input.ToModel())
 
 	if err != nil {
 		f.logger.Error(err)
@@ -107,7 +107,7 @@ func (f FileController) UpdateFile(c *gin.Context) {
 
 func (f FileController) DeleteFile(c *gin.Context) {
 	paramId := c.Param("id")
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -115,7 +115,7 @@ func (f FileController) DeleteFile(c *gin.Context) {
 		return
 	}
 
-	err = f.fileService.DeleteFile(uint(id))
+	err = f.fileService.DeleteFile(id)
 	if err != nil {
 		f.logger.Error(err)
 		_ = c.Error(err)
@@ -153,6 +153,7 @@ func (f FileController) UploadFile(c *gin.Context) {
 	//}
 
 	file, fileHeader, err := c.Request.FormFile("file")
+
 	if err != nil {
 		f.logger.Error(err)
 		_ = c.Error(libs.ErrInternalServerError)
@@ -166,7 +167,22 @@ func (f FileController) UploadFile(c *gin.Context) {
 		}
 	}(file)
 
-	url, err := f.fileService.UploadFile(file, fileHeader.Filename)
+	folderId := c.Request.FormValue("folderId")
+
+	folderIdInt, err := uuid.Parse(folderId)
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	url, err := f.fileService.UploadFile(
+		file,
+		fileHeader.Filename,
+		fileHeader.Header.Get("Content-Type"),
+		folderIdInt,
+	)
 
 	if err != nil {
 		f.logger.Error(err)

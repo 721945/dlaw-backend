@@ -25,10 +25,12 @@ func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string,
 	/// Now we are doing for put all file in the bucket and use database to collect all information
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
+	g.logger.Info("Start of upload file")
 	if err != nil {
 		return "", err
 	}
 	defer func(client *storage.Client) {
+		g.logger.Info("End of upload file")
 		err := client.Close()
 		if err != nil {
 			panic(err)
@@ -41,10 +43,12 @@ func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string,
 
 	wc := obj.NewWriter(ctx)
 
+	g.logger.Info("Start of copy file")
 	if _, err = io.Copy(wc, file); err != nil {
 		return "", err
 	}
 
+	g.logger.Info("End of copy file")
 	if err := wc.Close(); err != nil {
 		return "", err
 	}
@@ -54,10 +58,8 @@ func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string,
 	//sourceUrl := "gs://" + g.bucket + "/" + fileName
 	//targetUrl := "gs://" + g.bucket + "/" + fileName + ".txt"
 
-	visionText, err := g.vision.GetTextFromPdfUrl(*obj)
+	//visionText, err := g.vision.GetTextFromPdfUrl(*obj)
 	//visionText, err := g.vision.GetTextFromPdfUrl(sourceUrl, targetUrl)
-
-	g.logger.Info(visionText)
 
 	return url, nil
 }

@@ -9,17 +9,17 @@ import (
 	"net/http"
 )
 
-type TagController struct {
-	logger     *libs.Logger
-	tagService services.TagService
+type TypeController struct {
+	logger      *libs.Logger
+	fileService services.FileTypeService
 }
 
-func NewTagController(logger *libs.Logger, s services.TagService) TagController {
-	return TagController{logger: logger, tagService: s}
+func NewTypeController(logger *libs.Logger, s services.FileTypeService) TypeController {
+	return TypeController{logger: logger, fileService: s}
 }
 
-func (t TagController) GetTags(c *gin.Context) {
-	tags, err := t.tagService.GetTags()
+func (t TypeController) GetTypes(c *gin.Context) {
+	tags, err := t.fileService.GetFileTypes()
 
 	if err != nil {
 		t.logger.Error(err)
@@ -27,10 +27,12 @@ func (t TagController) GetTags(c *gin.Context) {
 		return
 	}
 
+	//tagsDto := dtos.ToTypeDtos(tags)
+
 	c.JSON(200, gin.H{"data": tags})
 }
 
-func (t TagController) GetTag(c *gin.Context) {
+func (t TypeController) GetType(c *gin.Context) {
 	paramId := c.Param("id")
 
 	id, err := uuid.Parse(paramId)
@@ -41,7 +43,7 @@ func (t TagController) GetTag(c *gin.Context) {
 		return
 	}
 
-	tag, err := t.tagService.GetTag(id)
+	tag, err := t.fileService.GetFileType(id)
 
 	if err != nil {
 		t.logger.Error(err)
@@ -52,8 +54,8 @@ func (t TagController) GetTag(c *gin.Context) {
 	c.JSON(200, gin.H{"data": tag})
 }
 
-func (t TagController) CreateTag(c *gin.Context) {
-	var input dtos.CreateTagDto
+func (t TypeController) CreateType(c *gin.Context) {
+	var input dtos.CreateFileTypeDto
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		t.logger.Error(err)
@@ -61,7 +63,7 @@ func (t TagController) CreateTag(c *gin.Context) {
 		return
 	}
 
-	tag, err := t.tagService.CreateTag(input.ToModel())
+	fileType, err := t.fileService.CreateFileType(input)
 
 	if err != nil {
 		t.logger.Error(err)
@@ -69,11 +71,11 @@ func (t TagController) CreateTag(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": tag})
+	c.JSON(http.StatusCreated, gin.H{"data": fileType})
 }
 
-func (t TagController) UpdateTag(c *gin.Context) {
-	var input dtos.UpdateTagDto
+func (t TypeController) UpdateType(c *gin.Context) {
+	var input dtos.UpdateFileTypeDto
 
 	var paramId = c.Param("id")
 
@@ -85,7 +87,7 @@ func (t TagController) UpdateTag(c *gin.Context) {
 		return
 	}
 
-	err = t.tagService.UpdateTag(id, input.ToModel())
+	err = t.fileService.UpdateFileType(id, input)
 
 	if err != nil {
 		t.logger.Error(err)
@@ -96,7 +98,7 @@ func (t TagController) UpdateTag(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-func (t TagController) DeleteTag(c *gin.Context) {
+func (t TypeController) DeleteType(c *gin.Context) {
 	var paramId = c.Param("id")
 
 	id, err := uuid.Parse(paramId)
@@ -107,7 +109,7 @@ func (t TagController) DeleteTag(c *gin.Context) {
 		return
 	}
 
-	err = t.tagService.DeleteTag(id)
+	err = t.fileService.DeleteFileType(id)
 
 	if err != nil {
 		t.logger.Error(err)
