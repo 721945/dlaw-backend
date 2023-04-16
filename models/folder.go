@@ -1,15 +1,15 @@
 package models
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 type Folder struct {
-	gorm.Model
+	Base
 	Name           string
 	IsArchive      bool
-	SubFolders     []Folder `gorm:"foreignKey:ParentFolderId"`
-	Files          []File   `gorm:"foreignKey:FolderId"`
-	Tags           []Tag    `gorm:"many2many:folder_tags;"`
-	ParentFolderId *uint
-	CaseId         *uint
+	ParentFolderId *uuid.UUID
+	CaseId         *uuid.UUID
+	SubFolders     []Folder    `gorm:"foreignKey:ParentFolderId"`
+	Files          []File      `gorm:"foreignKey:FolderId"`
+	Tags           []Tag       `gorm:"many2many:folder_tags;"`
 	ActionLogs     []ActionLog `gorm:"foreignKey:FolderId"`
 }

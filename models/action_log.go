@@ -1,11 +1,11 @@
 package models
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 type ActionLog struct {
-	gorm.Model
-	FolderId uint
+	Base
+	FolderId uuid.UUID
 	FileId   *uint
 	UserId   uint
-	ActionId uint
+	ActionId uuid.UUID
 }

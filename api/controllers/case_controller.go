@@ -5,7 +5,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
-	"strconv"
+	"github.com/google/uuid"
 )
 
 type CaseController struct {
@@ -33,7 +33,7 @@ func (ctrl CaseController) GetCase(c *gin.Context) {
 
 	paramId := c.Param("id")
 
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		ctrl.logger.Error(err)
@@ -41,7 +41,7 @@ func (ctrl CaseController) GetCase(c *gin.Context) {
 		return
 	}
 
-	mCase, err := ctrl.caseService.GetCase(uint(id))
+	mCase, err := ctrl.caseService.GetCase(id)
 
 	if err != nil {
 		ctrl.logger.Error(err)
@@ -56,6 +56,13 @@ func (ctrl CaseController) GetCase(c *gin.Context) {
 
 func (ctrl CaseController) CreateCase(c *gin.Context) {
 
+	id, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
 	var input dtos.CreateCaseDto
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -64,7 +71,32 @@ func (ctrl CaseController) CreateCase(c *gin.Context) {
 		return
 	}
 
-	mCase, err := ctrl.caseService.CreateCase(input)
+	mCase, err := ctrl.caseService.CreateCase(input, id.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": mCase,
+	})
+}
+
+func (ctrl CaseController) GetOwnCases(c *gin.Context) {
+
+	id, isExisted := c.Get("id")
+
+	ctrl.logger.Info(id)
+
+	if !isExisted {
+
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	mCase, err := ctrl.caseService.GetOwnCases(id.(uuid.UUID))
 
 	if err != nil {
 		ctrl.logger.Error(err)

@@ -6,7 +6,7 @@ import (
 )
 
 type ActionDto struct {
-	ID        uint      `json:"id"`
+	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -18,7 +18,7 @@ type CreateActionDto struct {
 
 func ToActionDto(action models.Action) ActionDto {
 	return ActionDto{
-		ID:        action.ID,
+		ID:        action.ID.String(),
 		Name:      action.Name,
 		CreatedAt: action.CreatedAt,
 		UpdatedAt: action.UpdatedAt,

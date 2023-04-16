@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
+	"github.com/google/uuid"
 )
 
 type PermissionService struct {
@@ -21,7 +22,7 @@ func (s *PermissionService) GetPermissions() (permissions []models.Permission, e
 
 }
 
-func (s *PermissionService) GetPermission(id uint) (permission *models.Permission, err error) {
+func (s *PermissionService) GetPermission(id uuid.UUID) (permission *models.Permission, err error) {
 	return s.permissionRepo.GetPermission(id)
 
 }
@@ -31,10 +32,10 @@ func (s *PermissionService) CreatePermission(permission models.Permission) (mode
 
 }
 
-func (s *PermissionService) UpdatePermission(id uint, permission models.Permission) error {
+func (s *PermissionService) UpdatePermission(id uuid.UUID, permission models.Permission) error {
 	return s.permissionRepo.UpdatePermission(id, permission)
 }
 
-func (s *PermissionService) DeletePermission(id uint) error {
+func (s *PermissionService) DeletePermission(id uuid.UUID) error {
 	return s.permissionRepo.DeletePermission(id)
 }

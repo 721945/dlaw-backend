@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
+	"github.com/google/uuid"
 )
 
 type FileTypeRepository struct {
@@ -18,7 +19,7 @@ func (r *FileTypeRepository) GetFileTypes() (fileTypes []models.FileType, err er
 	return fileTypes, r.db.DB.Find(&fileTypes).Error
 }
 
-func (r *FileTypeRepository) GetFileType(id uint) (fileType *models.FileType, err error) {
+func (r *FileTypeRepository) GetFileType(id uuid.UUID) (fileType *models.FileType, err error) {
 	return fileType, r.db.DB.First(&fileType, id).Error
 }
 
@@ -26,10 +27,14 @@ func (r *FileTypeRepository) CreateFileType(fileType models.FileType) (models.Fi
 	return fileType, r.db.DB.Create(&fileType).Error
 }
 
-func (r *FileTypeRepository) UpdateFileType(id uint, fileType models.FileType) error {
+func (r *FileTypeRepository) UpdateFileType(id uuid.UUID, fileType models.FileType) error {
 	return r.db.DB.Model(&models.FileType{}).Where("id = ?", id).Updates(fileType).Error
 }
 
-func (r *FileTypeRepository) DeleteFileType(id uint) error {
+func (r *FileTypeRepository) DeleteFileType(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.FileType{}, id).Error
+}
+
+func (r *FileTypeRepository) GetFileTypeByName(name string) (fileType *models.FileType, err error) {
+	return fileType, r.db.DB.Where("name = ?", name).First(&fileType).Error
 }

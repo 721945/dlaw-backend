@@ -5,7 +5,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
-	"strconv"
+	"github.com/google/uuid"
 )
 
 type PermissionController struct {
@@ -31,14 +31,14 @@ func (p PermissionController) GetPermissions(c *gin.Context) {
 func (p PermissionController) GetPermission(c *gin.Context) {
 	paramId := c.Param("id")
 
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 	if err != nil {
 		p.logger.Error(err)
 		_ = c.Error(err)
 		return
 	}
 
-	permission, err := p.permissionService.GetPermission(uint(id))
+	permission, err := p.permissionService.GetPermission(id)
 
 	if err != nil {
 		p.logger.Error(err)
@@ -72,7 +72,7 @@ func (p PermissionController) CreatePermission(c *gin.Context) {
 func (p PermissionController) UpdatePermission(c *gin.Context) {
 	paramId := c.Param("id")
 
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		p.logger.Error(err)
@@ -87,7 +87,7 @@ func (p PermissionController) UpdatePermission(c *gin.Context) {
 		return
 	}
 
-	err = p.permissionService.UpdatePermission(uint(id), input.ToModel())
+	err = p.permissionService.UpdatePermission(id, input.ToModel())
 
 	if err != nil {
 		p.logger.Error(err)
@@ -102,7 +102,7 @@ func (p PermissionController) UpdatePermission(c *gin.Context) {
 func (p PermissionController) DeletePermission(c *gin.Context) {
 	paramId := c.Param("id")
 
-	id, err := strconv.Atoi(paramId)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		p.logger.Error(err)
@@ -110,7 +110,7 @@ func (p PermissionController) DeletePermission(c *gin.Context) {
 		return
 	}
 
-	err = p.permissionService.DeletePermission(uint(id))
+	err = p.permissionService.DeletePermission(id)
 
 	if err != nil {
 		p.logger.Error(err)

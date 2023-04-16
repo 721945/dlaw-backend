@@ -1,12 +1,12 @@
 package models
 
-import "gorm.io/gorm"
+import "github.com/google/uuid"
 
 type CasePermissionLog struct {
-	gorm.Model
-	PermissionId uint
+	Base
+	PermissionId uuid.UUID
 	ActionId     uint
 	ActorUserId  uint
-	TargetUserId uint
+	TargetUserId uuid.UUID
 	CaseId       uint
 }

@@ -1,9 +1,11 @@
 package dtos
 
-import "github.com/721945/dlaw-backend/models"
+import (
+	"github.com/721945/dlaw-backend/models"
+)
 
 type PermissionDto struct {
-	Id   uint   `json:"id"`
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -29,7 +31,7 @@ func (p UpdatePermissionDto) ToModel() models.Permission {
 
 func ToPermissionDto(permission models.Permission) PermissionDto {
 	return PermissionDto{
-		Id:   permission.ID,
+		Id:   permission.ID.String(),
 		Name: permission.Name,
 	}
 }

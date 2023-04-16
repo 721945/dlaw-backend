@@ -4,15 +4,16 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type UserService interface {
 	WithTrx(trxHandle *gorm.DB) UserService
 	CreateUser(user models.User) (models.User, error)
-	UpdateUser(id uint, user models.User) error
-	DeleteUser(id uint) error
-	GetUser(id uint) (*models.User, error)
+	UpdateUser(id uuid.UUID, user models.User) error
+	DeleteUser(id uuid.UUID) error
+	GetUser(id uuid.UUID) (*models.User, error)
 	GetUsers() ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 }
@@ -35,15 +36,15 @@ func (u userService) CreateUser(user models.User) (models.User, error) {
 	return u.userRepo.CreateUser(user)
 }
 
-func (u userService) UpdateUser(id uint, user models.User) error {
+func (u userService) UpdateUser(id uuid.UUID, user models.User) error {
 	return u.userRepo.UpdateUser(id, user)
 }
 
-func (u userService) DeleteUser(id uint) error {
+func (u userService) DeleteUser(id uuid.UUID) error {
 	return u.userRepo.DeleteUser(id)
 }
 
-func (u userService) GetUser(id uint) (*models.User, error) {
+func (u userService) GetUser(id uuid.UUID) (*models.User, error) {
 	return u.userRepo.GetUser(id)
 }
 

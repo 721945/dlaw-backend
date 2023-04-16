@@ -12,4 +12,5 @@ var Module = fx.Options(
 	fx.Provide(NewFolderService),
 	fx.Provide(NewPermissionService),
 	fx.Provide(NewTagService),
+	fx.Provide(NewFileTypeService),
 )

@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
+	"github.com/google/uuid"
 )
 
 type FolderRepository struct {
@@ -18,18 +19,22 @@ func (r *FolderRepository) GetFolders() (folders []models.Folder, err error) {
 	return folders, r.db.DB.Find(&folders).Error
 }
 
-func (r *FolderRepository) GetFolder(id uint) (folder *models.Folder, err error) {
-	return folder, r.db.DB.First(&folder, id).Error
+func (r *FolderRepository) GetFolder(id uuid.UUID) (folder *models.Folder, err error) {
+	return folder, r.db.DB.Preload("Tags").First(&folder, id).Error
+}
+
+func (r *FolderRepository) GetSubFolders(id uuid.UUID) (folders []models.Folder, err error) {
+	return folders, r.db.DB.Where("parent_folder_id = ?", id).Find(&folders).Error
 }
 
 func (r *FolderRepository) CreateFolder(folder models.Folder) (models.Folder, error) {
 	return folder, r.db.DB.Create(&folder).Error
 }
 
-func (r *FolderRepository) UpdateFolder(id uint, folder models.Folder) error {
+func (r *FolderRepository) UpdateFolder(id uuid.UUID, folder models.Folder) error {
 	return r.db.DB.Model(&models.Folder{}).Where("id = ?", id).Updates(folder).Error
 }
 
-func (r *FolderRepository) DeleteFolder(id uint) error {
+func (r *FolderRepository) DeleteFolder(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Folder{}, id).Error
 }

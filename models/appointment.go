@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Appointment struct {
-	gorm.Model
+	Base
 	Case        Case
 	EventId     string
 	Title       string

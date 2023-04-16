@@ -1,10 +1,9 @@
 package models
 
-import "gorm.io/gorm"
-
 type FileUrl struct {
-	gorm.Model
+	Base
 	Url          string
 	PublishedUrl string
+	PreviewUrl   string
 	FileId       *uint
 }

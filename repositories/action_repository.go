@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
+	"github.com/google/uuid"
 )
 
 type ActionRepository struct {
@@ -18,7 +19,7 @@ func (r *ActionRepository) GetActions() (actions []models.Action, err error) {
 	return actions, r.db.DB.Find(&actions).Error
 }
 
-func (r *ActionRepository) GetAction(id uint) (action *models.Action, err error) {
+func (r *ActionRepository) GetAction(id uuid.UUID) (action *models.Action, err error) {
 	return action, r.db.DB.First(&action, id).Error
 }
 
@@ -26,10 +27,10 @@ func (r *ActionRepository) CreateAction(action models.Action) (models.Action, er
 	return action, r.db.DB.Create(&action).Error
 }
 
-func (r *ActionRepository) UpdateAction(id uint, action models.Action) error {
+func (r *ActionRepository) UpdateAction(id uuid.UUID, action models.Action) error {
 	return r.db.DB.Model(&models.Action{}).Where("id = ?", id).Updates(action).Error
 }
 
-func (r *ActionRepository) DeleteAction(id uint) error {
+func (r *ActionRepository) DeleteAction(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Action{}, id).Error
 }

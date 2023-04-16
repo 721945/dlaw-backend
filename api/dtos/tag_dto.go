@@ -2,14 +2,11 @@ package dtos
 
 import (
 	"github.com/721945/dlaw-backend/models"
-	"time"
 )
 
 type TagDto struct {
-	ID        uint      `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type CreateTagDto struct {
@@ -22,15 +19,13 @@ type UpdateTagDto struct {
 
 func ToTagDto(tag models.Tag) TagDto {
 	return TagDto{
-		ID:        tag.ID,
-		Name:      tag.Name,
-		CreatedAt: tag.CreatedAt,
-		UpdatedAt: tag.UpdatedAt,
+		ID:   tag.ID.String(),
+		Name: tag.Name,
 	}
 }
 
 func ToTagDtos(tags []models.Tag) []TagDto {
-	var tagDtos []TagDto
+	var tagDtos = make([]TagDto, 0)
 
 	for _, tag := range tags {
 		tagDtos = append(tagDtos, ToTagDto(tag))
