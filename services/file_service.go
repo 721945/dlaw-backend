@@ -1,12 +1,15 @@
 package services
 
 import (
+	"fmt"
 	"github.com/721945/dlaw-backend/infrastructure/google_storage"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/google/uuid"
 	"mime/multipart"
+	"strings"
+	"time"
 )
 
 type FileService struct {
@@ -16,6 +19,8 @@ type FileService struct {
 	storageService     google_storage.GoogleStorage
 	folderRepo         repositories.FolderRepository
 	casePermissionRepo repositories.CasePermissionRepository
+	actionRepo         repositories.ActionRepository
+	actionLogRepo      repositories.ActionLogRepository
 }
 
 func NewFileService(
@@ -25,6 +30,8 @@ func NewFileService(
 	typeRepo repositories.FileTypeRepository,
 	folderRepo repositories.FolderRepository,
 	casePermissionRepo repositories.CasePermissionRepository,
+	actionRepo repositories.ActionRepository,
+	actionLogRepo repositories.ActionLogRepository,
 ) FileService {
 	return FileService{
 		logger:             logger,
@@ -33,6 +40,8 @@ func NewFileService(
 		storageService:     storageService,
 		folderRepo:         folderRepo,
 		casePermissionRepo: casePermissionRepo,
+		actionRepo:         actionRepo,
+		actionLogRepo:      actionLogRepo,
 	}
 }
 
@@ -56,9 +65,9 @@ func (s *FileService) DeleteFile(id uuid.UUID) error {
 	return s.fileRepo.DeleteFile(id)
 }
 
-func (s *FileService) GetSignedUrl(amount int) ([]string, error) {
-	return s.storageService.GetSignedUrl(amount)
-}
+//func (s *FileService) GetSignedUrl(amount int) ([]string, error) {
+//	return s.storageService.GetSignedUrls(amount)
+//}
 
 func (s *FileService) UploadFile(
 	file multipart.File,
@@ -67,42 +76,87 @@ func (s *FileService) UploadFile(
 	folderId uuid.UUID,
 	userId uuid.UUID,
 ) (string, error) {
+	// TODO: NEED TO CHECK FOR REPLACE FILE
 
 	err := s.checkPermission(userId, folderId)
 
 	if err != nil {
 		return "", err
 	}
-
-	_, err = s.storageService.UploadFile(file, fileName)
+	fileT, err := s.fileTypeRepo.GetFileTypeByName(convertMimeTypeToWord(fileType))
 
 	if err != nil {
 		return "", err
 	}
 
-	//fileT, err := s.fileTypeRepo.GetFileTypeByName(fileType)
+	needConvert := checkNeedConvert(fileType)
+
+	version, versionPreview := "", ""
+
+	cloudName := generateUniqueName()
+
+	previewCloudName := cloudName
+
+	version, err = s.storageService.UploadFile(file, cloudName)
+
+	versionPreview = version
+
+	if needConvert {
+		//	DO CONVERT
+		//	previewCloudName = generateUniqueName(fileName)
+		//	versionPreview, err = s.storageService.UploadFile(file, previewCloudName)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	modelFile := models.File{
+		Name:             fileName,
+		TypeId:           &fileT.ID,
+		FolderId:         &folderId,
+		CloudName:        cloudName,
+		PreviewCloudName: previewCloudName,
+	}
 	//
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//var fileUrl models.FileUrl
-	//
-	//fileUrl.Url, fileUrl.PreviewUrl = setFileURLs(fileType, url)
-	//
-	//modelFile := models.File{
-	//	Name:     fileName,
-	//	TypeId:   &fileT.ID,
-	//	Urls:     []models.FileUrl{fileUrl},
-	//	FolderId: &folderId,
-	//}
-	//
-	//_, err = s.fileRepo.CreateFile(modelFile)
-	//
-	return "", nil
+	fileRes, err := s.fileRepo.CreateFile(modelFile)
+
+	if err != nil {
+		return "", err
+	}
+
+	action, err := s.actionRepo.GetActionByName("upload")
+
+	if err != nil {
+		return "", err
+	}
+
+	actionLog := models.ActionLog{
+		FolderId:             folderId,
+		FileId:               &fileRes.ID,
+		UserId:               userId,
+		ActionId:             action.ID,
+		FileVersionId:        &version,
+		FilePreviewVersionId: &versionPreview,
+	}
+
+	_, err = s.actionLogRepo.CreateActionLog(actionLog)
+
+	if err != nil {
+		return "", err
+	}
+
+	return fileRes.ID.String(), nil
 }
 
-func setFileURLs(fileType string, url string) (string, string) {
+func generateUniqueName() string {
+	id := uuid.New().String()
+	timestamp := time.Now().UnixNano()
+
+	return fmt.Sprintf("%s-%d", id, timestamp)
+}
+
+func checkNeedConvert(fileType string) bool {
 	microsoftTypes := []string{
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -114,13 +168,11 @@ func setFileURLs(fileType string, url string) (string, string) {
 
 	for _, t := range microsoftTypes {
 		if t == fileType {
-			// TO DO : convert file to pdf and upload to google storage
-			previewUrl := url + "&preview=true"
-			return url, previewUrl
+			return true
 		}
 	}
 
-	return url, url
+	return false
 }
 
 func (s *FileService) checkPermission(userId uuid.UUID, folderId uuid.UUID) error {
@@ -145,3 +197,58 @@ func (s *FileService) checkPermission(userId uuid.UUID, folderId uuid.UUID) erro
 	return libs.ErrUnauthorized
 }
 
+func convertMimeTypeToWord(mimeType string) string {
+	//if start with image
+
+	if strings.HasPrefix(mimeType, "image") {
+		return "image"
+	}
+
+	if strings.HasPrefix(mimeType, "video") {
+		return "video"
+	}
+
+	//audio
+	if strings.HasPrefix(mimeType, "audio") {
+		return "audio"
+	}
+
+	// compress
+	if strings.HasPrefix(mimeType, "application/zip") {
+		return "compress"
+	}
+
+	// text
+	if strings.HasPrefix(mimeType, "text") {
+		return "text"
+	}
+
+	if strings.HasPrefix(mimeType, "audio") {
+		return "audio"
+	}
+
+	switch mimeType {
+	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+		return "word"
+	case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+		return "excel"
+	case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+		return "powerpoint"
+	case "application/vnd.ms-excel":
+		return "excel"
+	case "application/vnd.ms-powerpoint":
+		return "powerpoint"
+	case "application/msword":
+		return "word"
+	case "application/pdf":
+		return "pdf"
+	case "image/jpeg":
+		return "image"
+	case "image/png":
+		return "image"
+	case "image/gif":
+		return "image"
+	default:
+		return ""
+	}
+}

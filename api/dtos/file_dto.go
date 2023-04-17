@@ -20,7 +20,7 @@ func ToFileDto(file models.File) FileDto {
 	return FileDto{
 		Id:   file.ID.String(),
 		Name: file.Name,
-		Url:  file.Urls[0].Url,
+		//Url:  file.Url.Url,
 	}
 }
 

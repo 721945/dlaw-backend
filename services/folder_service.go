@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/721945/dlaw-backend/api/dtos"
+	"github.com/721945/dlaw-backend/infrastructure/google_storage"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
@@ -13,6 +14,7 @@ type FolderService struct {
 	folderRepo         repositories.FolderRepository
 	fileRepo           repositories.FileRepository
 	casePermissionRepo repositories.CasePermissionRepository
+	storageService     google_storage.GoogleStorage
 }
 
 func NewFolderService(
@@ -20,12 +22,14 @@ func NewFolderService(
 	r repositories.FolderRepository,
 	fileRepo repositories.FileRepository,
 	casePermissionRepo repositories.CasePermissionRepository,
+	storageService google_storage.GoogleStorage,
 ) FolderService {
 	return FolderService{
 		logger:             logger,
 		folderRepo:         r,
 		fileRepo:           fileRepo,
 		casePermissionRepo: casePermissionRepo,
+		storageService:     storageService,
 	}
 }
 
@@ -48,14 +52,64 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *model
 	//
 	//folder.SubFolders = subFolders
 
-	files, err := s.fileRepo.GetFilesByFolderId(id)
+	//files, err := s.fileRepo.GetFilesByFolderId(id)
+	files := folder.Files
+
+	// Check if cloudname and previewcloudname is the same or not to avoid duplicate
+	// If it the same just use the cloudname
+	//for i, file := range files {
+	//	if file.CloudName == file.PreviewCloudName {
+	//		files[i].PreviewCloudName = ""
+	//	}
+	//}
+
+	cloudNames := make([]string, len(files))
+	previewCloudNames := make([]string, len(files))
+	downloadNames := make([]string, len(files))
+
+	for i, file := range files {
+		cloudNames[i] = file.CloudName
+		downloadNames[i] = file.Name
+		previewCloudNames[i] = file.PreviewCloudName
+	}
+
+	s.logger.Info("cloudNames: ", cloudNames)
+	s.logger.Info("previewCloudNames: ", previewCloudNames)
+	s.logger.Info("downloadNames: ", downloadNames)
+	//
+	urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
 
 	if err != nil {
 		s.logger.Info(err)
 		return nil, err
 	}
 
-	folder.Files = files
+	s.logger.Info("urls: ", urls)
+	previewUrls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
+	if err != nil {
+		s.logger.Info(err)
+		return nil, err
+	}
+	s.logger.Info("previewUrls: ", previewUrls)
+
+	newFiles := make([]models.File, len(files))
+	for i, file := range files {
+		newFiles[i] = file
+		newFiles[i].Url = &models.FileUrl{
+			Url:        urls[i],
+			PreviewUrl: previewUrls[i],
+		}
+	}
+
+	s.logger.Info("Files: ", newFiles)
+
+	//if err != nil {
+	//	s.logger.Info(err)
+	//	return nil, err
+	//}
+	//
+
+	folder.Files = newFiles
 
 	return folder, nil
 }
@@ -109,16 +163,27 @@ func (s *FolderService) DeleteFolder(id uuid.UUID, userId uuid.UUID) error {
 	return s.folderRepo.DeleteFolder(id)
 }
 
-//func (s *FolderService) ArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
-//
-//	err := s.checkPermission(userId, id)
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	return s.folderRepo.DeleteFolder(id)
-//}
+func (s *FolderService) ArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
+
+	err := s.checkPermission(userId, id)
+
+	if err != nil {
+		return err
+	}
+
+	return s.folderRepo.ArchiveFolder(id)
+}
+
+func (s *FolderService) UnArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
+
+	err := s.checkPermission(userId, id)
+
+	if err != nil {
+		return err
+	}
+
+	return s.folderRepo.UnArchiveFolder(id)
+}
 
 func (s *FolderService) checkPermission(userId uuid.UUID, folderId uuid.UUID) error {
 	folder, err := s.folderRepo.GetFolder(folderId)
