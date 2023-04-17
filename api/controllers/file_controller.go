@@ -151,6 +151,13 @@ func (f FileController) UploadFile(c *gin.Context) {
 	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	//	return
 	//}
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
 
 	file, fileHeader, err := c.Request.FormFile("file")
 
@@ -167,9 +174,9 @@ func (f FileController) UploadFile(c *gin.Context) {
 		}
 	}(file)
 
-	folderId := c.Request.FormValue("folderId")
+	formFolderId := c.Request.FormValue("folderId")
 
-	folderIdInt, err := uuid.Parse(folderId)
+	folderId, err := uuid.Parse(formFolderId)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -181,7 +188,8 @@ func (f FileController) UploadFile(c *gin.Context) {
 		file,
 		fileHeader.Filename,
 		fileHeader.Header.Get("Content-Type"),
-		folderIdInt,
+		folderId,
+		userId.(uuid.UUID),
 	)
 
 	if err != nil {

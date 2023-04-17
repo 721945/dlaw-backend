@@ -5,8 +5,8 @@ import "github.com/google/uuid"
 type CasePermissionLog struct {
 	Base
 	PermissionId uuid.UUID
-	ActionId     uint
-	ActorUserId  uint
+	ActionId     uuid.UUID
+	ActorUserId  uuid.UUID
 	TargetUserId uuid.UUID
-	CaseId       uint
+	CaseId       uuid.UUID
 }

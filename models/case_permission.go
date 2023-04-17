@@ -5,9 +5,9 @@ import "github.com/google/uuid"
 type CasePermission struct {
 	Base
 	UserId       uuid.UUID
-	User         User
+	User         *User
 	CaseId       uuid.UUID
-	Case         Case
+	Case         *Case
 	PermissionId uuid.UUID
-	Permission   Permission
+	Permission   *Permission
 }

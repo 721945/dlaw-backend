@@ -30,7 +30,6 @@ func (r *PermissionRepository) GetPermissionByName(name string) (permission *mod
 
 func (r *PermissionRepository) CreatePermission(permission models.Permission) (models.Permission, error) {
 	return permission, r.db.DB.Create(&permission).Error
-
 }
 
 func (r *PermissionRepository) UpdatePermission(id uuid.UUID, permission models.Permission) error {

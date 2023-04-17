@@ -18,8 +18,11 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 	engine := gin.New()
 
 	gin.ForceConsoleColor()
+
 	logger.Info("Setting up request handler")
+
 	engine.Use(gin.Recovery())
+
 	engine.Use(middleware.ErrorHandler(
 		middleware.Map(ErrInternalServerError).ToResponse(func(c *gin.Context, err error) {
 			logger.Error(err)
@@ -30,6 +33,7 @@ func NewRequestHandler(logger *Logger) RequestHandler {
 
 	engine.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// your custom format
+		//color.Blue("Prints %s in blue.", "text")
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
 			param.TimeStamp.Format(time.RFC1123),

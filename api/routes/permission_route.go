@@ -21,6 +21,7 @@ func (r PermissionRoute) Setup() {
 	{
 		api.GET("", r.ctrl.GetPermissions)
 		api.GET("/:id", r.ctrl.GetPermission)
+		api.GET("/name/:name", r.ctrl.GetPermissionName)
 		api.POST("", r.ctrl.CreatePermission)
 		api.DELETE("/:id", r.ctrl.DeletePermission)
 		api.PUT("/:id", r.ctrl.UpdatePermission)

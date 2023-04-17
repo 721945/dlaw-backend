@@ -26,20 +26,22 @@ func (m JWTAuthMiddleware) Setup() {
 
 func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		authHeader := c.Request.Header.Get("Authorization")
 		t := strings.Split(authHeader, " ")
 		if len(t) == 2 {
 			authToken := t[1]
+
+			m.logger.Info(authToken)
+			
 			user, err := m.service.VerifyToken(authToken)
 
-			m.logger.Info(user)
 			if err != nil {
 				_ = c.Error(libs.ErrUnauthorized)
 				c.Abort()
 				return
 			}
 
-			m.logger.Info(user)
 			m.logger.Info(user.ID)
 
 			c.Set("user", user)
@@ -51,7 +53,7 @@ func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "you are not authorized",
+			"error": "you are not authorized !!",
 		})
 
 		c.Abort()

@@ -65,9 +65,9 @@ func (u UserController) GetMe(c *gin.Context) {
 
 func (u UserController) CreateUser(c *gin.Context) {
 	var input dtos.CreateUserDto
-	trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
+	//trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
+
 	if err := c.ShouldBindJSON(&input); err != nil {
-		//u.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -86,8 +86,8 @@ func (u UserController) CreateUser(c *gin.Context) {
 		Lastname:  input.LastName,
 	}
 
-	//user, err =(u.service).CreateUser(user)
-	user, err = (u.service).WithTrx(trxHandle).CreateUser(user)
+	user, err = (u.service).CreateUser(user)
+	//user, err = (u.service).WithTrx(trxHandle).CreateUser(user)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

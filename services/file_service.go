@@ -10,10 +10,12 @@ import (
 )
 
 type FileService struct {
-	logger         *libs.Logger
-	fileRepo       repositories.FileRepository
-	fileTypeRepo   repositories.FileTypeRepository
-	storageService google_storage.GoogleStorage
+	logger             *libs.Logger
+	fileRepo           repositories.FileRepository
+	fileTypeRepo       repositories.FileTypeRepository
+	storageService     google_storage.GoogleStorage
+	folderRepo         repositories.FolderRepository
+	casePermissionRepo repositories.CasePermissionRepository
 }
 
 func NewFileService(
@@ -21,12 +23,16 @@ func NewFileService(
 	fileRepo repositories.FileRepository,
 	storageService google_storage.GoogleStorage,
 	typeRepo repositories.FileTypeRepository,
+	folderRepo repositories.FolderRepository,
+	casePermissionRepo repositories.CasePermissionRepository,
 ) FileService {
 	return FileService{
-		logger:         logger,
-		fileRepo:       fileRepo,
-		fileTypeRepo:   typeRepo,
-		storageService: storageService,
+		logger:             logger,
+		fileRepo:           fileRepo,
+		fileTypeRepo:       typeRepo,
+		storageService:     storageService,
+		folderRepo:         folderRepo,
+		casePermissionRepo: casePermissionRepo,
 	}
 }
 
@@ -59,32 +65,40 @@ func (s *FileService) UploadFile(
 	fileName string,
 	fileType string,
 	folderId uuid.UUID,
+	userId uuid.UUID,
 ) (string, error) {
-	url, err := s.storageService.UploadFile(file, fileName)
+
+	err := s.checkPermission(userId, folderId)
 
 	if err != nil {
 		return "", err
 	}
 
-	fileT, err := s.fileTypeRepo.GetFileTypeByName(fileType)
+	_, err = s.storageService.UploadFile(file, fileName)
 
 	if err != nil {
 		return "", err
 	}
 
-	var fileUrl models.FileUrl
-
-	fileUrl.Url, fileUrl.PreviewUrl = setFileURLs(fileType, url)
-
-	modelFile := models.File{
-		Name:     fileName,
-		TypeId:   &fileT.ID,
-		Urls:     []models.FileUrl{fileUrl},
-		FolderId: &folderId,
-	}
-
-	_, err = s.fileRepo.CreateFile(modelFile)
-
+	//fileT, err := s.fileTypeRepo.GetFileTypeByName(fileType)
+	//
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//var fileUrl models.FileUrl
+	//
+	//fileUrl.Url, fileUrl.PreviewUrl = setFileURLs(fileType, url)
+	//
+	//modelFile := models.File{
+	//	Name:     fileName,
+	//	TypeId:   &fileT.ID,
+	//	Urls:     []models.FileUrl{fileUrl},
+	//	FolderId: &folderId,
+	//}
+	//
+	//_, err = s.fileRepo.CreateFile(modelFile)
+	//
 	return "", nil
 }
 
@@ -108,3 +122,26 @@ func setFileURLs(fileType string, url string) (string, string) {
 
 	return url, url
 }
+
+func (s *FileService) checkPermission(userId uuid.UUID, folderId uuid.UUID) error {
+	// TODO : Improve to get permission by folder id later
+	folder, err := s.folderRepo.GetFolder(folderId)
+
+	if err != nil {
+		return err
+	}
+
+	performerRole, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(userId, *folder.CaseId)
+
+	if err != nil {
+		return libs.ErrUnauthorized
+	}
+
+	permission := (*performerRole).Permission.Name
+
+	if permission == "owner" || permission == "admin" {
+		return nil
+	}
+	return libs.ErrUnauthorized
+}
+

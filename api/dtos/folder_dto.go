@@ -35,7 +35,12 @@ type CreateFolderDto struct {
 	ParentFolderId string `json:"parentFolderId"`
 }
 
-func (dto CreateFolderDto) ToFolder() models.Folder {
+type UpdateFolderDto struct {
+	Name           *string `json:"name"`
+	ParentFolderId *string `json:"parentFolderId"`
+}
+
+func (dto CreateFolderDto) ToFolder(caseId uuid.UUID) models.Folder {
 
 	parentFolderId, err := uuid.Parse(dto.ParentFolderId)
 
@@ -44,6 +49,7 @@ func (dto CreateFolderDto) ToFolder() models.Folder {
 			Name:           dto.Name,
 			ParentFolderId: nil,
 			IsArchive:      false,
+			CaseId:         &caseId,
 		}
 	}
 
@@ -51,5 +57,23 @@ func (dto CreateFolderDto) ToFolder() models.Folder {
 		Name:           dto.Name,
 		ParentFolderId: &parentFolderId,
 		IsArchive:      false,
+		CaseId:         &caseId,
+	}
+}
+
+func (dto UpdateFolderDto) ToFolder() models.Folder {
+
+	parentFolderId, err := uuid.Parse(*dto.ParentFolderId)
+
+	if err != nil {
+		return models.Folder{
+			Name:           *dto.Name,
+			ParentFolderId: nil,
+		}
+	}
+
+	return models.Folder{
+		Name:           *dto.Name,
+		ParentFolderId: &parentFolderId,
 	}
 }
