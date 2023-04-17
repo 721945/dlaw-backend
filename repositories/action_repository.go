@@ -34,3 +34,7 @@ func (r *ActionRepository) UpdateAction(id uuid.UUID, action models.Action) erro
 func (r *ActionRepository) DeleteAction(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Action{}, id).Error
 }
+
+func (r *ActionRepository) GetActionByName(name string) (action *models.Action, err error) {
+	return action, r.db.DB.Where("name = ?", name).First(&action).Error
+}

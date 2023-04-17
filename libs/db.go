@@ -44,11 +44,12 @@ func NewDatabase(env Env, logger *Logger) Database {
 	//	&models.CasePermissionLog{},
 	//	&models.FileType{},
 	//	&models.File{},
-	//	&models.FileUrl{},
-	//	&models.Folders{},
+	//	&models.Folder{},
 	//	&models.Tag{},
 	//	&models.User{},
 	//)
+	//&models.FileVersion{},
+	//	&models.FileUrl{},
 
 	if err != nil {
 		logger.Fatal("👹 Can't migrate database: ", err)

@@ -29,7 +29,7 @@ func (l Logger) Info(message ...interface{}) {
 }
 
 func (l Logger) Error(v ...any) {
-	l.Logger.Println(v)
+	l.Logger.Println("Error!!!: %+v", v)
 }
 
 func (l Logger) Fatal(v ...any) {

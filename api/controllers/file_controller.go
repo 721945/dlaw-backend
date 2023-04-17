@@ -133,15 +133,15 @@ func (f FileController) GetSignedUrl(c *gin.Context) {
 		return
 	}
 
-	url, err := f.fileService.GetSignedUrl(input.Amount)
+	//url, err := f.fileService.GetSignedUrl(input.Amount)
 
-	if err != nil {
-		f.logger.Error(err)
-		_ = c.Error(err)
-		return
-	}
+	//if err != nil {
+	//	f.logger.Error(err)
+	//	_ = c.Error(err)
+	//	return
+	//}
 
-	c.JSON(http.StatusOK, gin.H{"data": url})
+	c.JSON(http.StatusOK, gin.H{"data": []string{}})
 }
 
 func (f FileController) UploadFile(c *gin.Context) {

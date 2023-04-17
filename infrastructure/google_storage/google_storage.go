@@ -3,22 +3,38 @@ package google_storage
 import (
 	"cloud.google.com/go/storage"
 	"context"
+	"fmt"
 	"github.com/721945/dlaw-backend/infrastructure/google_vision"
 	"github.com/721945/dlaw-backend/libs"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
+	"strconv"
+	"sync"
 	"time"
 )
 
 type GoogleStorage struct {
-	bucket string
-	logger *libs.Logger
-	vision google_vision.GoogleVision
+	bucket      string
+	logger      *libs.Logger
+	vision      google_vision.GoogleVision
+	clientEmail string
+	privateKey  string
 }
 
-func NewGoogleStorage(env libs.Env, logger *libs.Logger, vision google_vision.GoogleVision) GoogleStorage {
-	return GoogleStorage{bucket: env.Bucket, logger: logger, vision: vision}
+func NewGoogleStorage(
+	env libs.Env,
+	logger *libs.Logger,
+	vision google_vision.GoogleVision,
+) GoogleStorage {
+	return GoogleStorage{
+		bucket:      env.Bucket,
+		logger:      logger,
+		vision:      vision,
+		clientEmail: env.GoogleCloudStorageClientEmail,
+		privateKey:  env.GoogleCloudStoragePrivateKey,
+	}
 }
 
 func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string, error) {
@@ -53,55 +69,77 @@ func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string,
 		return "", err
 	}
 
-	url := "https://storage.cloud.google.com/" + g.bucket + "/" + fileName
+	attrs, err := obj.Attrs(ctx)
 
-	//sourceUrl := "gs://" + g.bucket + "/" + fileName
-	//targetUrl := "gs://" + g.bucket + "/" + fileName + ".txt"
-
-	//visionText, err := g.vision.GetTextFromPdfUrl(*obj)
-	//visionText, err := g.vision.GetTextFromPdfUrl(sourceUrl, targetUrl)
-
-	return url, nil
-}
-
-func (g GoogleStorage) GetSignedUrl(amount int) ([]string, error) {
-	var urls []string
-	for i := 0; i < amount; i++ {
-		url, err := g.getSignedUrl("abc.pdf")
-		if err != nil {
-			return nil, err
-		}
-		urls = append(urls, url)
-	}
-	return urls, nil
-}
-
-func (g GoogleStorage) getSignedUrl(objectName string) (string, error) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return "", err
 	}
+
+	version := strconv.FormatInt(attrs.Generation, 10)
+
+	return version, nil
+}
+
+func (g GoogleStorage) GetSignedUrls(names, versions, fileNames []string) ([]string, error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+
+	if err != nil {
+		return []string{}, err
+	}
+
 	defer func(client *storage.Client) {
 		err := client.Close()
 		if err != nil {
+			g.logger.Error("Error closing Google Cloud Storage client: %v", err)
 			panic(err)
 		}
 	}(client)
 
+	// TODO : Change this to read from env
+	expirationTime := time.Now().Add(time.Hour * 2)
+
 	bucket := client.Bucket(g.bucket)
 
+	// TODO : Make this more security
 	opts := &storage.SignedURLOptions{
-		Method:      http.MethodPut,
-		ContentType: "application/octet-stream",
-		Expires:     time.Now().Add(10 * time.Minute),
+		GoogleAccessID: g.clientEmail,
+		Method:         http.MethodGet,
+		Expires:        expirationTime,
+		PrivateKey:     []byte(g.privateKey),
 	}
 
-	url, err := bucket.SignedURL(objectName, opts)
+	urls := make([]string, len(names))
 
-	if err != nil {
-		return "", err
+	if len(versions) == 0 {
+		versions = make([]string, len(names))
 	}
-	return url, nil
+	var wg sync.WaitGroup
+	for i, name := range names {
+		wg.Add(1)
+		go func(i int, name string, version string, downloadName string) {
+			defer wg.Done()
 
+			objectName := name
+
+			if version != "" {
+				objectName = fmt.Sprintf("%s/%s", name, version)
+			}
+
+			url, err := bucket.SignedURL(objectName, opts)
+
+			if err != nil {
+				log.Printf("Error signing URL for object %s: %v", name, err)
+			} else {
+				urls[i] = url
+				urls[i] += "&response-content-disposition=attachment;filename=" + downloadName
+			}
+		}(i, name, versions[i], fileNames[i])
+	}
+
+	wg.Wait()
+
+	return urls, nil
 }
+
+//func signed
