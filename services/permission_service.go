@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
@@ -22,14 +23,32 @@ func (s *PermissionService) GetPermissions() (permissions []models.Permission, e
 
 }
 
-func (s *PermissionService) GetPermission(id uuid.UUID) (permission *models.Permission, err error) {
-	return s.permissionRepo.GetPermission(id)
+func (s *PermissionService) GetPermission(id uuid.UUID) (permissionDto *dtos.PermissionDto, err error) {
+	permission, err := s.permissionRepo.GetPermission(id)
 
+	if err != nil {
+		return permissionDto, err
+	}
+
+	permissionDto = dtos.ToPermissionDto(permission)
+
+	return permissionDto, nil
+}
+
+func (s *PermissionService) GetPermissionByName(name string) (permissionDto *dtos.PermissionDto, err error) {
+	permission, err := s.permissionRepo.GetPermissionByName(name)
+
+	if err != nil {
+		return permissionDto, err
+	}
+
+	permissionDto = dtos.ToPermissionDto(permission)
+
+	return permissionDto, nil
 }
 
 func (s *PermissionService) CreatePermission(permission models.Permission) (models.Permission, error) {
 	return s.permissionRepo.CreatePermission(permission)
-
 }
 
 func (s *PermissionService) UpdatePermission(id uuid.UUID, permission models.Permission) error {

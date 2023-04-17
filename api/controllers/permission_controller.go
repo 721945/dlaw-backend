@@ -46,7 +46,20 @@ func (p PermissionController) GetPermission(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"data": dtos.ToPermissionDto(*permission)})
+	c.JSON(200, gin.H{"data": permission})
+}
+func (p PermissionController) GetPermissionName(c *gin.Context) {
+	name := c.Param("name")
+
+	permission, err := p.permissionService.GetPermissionByName(name)
+
+	if err != nil {
+		p.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{"data": permission})
 }
 
 func (p PermissionController) CreatePermission(c *gin.Context) {
@@ -66,7 +79,7 @@ func (p PermissionController) CreatePermission(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, gin.H{"data": dtos.ToPermissionDto(permission)})
+	c.JSON(201, gin.H{"data": permission})
 }
 
 func (p PermissionController) UpdatePermission(c *gin.Context) {

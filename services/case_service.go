@@ -17,8 +17,22 @@ type CaseService struct {
 	permissionLogRepo  repositories.CasePermissionLogRepository
 }
 
-func NewCaseService(logger *libs.Logger, r repositories.CaseRepository, f repositories.FolderRepository) CaseService {
-	return CaseService{logger: logger, caseRepo: r, folderRepo: f}
+func NewCaseService(
+	logger *libs.Logger,
+	r repositories.CaseRepository,
+	f repositories.FolderRepository,
+	p repositories.PermissionRepository,
+	cp repositories.CasePermissionRepository,
+	pl repositories.CasePermissionLogRepository,
+) CaseService {
+	return CaseService{
+		logger:             logger,
+		caseRepo:           r,
+		folderRepo:         f,
+		permissionRepo:     p,
+		casePermissionRepo: cp,
+		permissionLogRepo:  pl,
+	}
 }
 
 func (s CaseService) GetCases() (cases []models.Case, err error) {
@@ -29,7 +43,7 @@ func (s CaseService) GetCase(id uuid.UUID) (mCase *models.Case, err error) {
 	return s.caseRepo.GetCase(id)
 }
 
-func (s CaseService) CreateCase(dto dtos.CreateCaseDto, userId uuid.UUID) (models.Case, error) {
+func (s CaseService) CreateCase(dto dtos.CreateCaseDto, userId uuid.UUID) (string, error) {
 
 	mCase := dto.ToCase(models.Folder{
 		Name:      dto.Name,
@@ -39,13 +53,14 @@ func (s CaseService) CreateCase(dto dtos.CreateCaseDto, userId uuid.UUID) (model
 	permission, err := s.permissionRepo.GetPermissionByName("owner")
 
 	if err != nil {
-		return mCase, err
+		return "", err
 	}
 
 	mCase, err = s.caseRepo.CreateCase(mCase)
 
 	if err != nil {
-		return mCase, err
+		return "", err
+
 	}
 
 	casePermission := models.CasePermission{
@@ -54,13 +69,15 @@ func (s CaseService) CreateCase(dto dtos.CreateCaseDto, userId uuid.UUID) (model
 		PermissionId: permission.ID,
 	}
 
+	s.logger.Info(casePermission)
+
 	_, err = s.casePermissionRepo.CreateCasePermission(casePermission)
 
 	if err != nil {
-		return mCase, err
+		return "", err
 	}
 
-	return mCase, nil
+	return mCase.ID.String(), nil
 }
 
 func (s CaseService) UpdateCase(id uuid.UUID, mCase models.Case) error {
@@ -71,32 +88,31 @@ func (s CaseService) DeleteCase(id uuid.UUID) error {
 	return s.caseRepo.DeleteCase(id)
 }
 
-func (s CaseService) GetOwnCases(id uuid.UUID) (cases []dtos.CaseDetailDto, err error) {
+func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, err error) {
 
 	permissionCases, err := s.casePermissionRepo.GetCasePermissionsByUserId(id)
 
-	s.logger.Info(permissionCases)
-	//
-	//if err != nil {
-	//	return cases, err
-	//}
+	if err != nil {
+		return casesDto, err
+	}
 
-	//for _, permissionCase := range permissionCases {
-	//	//mCase, err := s.caseRepo.GetCase(permissionCase.CaseId)
-	//
-	//	if err != nil {
-	//		return cases, err
-	//	}
-	//
-	//	//cases = append(cases, dtos.CaseDetailDto{
-	//	//	ID:        mCase.ID,
-	//	//	Name:      mCase.Name,
-	//	//	IsArchive: mCase.IsArchive,
-	//	//	IsPrivate: mCase.IsPrivate,
-	//	//	IsPublic:  mCase.IsPublic,
-	//	//	UserId:    mCase.UserId,
-	//	//})
-	//}
+	caseIds := make([]uuid.UUID, len(permissionCases))
 
-	return cases, nil
+	for i, permissionCase := range permissionCases {
+		caseIds[i] = permissionCase.CaseId
+	}
+
+	cases, err := s.caseRepo.GetCasesByIds(caseIds)
+
+	if err != nil {
+		return casesDto, err
+	}
+
+	casesDto = make([]dtos.CaseDetailDto, len(cases))
+	
+	for _, mCase := range cases {
+		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
+	}
+
+	return casesDto, nil
 }

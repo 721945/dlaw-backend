@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
@@ -8,13 +9,24 @@ import (
 )
 
 type FolderService struct {
-	logger     *libs.Logger
-	folderRepo repositories.FolderRepository
-	fileRepo   repositories.FileRepository
+	logger             *libs.Logger
+	folderRepo         repositories.FolderRepository
+	fileRepo           repositories.FileRepository
+	casePermissionRepo repositories.CasePermissionRepository
 }
 
-func NewFolderService(logger *libs.Logger, r repositories.FolderRepository, fileRepo repositories.FileRepository) FolderService {
-	return FolderService{logger: logger, folderRepo: r, fileRepo: fileRepo}
+func NewFolderService(
+	logger *libs.Logger,
+	r repositories.FolderRepository,
+	fileRepo repositories.FileRepository,
+	casePermissionRepo repositories.CasePermissionRepository,
+) FolderService {
+	return FolderService{
+		logger:             logger,
+		folderRepo:         r,
+		fileRepo:           fileRepo,
+		casePermissionRepo: casePermissionRepo,
+	}
 }
 
 func (s *FolderService) GetFolders() (folders []models.Folder, err error) {
@@ -22,21 +34,19 @@ func (s *FolderService) GetFolders() (folders []models.Folder, err error) {
 }
 
 func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *models.Folder, err error) {
-	folder, err = s.folderRepo.GetFolder(id)
+	folder, err = s.folderRepo.GetFolderContent(id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	subFolders, err := s.folderRepo.GetSubFolders(id)
+	//subFolders, err := s.folderRepo.GetSubFolders(id)
 
-	s.logger.Info(subFolders)
-
-	if err != nil {
-		return nil, err
-	}
-
-	folder.SubFolders = subFolders
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//folder.SubFolders = subFolders
 
 	files, err := s.fileRepo.GetFilesByFolderId(id)
 
@@ -50,8 +60,23 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *model
 	return folder, nil
 }
 
-func (s *FolderService) CreateFolder(folder models.Folder) (*uuid.UUID, error) {
-	folder, err := s.folderRepo.CreateFolder(folder)
+func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto) (*uuid.UUID, error) {
+
+	parentFolderId, err := uuid.Parse(dto.ParentFolderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	parent, err := s.folderRepo.GetFolderContent(parentFolderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	folder := dto.ToFolder(*parent.CaseId)
+
+	folder, err = s.folderRepo.CreateFolder(folder)
 
 	if err != nil {
 		return nil, err
@@ -60,10 +85,58 @@ func (s *FolderService) CreateFolder(folder models.Folder) (*uuid.UUID, error) {
 	return &folder.ID, nil
 }
 
-func (s *FolderService) UpdateFolder(id uuid.UUID, folder models.Folder) error {
+func (s *FolderService) UpdateFolder(id uuid.UUID, dto dtos.UpdateFolderDto, userId uuid.UUID) error {
+
+	err := s.checkPermission(userId, id)
+
+	if err != nil {
+		return err
+	}
+
+	folder := dto.ToFolder()
+
 	return s.folderRepo.UpdateFolder(id, folder)
 }
 
-func (s *FolderService) DeleteFolder(id uuid.UUID) error {
+func (s *FolderService) DeleteFolder(id uuid.UUID, userId uuid.UUID) error {
+
+	err := s.checkPermission(userId, id)
+
+	if err != nil {
+		return err
+	}
+
 	return s.folderRepo.DeleteFolder(id)
+}
+
+//func (s *FolderService) ArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
+//
+//	err := s.checkPermission(userId, id)
+//
+//	if err != nil {
+//		return err
+//	}
+//
+//	return s.folderRepo.DeleteFolder(id)
+//}
+
+func (s *FolderService) checkPermission(userId uuid.UUID, folderId uuid.UUID) error {
+	folder, err := s.folderRepo.GetFolder(folderId)
+
+	if err != nil {
+		return err
+	}
+
+	performerRole, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(userId, *folder.CaseId)
+
+	if err != nil {
+		return libs.ErrUnauthorized
+	}
+
+	permission := (*performerRole).Permission.Name
+
+	if permission == "owner" || permission == "admin" {
+		return nil
+	}
+	return libs.ErrUnauthorized
 }

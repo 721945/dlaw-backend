@@ -71,7 +71,7 @@ func (t FolderController) CreateFolder(c *gin.Context) {
 		return
 	}
 
-	folder, err := t.folderService.CreateFolder(input.ToFolder())
+	folder, err := t.folderService.CreateFolder(input)
 	//
 	if err != nil {
 		t.logger.Error(err)
@@ -83,27 +83,41 @@ func (t FolderController) CreateFolder(c *gin.Context) {
 }
 
 func (t FolderController) UpdateFolder(c *gin.Context) {
-	//var input dtos.UpdateFolderDto
+	var input dtos.UpdateFolderDto
 	//
-	//var paramId = c.Param("id")
+	var paramId = c.Param("id")
 	//
-	//id, err := uuid.Parse(paramId)
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
 	//
-	//if err := c.ShouldBindJSON(&input); err != nil {
-	//	t.logger.Error(err)
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
-	//
-	//err = t.folderService.UpdateFolder(id, input.ToModel())
-	//
-	//if err != nil {
-	//	t.logger.Error(err)
-	//	_ = c.Error(err)
-	//	return
-	//}
-	//
-	//c.JSON(http.StatusOK, gin.H{})
+	if err := c.ShouldBindJSON(&input); err != nil {
+		t.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = t.folderService.UpdateFolder(id, input, userId.(uuid.UUID))
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (t FolderController) DeleteFolder(c *gin.Context) {
@@ -117,7 +131,45 @@ func (t FolderController) DeleteFolder(c *gin.Context) {
 		return
 	}
 
-	err = t.folderService.DeleteFolder(id)
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = t.folderService.DeleteFolder(id, userId.(uuid.UUID))
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
+}
+
+func (t FolderController) ArchiveFolder(c *gin.Context) {
+	var paramId = c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = t.folderService.DeleteFolder(id, userId.(uuid.UUID))
 
 	if err != nil {
 		t.logger.Error(err)

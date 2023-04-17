@@ -16,11 +16,11 @@ func NewCaseRepository(logger *libs.Logger, db libs.Database) CaseRepository {
 }
 
 func (r *CaseRepository) GetCases() (cases []models.Case, err error) {
-	return cases, r.db.DB.Find(&cases).Preload("Folders").Error
+	return cases, r.db.DB.Preload("Folders").Find(&cases).Error
 }
 
 func (r *CaseRepository) GetCase(id uuid.UUID) (mCase *models.Case, err error) {
-	return mCase, r.db.DB.Preload("Folders").First(&mCase, id).Error
+	return mCase, r.db.DB.Preload("Folders", "parent_folder_id = ?", nil).First(&mCase, id).Error
 }
 
 func (r *CaseRepository) CreateCase(mCase models.Case) (models.Case, error) {
@@ -33,4 +33,8 @@ func (r *CaseRepository) UpdateCase(id uuid.UUID, mCase models.Case) error {
 
 func (r *CaseRepository) DeleteCase(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Case{}, id).Error
+}
+
+func (r *CaseRepository) GetCasesByIds(caseIds []uuid.UUID) (cases []models.Case, err error) {
+	return cases, r.db.DB.Preload("Folders", "parent_folder_id = ?", nil).Where("id IN (?)", caseIds).Find(&cases).Error
 }

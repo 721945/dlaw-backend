@@ -26,6 +26,7 @@ func (m CorsMiddleware) Setup() {
 	m.logger.Info("Setting up cors middleware")
 
 	debug := m.env.Environment == "development"
+
 	if debug {
 		m.logger.Info("Cors is enabled in development mode")
 	}

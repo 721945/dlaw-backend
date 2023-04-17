@@ -29,8 +29,8 @@ func (p UpdatePermissionDto) ToModel() models.Permission {
 	}
 }
 
-func ToPermissionDto(permission models.Permission) PermissionDto {
-	return PermissionDto{
+func ToPermissionDto(permission *models.Permission) *PermissionDto {
+	return &PermissionDto{
 		Id:   permission.ID.String(),
 		Name: permission.Name,
 	}

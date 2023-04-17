@@ -19,18 +19,31 @@ func NewUserRoute(
 	userController controllers.UserController,
 	authMiddleware middlewares.JWTAuthMiddleware,
 ) UserRoute {
-	return UserRoute{logger: logger, handler: handler, userController: userController, authMiddleware: authMiddleware}
+	return UserRoute{
+		logger:         logger,
+		handler:        handler,
+		userController: userController,
+		authMiddleware: authMiddleware,
+	}
 }
 
 func (u UserRoute) Setup() {
 	u.logger.Info("Setting user routes")
-	api := u.handler.Gin.Group("/users")
-	//.Use(u.authMiddleware.Handler())
+	newApi := u.handler.Gin.Group("/users")
 	{
-		api.POST("", u.userController.CreateUser)
-		api.GET("", u.userController.GetUsers)
-		api.GET("/:id", u.userController.GetUser)
-		api.GET("/me", u.userController.GetMe).Use(u.authMiddleware.Handler())
-		api.PUT("/:id", u.userController.UpdateUser)
+		newApi.POST("", u.userController.CreateUser)
+		newApi.GET("", u.userController.GetUsers)
+		newApi.GET("/:id", u.userController.GetUser)
+		newApi.GET("/me", u.userController.GetMe)
+		newApi.PUT("/:id", u.userController.UpdateUser)
 	}
+	//}	api := u.handler.Gin.Group("/users")
+	//{
+	//	api.POST("", u.userController.CreateUser)
+	//	api.GET("", u.userController.GetUsers)
+	//	api.GET("/:id", u.userController.GetUser)
+	//	api.GET("/me", u.userController.GetMe).Use(u.authMiddleware.Handler())
+	//	api.PUT("/:id", u.userController.UpdateUser)
+	//}
+	//
 }

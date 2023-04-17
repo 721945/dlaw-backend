@@ -1,6 +1,8 @@
 package libs
 
-import "log"
+import (
+	"log"
+)
 
 type Logger struct {
 	Logger *log.Logger
@@ -18,8 +20,12 @@ func (l Logger) GetGinLogger() *log.Logger {
 	return l.Logger
 }
 
-func (l Logger) Info(message ...any) {
-	l.Logger.Println(message)
+func (l Logger) Info(message ...interface{}) {
+	if len(message) > 0 {
+		l.Logger.Printf("INFO: %+v --> %+v\n", message[0], message[1:])
+	} else {
+		l.Logger.Println("INFO: No message provided")
+	}
 }
 
 func (l Logger) Error(v ...any) {

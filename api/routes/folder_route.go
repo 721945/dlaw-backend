@@ -30,7 +30,8 @@ func (r FolderRoute) Setup() {
 		api.GET("", r.controller.GetFolders)
 		api.POST("", r.controller.CreateFolder)
 		api.GET("/:id", r.controller.GetFolder)
-		api.DELETE("", r.controller.DeleteFolder)
+		api.DELETE("/:id", r.controller.DeleteFolder)
+		api.DELETE("/:id/archive", r.controller.ArchiveFolder)
 		api.PUT("", r.controller.UpdateFolder)
 	}
 }

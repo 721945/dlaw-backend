@@ -19,6 +19,7 @@ type CaseDetailDto struct {
 	ShareWith []UserDto `json:"shareWith"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	FolderId  string    `json:"folderId"`
 }
 
 type OwnerDto struct {
@@ -42,6 +43,23 @@ func (dto CreateCaseDto) ToCase(folder models.Folder) models.Case {
 		Title:           dto.Name,
 		CaseTitle:       dto.CaseTitle,
 		CaseDetail:      dto.CaseContent,
-		Folder:          folder,
+		Folders:         []models.Folder{folder},
+		Email:           dto.Email,
+	}
+}
+
+func ToCaseDto(mCase models.Case) CaseDetailDto {
+	return CaseDetailDto{
+		Id:   mCase.ID.String(),
+		Name: mCase.Title,
+		Tags: ToTagDtos(mCase.Folders[0].Tags),
+		Owner: OwnerDto{
+			FirstName: "John",
+			LastName:  "Doe",
+		},
+		ShareWith: []UserDto{},
+		CreatedAt: mCase.CreatedAt,
+		UpdatedAt: mCase.UpdatedAt,
+		FolderId:  mCase.Folders[0].ID.String(),
 	}
 }
