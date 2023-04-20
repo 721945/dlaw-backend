@@ -22,7 +22,7 @@ func (l Logger) GetGinLogger() *log.Logger {
 
 func (l Logger) Info(message ...interface{}) {
 	if len(message) > 0 {
-		l.Logger.Printf("INFO: %+v --> %+v\n", message[0], message[1:])
+		l.Logger.Printf("INFO: %+v ", message)
 	} else {
 		l.Logger.Println("INFO: No message provided")
 	}
