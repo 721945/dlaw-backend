@@ -1,11 +1,15 @@
 package services
 
 import (
+	"fmt"
+	"github.com/721945/dlaw-backend/infrastructure/smtp"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"math/rand"
+	"time"
 )
 
 type UserService interface {
@@ -16,11 +20,17 @@ type UserService interface {
 	GetUser(id uuid.UUID) (*models.User, error)
 	GetUsers() ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
+	ForgetPassword(email string) error
 }
 
 type userService struct {
 	userRepo repositories.UserRepository
 	logger   *libs.Logger
+	smtp     smtp.SMTP
+}
+
+func NewUserService(userRepo repositories.UserRepository, logger *libs.Logger, smtp smtp.SMTP) UserService {
+	return &userService{userRepo: userRepo, logger: logger, smtp: smtp}
 }
 
 func (u userService) WithTrx(trxHandle *gorm.DB) UserService {
@@ -56,6 +66,29 @@ func (u userService) GetUserByEmail(email string) (user *models.User, err error)
 	return u.userRepo.GetUserByEmail(email)
 }
 
-func NewUserService(r repositories.UserRepository, logger *libs.Logger) UserService {
-	return &userService{userRepo: r, logger: logger}
+func (u userService) ForgetPassword(email string) error {
+	user, err := u.userRepo.GetUserByEmail(email)
+
+	if err != nil {
+		return err
+	}
+
+	otp := generateOTP()
+	user.OtpSecret = &otp
+	*user.OtpExpiredAt = time.Now().Add(time.Minute * 5)
+
+	err = u.userRepo.UpdateUser(user.ID, *user)
+
+	if err != nil {
+		return err
+	}
+
+	// send email
+	return nil
+}
+
+func generateOTP() string {
+	rand.Seed(time.Now().UnixNano())
+	otp := rand.Intn(999999)
+	return fmt.Sprintf("%06d", otp)
 }

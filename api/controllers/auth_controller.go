@@ -51,3 +51,22 @@ func (ctrl AuthController) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": token})
 
 }
+
+func (ctrl AuthController) forgetPassword(c *gin.Context) {
+
+	email := c.PostForm("email")
+
+	if email == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	err := ctrl.userService.ForgetPassword(email)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "ok"})
+}

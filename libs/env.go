@@ -40,12 +40,6 @@ func NewEnv() Env {
 
 	//log.Fatal("ERROR 1")
 
-	viper.SetConfigType("env")
-
-	viper.SetConfigFile(".env")
-
-	log.Println(viper.GetString("DB_HOST"))
-
 	log.Println("👻 Loaded .env file")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("👹 Can't read .env file")
@@ -57,8 +51,6 @@ func NewEnv() Env {
 	if err := viper.Unmarshal(&env); err != nil {
 		log.Println("👹 Can't loaded: ", err)
 	}
-
-	log.Println(env)
 
 	return env
 }

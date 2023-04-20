@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"log"
+	"os"
+	"time"
 )
 
 // Config : Unused here
@@ -19,19 +23,28 @@ type Database struct {
 	DB *gorm.DB
 }
 
-func NewDatabase(env Env, logger *Logger) Database {
+func NewDatabase(env Env, myLogger *Logger) Database {
 	var url string
 
 	url = fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=verify-full TimeZone=Asia/Bangkok", env.DBHost, env.DBUser, env.DBPassword, env.DBName)
 	//url = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Bangkok", env.DBHost, env.DBUser, env.DBPassword, env.DBName, env.DBPort)
-
-	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Second, // Slow SQL threshold
+			LogLevel:      logger.Info, // Log level
+			Colorful:      true,        // Enable color
+		},
+	)
+	db, err := gorm.Open(postgres.Open(url), &gorm.Config{
+		Logger: newLogger,
+	})
 
 	if err != nil {
-		logger.Fatal("👹 Can't connect to database: ", err)
+		myLogger.Fatal("👹 Can't connect to database: ", err)
 	}
 
-	logger.Info("👻 Connected to database - 1")
+	myLogger.Info("👻 Connected to database - 1")
 
 	// Uncomment if want to Migrate the schema
 	//err = db.AutoMigrate(
@@ -52,7 +65,7 @@ func NewDatabase(env Env, logger *Logger) Database {
 	//	&models.FileUrl{},
 
 	if err != nil {
-		logger.Fatal("👹 Can't migrate database: ", err)
+		myLogger.Fatal("👹 Can't migrate database: ", err)
 	}
 
 	return Database{DB: db}
