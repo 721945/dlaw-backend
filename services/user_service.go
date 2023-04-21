@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/infrastructure/smtp"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
@@ -17,7 +18,7 @@ type UserService interface {
 	CreateUser(user models.User) (models.User, error)
 	UpdateUser(id uuid.UUID, user models.User) error
 	DeleteUser(id uuid.UUID) error
-	GetUser(id uuid.UUID) (*models.User, error)
+	GetUser(id uuid.UUID) (*dtos.UserDto, error)
 	GetUsers() ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	ForgetPassword(email string) error
@@ -54,8 +55,19 @@ func (u userService) DeleteUser(id uuid.UUID) error {
 	return u.userRepo.DeleteUser(id)
 }
 
-func (u userService) GetUser(id uuid.UUID) (*models.User, error) {
-	return u.userRepo.GetUser(id)
+func (u userService) GetUser(id uuid.UUID) (*dtos.UserDto, error) {
+	user, err := u.userRepo.GetUser(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dtos.UserDto{
+		ID:        user.ID.String(),
+		FirstName: user.Firstname,
+		LastName:  user.Lastname,
+		Email:     user.Email,
+	}, nil
 }
 
 func (u userService) GetUsers() ([]models.User, error) {

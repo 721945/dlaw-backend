@@ -39,7 +39,7 @@ func (s CaseService) GetCases() (cases []models.Case, err error) {
 	return s.caseRepo.GetCases()
 }
 
-func (s CaseService) GetCase(id uuid.UUID) (mCase *models.Case, err error) {
+func (s CaseService) GetCase(id, userId uuid.UUID) (mCase *models.Case, err error) {
 	return s.caseRepo.GetCase(id)
 }
 
@@ -80,8 +80,27 @@ func (s CaseService) CreateCase(dto dtos.CreateCaseDto, userId uuid.UUID) (strin
 	return mCase.ID.String(), nil
 }
 
-func (s CaseService) UpdateCase(id uuid.UUID, mCase models.Case) error {
-	return s.caseRepo.UpdateCase(id, mCase)
+func (s CaseService) UpdateCase(id uuid.UUID, dto dtos.UpdateCaseDto, userId uuid.UUID) error {
+	// Need to check permission before
+	hasPermission, err := s.checkPermission(id, userId)
+
+	if err != nil {
+		return err
+	}
+
+	if !hasPermission {
+		return libs.ErrUnauthorized
+	}
+
+	mCase := dto.ToModel()
+
+	err = s.caseRepo.UpdateCase(id, mCase)
+
+	//if err != nil {
+	//	return err
+	//}
+
+	return err
 }
 
 func (s CaseService) DeleteCase(id uuid.UUID) error {
@@ -109,10 +128,24 @@ func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, e
 	}
 
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
-	
+
 	for _, mCase := range cases {
 		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
 	}
 
 	return casesDto, nil
+}
+
+func (s CaseService) checkPermission(caseId uuid.UUID, userId uuid.UUID) (bool, error) {
+	permissionCase, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(caseId, userId)
+
+	if err != nil {
+		return false, err
+	}
+
+	if permissionCase.Permission.Name == "owner" {
+		return true, nil
+	}
+
+	return false, nil
 }
