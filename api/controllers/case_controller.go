@@ -31,6 +31,13 @@ func (ctrl CaseController) GetCases(c *gin.Context) {
 
 func (ctrl CaseController) GetCase(c *gin.Context) {
 
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
 	paramId := c.Param("id")
 
 	id, err := uuid.Parse(paramId)
@@ -41,7 +48,7 @@ func (ctrl CaseController) GetCase(c *gin.Context) {
 		return
 	}
 
-	mCase, err := ctrl.caseService.GetCase(id)
+	mCase, err := ctrl.caseService.GetCase(id, userId.(uuid.UUID))
 
 	if err != nil {
 		ctrl.logger.Error(err)
@@ -106,5 +113,45 @@ func (ctrl CaseController) GetOwnCases(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"data": mCase,
+	})
+}
+
+func (ctrl CaseController) UpdateCase(c *gin.Context) {
+
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	var input dtos.UpdateCaseDto
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.UpdateCase(id, input, userId.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": "ok",
 	})
 }

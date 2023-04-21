@@ -12,8 +12,8 @@ type SMTP struct {
 	Password string
 }
 
-func NewSMTP() *SMTP {
-	return &SMTP{
+func NewSMTP() SMTP {
+	return SMTP{
 		Host:     "smtp.gmail.com",
 		Port:     587,
 		Username: "dlaw.project@gmail.com",
