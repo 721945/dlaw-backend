@@ -11,7 +11,7 @@ type Case struct {
 	AppointmentId   *uint
 	IsArchive       bool                `gorm:"default:false"`
 	Folders         []Folder            `gorm:"foreignKey:CaseId"`
-	CasePermission  []CasePermission    `gorm:"foreignKey:CaseId"`
+	CasePermissions []CasePermission    `gorm:"foreignKey:CaseId"`
 	PermissionLogs  []CasePermissionLog `gorm:"foreignKey:CaseId"`
 	CaseUsedLogs    []CaseUsedLog       `gorm:"foreignKey:CaseId"`
 	Appointments    []Appointment       `gorm:"foreignKey:CaseId"`

@@ -36,7 +36,7 @@ func (r *CaseRepository) DeleteCase(id uuid.UUID) error {
 }
 
 func (r *CaseRepository) GetCasesByIds(caseIds []uuid.UUID, isArchive bool) (cases []models.Case, err error) {
-	return cases, r.db.DB.Preload("Folders", "parent_folder_id IS NULL").Where("id IN (?) AND is_archive = ?", caseIds, isArchive).Find(&cases).Error
+	return cases, r.db.DB.Preload("Folders", "parent_folder_id IS NULL").Preload("CasePermissions").Preload("CasePermissions.User").Preload("CasePermissions.Permission").Where("id IN (?) AND is_archive = ?", caseIds, isArchive).Find(&cases).Error
 }
 
 func (r *CaseRepository) GetCasesByFolderId(folderId uuid.UUID) (cases []models.Case, err error) {
