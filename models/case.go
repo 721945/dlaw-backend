@@ -9,6 +9,7 @@ type Case struct {
 	CaseDetail      *string
 	Email           *string
 	AppointmentId   *uint
+	IsArchive       bool                `gorm:"default:false"`
 	Folders         []Folder            `gorm:"foreignKey:CaseId"`
 	CasePermission  []CasePermission    `gorm:"foreignKey:CaseId"`
 	PermissionLogs  []CasePermissionLog `gorm:"foreignKey:CaseId"`

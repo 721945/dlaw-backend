@@ -35,10 +35,11 @@ func (r CaseRoute) Setup() {
 		api.GET("", r.caseCtrl.GetCases)
 		api.POST("", r.caseCtrl.CreateCase)
 		api.GET("/:id", r.caseCtrl.GetCase)
+		api.GET("/archived", r.caseCtrl.GetArchivedCases)
 		api.GET("/me", r.caseCtrl.GetOwnCases)
 		api.GET("/freq", r.caseCtrl.GetOwnCases)
 		api.PATCH("/:id", r.caseCtrl.UpdateCase)
-		//api.DELETE("", r.caseCtrl.DeleteCase)
+		api.PATCH("/:id/archive", r.caseCtrl.ArchiveCase)
 		//api.PUT("", r.caseCtrl.UpdateCase)
 	}
 }

@@ -35,6 +35,18 @@ func (r *CaseRepository) DeleteCase(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Case{}, id).Error
 }
 
-func (r *CaseRepository) GetCasesByIds(caseIds []uuid.UUID) (cases []models.Case, err error) {
-	return cases, r.db.DB.Preload("Folders", "parent_folder_id IS NULL").Where("id IN (?)", caseIds).Find(&cases).Error
+func (r *CaseRepository) GetCasesByIds(caseIds []uuid.UUID, isArchive bool) (cases []models.Case, err error) {
+	return cases, r.db.DB.Preload("Folders", "parent_folder_id IS NULL").Where("id IN (?) AND is_archive = ?", caseIds, isArchive).Find(&cases).Error
+}
+
+func (r *CaseRepository) GetCasesByFolderId(folderId uuid.UUID) (cases []models.Case, err error) {
+	return cases, r.db.DB.Preload("Folders", "parent_folder_id = ?", folderId).Find(&cases).Error
+}
+
+func (r *CaseRepository) ArchiveCase(id uuid.UUID) error {
+	return r.db.DB.Model(&models.Case{}).Where("id = ?", id).Update("is_archive", true).Error
+
+}
+func (r *CaseRepository) UnArchiveCase(id uuid.UUID) error {
+	return r.db.DB.Model(&models.Case{}).Where("id = ?", id).Update("is_archive", false).Error
 }

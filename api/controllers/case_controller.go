@@ -26,7 +26,7 @@ func (ctrl CaseController) GetCases(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, cases)
+	c.JSON(200, gin.H{"data": cases})
 }
 
 func (ctrl CaseController) GetCase(c *gin.Context) {
@@ -153,5 +153,123 @@ func (ctrl CaseController) UpdateCase(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"data": "ok",
+	})
+}
+
+func (ctrl CaseController) DeleteCase(c *gin.Context) {
+
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.DeleteCase(id, userId.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": "ok",
+	})
+}
+
+func (ctrl CaseController) ArchiveCase(c *gin.Context) {
+
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.ArchiveCase(id, userId.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": "ok",
+	})
+}
+
+func (ctrl CaseController) UnArchiveCase(c *gin.Context) {
+
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.UnArchiveCase(id, userId.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": "ok",
+	})
+}
+
+func (ctrl CaseController) GetArchivedCases(c *gin.Context) {
+
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	mCase, err := ctrl.caseService.GetArchivedCases(userId.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": mCase,
 	})
 }
