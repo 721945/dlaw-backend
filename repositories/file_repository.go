@@ -27,6 +27,9 @@ func (r *FileRepository) GetFile(id uuid.UUID) (file *models.File, err error) {
 func (r *FileRepository) GetFilesByFolderId(folderId uuid.UUID) (files []models.File, err error) {
 	return files, r.db.DB.Preload(clause.Associations).Where("folder_id = ?", folderId).Find(&files).Error
 }
+func (r *FileRepository) GetFilesWithTagByFolderId(folderId uuid.UUID) (files []models.File, err error) {
+	return files, r.db.DB.Preload("Tags").Where("folder_id = ?", folderId).Find(&files).Error
+}
 
 func (r *FileRepository) CreateFile(file models.File) (models.File, error) {
 	return file, r.db.DB.Create(&file).Error

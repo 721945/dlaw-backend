@@ -149,6 +149,12 @@ func (s *FileService) UploadFile(
 		FilePreviewVersionId: &versionPreview,
 	}
 
+	err = s.updateFolderTagByFolderId(folderId)
+
+	if err != nil {
+		return "", err
+	}
+
 	_, err = s.actionLogRepo.CreateActionLog(actionLog)
 
 	if err != nil {
@@ -260,4 +266,33 @@ func convertMimeTypeToString(mimeType string) string {
 	default:
 		return ""
 	}
+}
+
+func (s *FileService) updateFolderTagByFolderId(folderId uuid.UUID) error {
+	// Get all tags from files in folder
+	files, err := s.fileRepo.GetFilesWithTagByFolderId(folderId)
+
+	if err != nil {
+		return err
+	}
+
+	// make it distinct
+	tags := make(map[string]models.Tag)
+
+	for _, file := range files {
+		for _, tag := range file.Tags {
+			tags[tag.Name] = tag
+		}
+	}
+
+	tagArray := make([]models.Tag, 0)
+
+	for _, tag := range tags {
+		tagArray = append(tagArray, tag)
+	}
+
+	err = s.folderRepo.UpdateTags(folderId, tagArray)
+
+	return err
+
 }
