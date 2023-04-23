@@ -13,4 +13,5 @@ type Case struct {
 	Folders         []Folder            `gorm:"foreignKey:CaseId"`
 	CasePermission  []CasePermission    `gorm:"foreignKey:CaseId"`
 	PermissionLogs  []CasePermissionLog `gorm:"foreignKey:CaseId"`
+	CaseUsedLogs    []CaseUsedLog       `gorm:"foreignKey:CaseId"`
 }

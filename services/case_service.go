@@ -222,3 +222,77 @@ func (s CaseService) GetArchivedCases(userId uuid.UUID) (casesDto []dtos.CaseDet
 
 	return casesDto, nil
 }
+
+func (s CaseService) GetFrequencyCases(userId uuid.UUID) (casesDto []dtos.CaseDetailDto, err error) {
+	permissionCases, err := s.casePermissionRepo.GetCasePermissionsByUserId(userId)
+
+	if err != nil {
+		return casesDto, err
+	}
+
+	caseIds := make([]uuid.UUID, len(permissionCases))
+
+	for i, permissionCase := range permissionCases {
+		caseIds[i] = permissionCase.CaseId
+	}
+
+	cases, err := s.caseRepo.GetCasesByIds(caseIds, false)
+
+	if err != nil {
+		return casesDto, err
+	}
+
+	casesDto = make([]dtos.CaseDetailDto, len(cases))
+
+	for _, mCase := range cases {
+		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
+	}
+
+	return casesDto, nil
+}
+
+func (s CaseService) GetMembers(caseId uuid.UUID) (members []dtos.MemberDto, err error) {
+	permissions, err := s.casePermissionRepo.GetCasePermissionsByCaseId(caseId)
+
+	if err != nil {
+		return members, err
+	}
+
+	members = make([]dtos.MemberDto, len(permissions))
+
+	for i, permission := range permissions {
+		members[i] = dtos.ToMemberDto(permission)
+	}
+
+	return members, nil
+}
+
+func (s CaseService) UpdateMember(caseId uuid.UUID, userId uuid.UUID, dto dtos.UpdateMemberDto) (err error) {
+	permission, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(caseId, userId)
+
+	if err != nil {
+		return err
+	}
+
+	permissionUpdate, err := s.permissionRepo.GetPermissionByName(dto.Permission)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.casePermissionRepo.UpdateCasePermission(permission.ID, models.CasePermission{PermissionId: permissionUpdate.ID})
+
+	return err
+}
+
+func (s CaseService) DeleteMember(caseId uuid.UUID, userId uuid.UUID) (err error) {
+	permission, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(caseId, userId)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.casePermissionRepo.DeleteCasePermission(permission.ID)
+
+	return err
+}
