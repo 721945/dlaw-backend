@@ -150,6 +150,8 @@ func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, e
 
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
 
+	s.logger.Info(cases)
+
 	for _, mCase := range cases {
 		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
 	}

@@ -15,7 +15,7 @@ type CaseDetailDto struct {
 	Id        string    `json:"id"`
 	Name      string    `json:"name"`
 	Tags      []TagDto  `json:"tags"`
-	Owner     OwnerDto  `json:"owner"`
+	Owner     UserDto   `json:"owner"`
 	ShareWith []UserDto `json:"shareWith"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -69,15 +69,35 @@ func (dto UpdateCaseDto) ToModel() models.Case {
 }
 
 func ToCaseDto(mCase models.Case) CaseDetailDto {
+	permissions := mCase.CasePermissions
+
+	users := make([]UserDto, len(permissions))
+
+	var owner UserDto
+
+	for i, permission := range permissions {
+		if permission.Permission.Name == "owner" {
+			owner = UserDto{
+				ID:        permission.User.ID.String(),
+				FirstName: permission.User.Firstname,
+				LastName:  permission.User.Lastname,
+				Email:     permission.User.Email,
+			}
+		}
+		users[i] = UserDto{
+			ID:        permission.User.ID.String(),
+			FirstName: permission.User.Firstname,
+			LastName:  permission.User.Lastname,
+			Email:     permission.User.Email,
+		}
+	}
+
 	return CaseDetailDto{
-		Id:   mCase.ID.String(),
-		Name: mCase.Title,
-		Tags: ToTagDtos(mCase.Folders[0].Tags),
-		Owner: OwnerDto{
-			FirstName: "John",
-			LastName:  "Doe",
-		},
-		ShareWith: []UserDto{},
+		Id:        mCase.ID.String(),
+		Name:      mCase.Title,
+		Tags:      ToTagDtos(mCase.Folders[0].Tags),
+		Owner:     owner,
+		ShareWith: users,
 		CreatedAt: mCase.CreatedAt,
 		UpdatedAt: mCase.UpdatedAt,
 		FolderId:  mCase.Folders[0].ID.String(),
