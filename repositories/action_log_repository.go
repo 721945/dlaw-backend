@@ -34,3 +34,8 @@ func (r *ActionLogRepository) UpdateActionLog(id uuid.UUID, permissionLog models
 func (r *ActionLogRepository) DeleteActionLog(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.ActionLog{}, id).Error
 }
+
+// Get by folder id
+func (r *ActionLogRepository) GetActionLogsByFolderId(folderId uuid.UUID) (permissionLogs []models.ActionLog, err error) {
+	return permissionLogs, r.db.DB.Where("folder_id = ?", folderId).Find(&permissionLogs).Error
+}
