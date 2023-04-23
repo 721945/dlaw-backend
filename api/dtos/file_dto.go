@@ -10,17 +10,24 @@ type CreateFileDto struct {
 }
 
 type FileDto struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Url        string `json:"url"`
-	PreviewUrl string `json:"previewUrl"`
+	Id         string   `json:"id"`
+	Name       string   `json:"name"`
+	Url        string   `json:"url"`
+	PreviewUrl string   `json:"previewUrl"`
+	Tags       []TagDto `json:"tags,omitempty"`
+	CreatedAt  string   `json:"createdAt"`
+	UpdatedAt  string   `json:"updatedAt"`
 }
 
 func ToFileDto(file models.File) FileDto {
 	return FileDto{
-		Id:   file.ID.String(),
-		Name: file.Name,
-		//Url:  file.Url.Url,
+		Id:         file.ID.String(),
+		Name:       file.Name,
+		Url:        file.Url.Url,
+		PreviewUrl: file.Url.PreviewUrl,
+		Tags:       ToTagDtos(file.Tags),
+		CreatedAt:  file.CreatedAt.String(),
+		UpdatedAt:  file.UpdatedAt.String(),
 	}
 }
 

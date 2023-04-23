@@ -6,18 +6,19 @@ import (
 )
 
 type FolderDto struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id         string      `json:"id"`
+	Name       string      `json:"name"`
+	SubFolders []FolderDto `json:"subFolders"`
+	Files      []FileDto   `json:"files"`
+	CreatedAt  string      `json:"createdAt"`
+	UpdatedAt  string      `json:"updatedAt"`
 }
 
 func ToFolderDtos(folders []models.Folder) []FolderDto {
 	var dtos []FolderDto
 
 	for _, folder := range folders {
-		dtos = append(dtos, FolderDto{
-			Id:   folder.ID.String(),
-			Name: folder.Name,
-		})
+		dtos = append(dtos, ToFolderDto(folder))
 	}
 
 	return dtos
@@ -25,8 +26,12 @@ func ToFolderDtos(folders []models.Folder) []FolderDto {
 
 func ToFolderDto(folder models.Folder) FolderDto {
 	return FolderDto{
-		Id:   folder.ID.String(),
-		Name: folder.Name,
+		Id:         folder.ID.String(),
+		Name:       folder.Name,
+		Files:      ToFileDtos(folder.Files),
+		CreatedAt:  folder.CreatedAt.String(),
+		UpdatedAt:  folder.UpdatedAt.String(),
+		SubFolders: ToFolderDtos(folder.SubFolders),
 	}
 }
 

@@ -18,6 +18,7 @@ func NewTagRepository(logger *libs.Logger, db libs.Database) TagRepository {
 func (r *TagRepository) GetTags() (tags []models.Tag, err error) {
 	return tags, r.db.DB.Find(&tags).Error
 }
+
 func (r *TagRepository) GetShowMenuTags() (tags []models.Tag, err error) {
 	return tags, r.db.DB.Where("show_menu = false").Find(&tags).Error
 }
@@ -36,4 +37,8 @@ func (r *TagRepository) UpdateTag(id uuid.UUID, tag models.Tag) error {
 
 func (r *TagRepository) DeleteTag(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Tag{}, id).Error
+}
+
+func (r *TagRepository) GetTagByNames(names []string) (tags []models.Tag, err error) {
+	return tags, r.db.DB.Where("name IN (?)", names).Find(&tags).Error
 }

@@ -21,6 +21,7 @@ type FileService struct {
 	casePermissionRepo repositories.CasePermissionRepository
 	actionRepo         repositories.ActionRepository
 	actionLogRepo      repositories.ActionLogRepository
+	tagRepo            repositories.TagRepository
 }
 
 func NewFileService(
@@ -32,6 +33,7 @@ func NewFileService(
 	casePermissionRepo repositories.CasePermissionRepository,
 	actionRepo repositories.ActionRepository,
 	actionLogRepo repositories.ActionLogRepository,
+	tagRepo repositories.TagRepository,
 ) FileService {
 	return FileService{
 		logger:             logger,
@@ -42,6 +44,7 @@ func NewFileService(
 		casePermissionRepo: casePermissionRepo,
 		actionRepo:         actionRepo,
 		actionLogRepo:      actionLogRepo,
+		tagRepo:            tagRepo,
 	}
 }
 
@@ -79,11 +82,11 @@ func (s *FileService) UploadFile(
 	// TODO: NEED TO CHECK FOR REPLACE FILE
 
 	err := s.checkPermission(userId, folderId)
-
+	mimeTypeSTtring := convertMimeTypeToString(fileType)
 	if err != nil {
 		return "", err
 	}
-	fileT, err := s.fileTypeRepo.GetFileTypeByName(convertMimeTypeToWord(fileType))
+	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeSTtring)
 
 	if err != nil {
 		return "", err
@@ -111,13 +114,19 @@ func (s *FileService) UploadFile(
 		return "", err
 	}
 
+	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeSTtring})
+
+	// Do the ocr and then update the tag
+
 	modelFile := models.File{
 		Name:             fileName,
 		TypeId:           &fileT.ID,
 		FolderId:         &folderId,
 		CloudName:        cloudName,
 		PreviewCloudName: previewCloudName,
+		Tags:             tag,
 	}
+
 	//
 	fileRes, err := s.fileRepo.CreateFile(modelFile)
 
@@ -197,7 +206,7 @@ func (s *FileService) checkPermission(userId uuid.UUID, folderId uuid.UUID) erro
 	return libs.ErrUnauthorized
 }
 
-func convertMimeTypeToWord(mimeType string) string {
+func convertMimeTypeToString(mimeType string) string {
 	//if start with image
 
 	if strings.HasPrefix(mimeType, "image") {

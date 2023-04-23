@@ -45,37 +45,27 @@ func (s *FolderService) GetFolders() (folders []models.Folder, err error) {
 	return s.folderRepo.GetFolders()
 }
 
-func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *models.Folder, err error) {
-	folder, err = s.folderRepo.GetFolderContent(id)
-
-	err = s.casedUsedRepo.IncrementCaseUsedLog(*folder.CaseId)
+func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (dto *dtos.FolderDto, err error) {
+	// FIXME : Fix this
+	//_, err = s.casedUsedRepo.CreateCaseUsedLog(models.CaseUsedLog{CaseId: id, UserId: userId})
+	//_, err = s.casedUsedRepo.FindOrCreate(id, userId)
 
 	if err != nil {
 		return nil, err
 	}
 
-	files := folder.Files
+	//err = s.casedUsedRepo.IncrementCaseUsedLog(*folder.CaseId, userId)
 
-	cloudNames := make([]string, len(files))
-	previewCloudNames := make([]string, len(files))
-	downloadNames := make([]string, len(files))
-
-	for i, file := range files {
-		cloudNames[i] = file.CloudName
-		downloadNames[i] = file.Name
-		previewCloudNames[i] = file.PreviewCloudName
-	}
-
-	urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
+	folderModel, err := s.folderRepo.GetFolderContent(id)
 
 	if err != nil {
-		s.logger.Info(err)
 		return nil, err
 	}
 
-	previewUrls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
+	urls, err := s.getSignedFileUrls(folderModel.Files)
+
+	files := folderModel.Files
 	if err != nil {
-		s.logger.Info(err)
 		return nil, err
 	}
 
@@ -83,22 +73,20 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *model
 	for i, file := range files {
 		newFiles[i] = file
 		newFiles[i].Url = &models.FileUrl{
-			Url:        urls[i],
-			PreviewUrl: previewUrls[i],
+			Url:        urls[i].Url,
+			PreviewUrl: urls[i].PreviewUrl,
 		}
 	}
 
 	s.logger.Info("Files: ", newFiles)
 
-	//if err != nil {
-	//	s.logger.Info(err)
-	//	return nil, err
-	//}
-	//
+	folderModel.Files = newFiles
 
-	folder.Files = newFiles
+	folder := dtos.ToFolderDto(*folderModel)
 
-	return folder, nil
+	dto = &folder
+
+	return dto, nil
 }
 
 func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto) (*uuid.UUID, error) {
