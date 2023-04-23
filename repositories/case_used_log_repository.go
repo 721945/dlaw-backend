@@ -32,6 +32,13 @@ func (r CaseUsedLogRepository) UpdateCaseUsedLog(caseId uuid.UUID, mCase models.
 	return r.db.DB.Model(&mCase).Where("case_id = ?", caseId).Updates(mCase).Error
 }
 
-func (r CaseUsedLogRepository) IncrementCaseUsedLog(caseId uuid.UUID) error {
-	return r.db.DB.Model(&models.CaseUsedLog{}).Where("case_id = ?", caseId).Update("count", gorm.Expr("count + ?", 1)).Error
+func (r CaseUsedLogRepository) IncrementCaseUsedLog(caseId uuid.UUID, userId uuid.UUID) error {
+	return r.db.DB.Model(&models.CaseUsedLog{}).Where("case_id = ? AND user_id = ?", caseId, userId).Update("count", gorm.Expr("count + ?", 1)).Error
+}
+
+func (r CaseUsedLogRepository) FindOrCreate(caseId uuid.UUID, userId uuid.UUID) (models.CaseUsedLog, error) {
+	var mCase models.CaseUsedLog
+	mCase = models.CaseUsedLog{CaseId: caseId, UserId: userId}
+	err := r.db.DB.Where("case_id = ? AND user_id = ?", caseId, userId).FirstOrCreate(&mCase).Error
+	return mCase, err
 }

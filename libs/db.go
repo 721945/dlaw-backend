@@ -2,7 +2,6 @@ package libs
 
 import (
 	"fmt"
-	"github.com/721945/dlaw-backend/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -48,21 +47,21 @@ func NewDatabase(env Env, myLogger *Logger) Database {
 	myLogger.Info("👻 Connected to database - 1")
 
 	// Uncomment if want to Migrate the schema
-	err = db.AutoMigrate(
-		&models.Action{},
-		&models.Permission{},
-		&models.ActionLog{},
-		&models.Appointment{},
-		&models.Case{},
-		&models.CasePermission{},
-		&models.CasePermissionLog{},
-		&models.CaseUsedLog{},
-		&models.FileType{},
-		&models.File{},
-		&models.Folder{},
-		&models.Tag{},
-		&models.User{},
-	)
+	//err = db.AutoMigrate(
+	//	//&models.Action{},
+	//	//&models.Permission{},
+	//	//&models.ActionLog{},
+	//	//&models.Appointment{},
+	//	&models.Case{},
+	//	//&models.CasePermission{},
+	//	//&models.CasePermissionLog{},
+	//	&models.CaseUsedLog{},
+	//	//&models.FileType{},
+	//	//&models.File{},
+	//	//&models.Folder{},
+	//	//&models.Tag{},
+	//	&models.User{},
+	//)
 	//&models.FileVersion{},
 	//	&models.FileUrl{},
 

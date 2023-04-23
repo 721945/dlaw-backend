@@ -6,5 +6,5 @@ type CaseUsedLog struct {
 	Base
 	UserId uuid.UUID
 	CaseId uuid.UUID
-	count  int
+	Count  int `gorm:"default:0"`
 }
