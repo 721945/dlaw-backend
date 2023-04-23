@@ -35,3 +35,12 @@ func (r *AppointmentRepository) UpdateAppointment(id uuid.UUID, appointment mode
 func (r *AppointmentRepository) DeleteAppointment(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Appointment{}, id).Error
 }
+
+func (r *AppointmentRepository) GetAppointmentByCaseIds(caseIds []uuid.UUID) (appointments []models.Appointment, err error) {
+	return appointments, r.db.DB.Preload("User").Where("case_id IN (?)", caseIds).Find(&appointments).Error
+}
+
+func (r *AppointmentRepository) GetPublicAppointments() (appointments []models.Appointment, err error) {
+	return appointments, r.db.DB.Where("is_public = true").Find(&appointments).Error
+
+}

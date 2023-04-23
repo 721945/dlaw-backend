@@ -341,7 +341,7 @@ func (ctrl CaseController) AddMember(c *gin.Context) {
 		return
 	}
 
-	err = ctrl.caseService.AddMember(id, input)
+	res, err := ctrl.caseService.AddMember(id, input)
 
 	if err != nil {
 		ctrl.logger.Error(err)
@@ -350,7 +350,7 @@ func (ctrl CaseController) AddMember(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message": "ok",
+		"message": res,
 	})
 }
 

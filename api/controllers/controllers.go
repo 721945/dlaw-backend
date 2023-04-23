@@ -12,4 +12,5 @@ var Module = fx.Options(
 	fx.Provide(NewCaseController),
 	fx.Provide(NewFolderController),
 	fx.Provide(NewTypeController),
+	fx.Provide(NewAppointmentController),
 )

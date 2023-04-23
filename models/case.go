@@ -14,4 +14,5 @@ type Case struct {
 	CasePermission  []CasePermission    `gorm:"foreignKey:CaseId"`
 	PermissionLogs  []CasePermissionLog `gorm:"foreignKey:CaseId"`
 	CaseUsedLogs    []CaseUsedLog       `gorm:"foreignKey:CaseId"`
+	Appointments    []Appointment       `gorm:"foreignKey:CaseId"`
 }
