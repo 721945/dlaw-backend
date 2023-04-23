@@ -315,7 +315,7 @@ func (s CaseService) AddMember(caseId uuid.UUID, dto dtos.AddMemberDto) (id stri
 }
 
 func (s CaseService) RemoveMember(caseId uuid.UUID, userId uuid.UUID) (err error) {
-	permission, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(caseId, userId)
+	permission, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(userId, caseId)
 
 	if err != nil {
 		return err

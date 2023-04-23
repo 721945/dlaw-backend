@@ -36,7 +36,7 @@ func (r CasePermissionRepository) DeleteCasePermission(id uuid.UUID) error {
 }
 
 func (r CasePermissionRepository) GetCasePermissionsByCaseId(id uuid.UUID) (cases []models.CasePermission, err error) {
-	return cases, r.db.DB.Preload("User").Where("case_id = ?", id).Find(&cases).Error
+	return cases, r.db.DB.Preload("User").Preload("Permission").Where("case_id = ?", id).Find(&cases).Error
 }
 
 func (r CasePermissionRepository) GetCasePermissionsByUserId(id uuid.UUID) (cases []models.CasePermission, err error) {
