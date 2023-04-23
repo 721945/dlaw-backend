@@ -15,6 +15,7 @@ type CaseService struct {
 	permissionRepo     repositories.PermissionRepository
 	casePermissionRepo repositories.CasePermissionRepository
 	permissionLogRepo  repositories.CasePermissionLogRepository
+	userRepo           repositories.UserRepository
 }
 
 func NewCaseService(
@@ -24,6 +25,7 @@ func NewCaseService(
 	p repositories.PermissionRepository,
 	cp repositories.CasePermissionRepository,
 	pl repositories.CasePermissionLogRepository,
+	u repositories.UserRepository,
 ) CaseService {
 	return CaseService{
 		logger:             logger,
@@ -32,6 +34,7 @@ func NewCaseService(
 		permissionRepo:     p,
 		casePermissionRepo: cp,
 		permissionLogRepo:  pl,
+		userRepo:           u,
 	}
 }
 
@@ -285,7 +288,33 @@ func (s CaseService) UpdateMember(caseId uuid.UUID, userId uuid.UUID, dto dtos.U
 	return err
 }
 
-func (s CaseService) DeleteMember(caseId uuid.UUID, userId uuid.UUID) (err error) {
+func (s CaseService) AddMember(caseId uuid.UUID, dto dtos.AddMemberDto) (id string, err error) {
+	permission, err := s.permissionRepo.GetPermissionByName(dto.Permission)
+
+	if err != nil {
+		return "", err
+	}
+
+	userId, err := uuid.Parse(dto.UserId)
+
+	if err != nil {
+		return "", err
+	}
+
+	user, err := s.userRepo.GetUser(userId)
+
+	permissionCase := models.CasePermission{
+		CaseId:       caseId,
+		PermissionId: permission.ID,
+		UserId:       user.ID,
+	}
+
+	casePermission, err := s.casePermissionRepo.CreateCasePermission(permissionCase)
+
+	return casePermission.ID.String(), err
+}
+
+func (s CaseService) RemoveMember(caseId uuid.UUID, userId uuid.UUID) (err error) {
 	permission, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(caseId, userId)
 
 	if err != nil {

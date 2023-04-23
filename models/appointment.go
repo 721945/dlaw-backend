@@ -1,10 +1,19 @@
 package models
 
+import (
+	"github.com/google/uuid"
+	"time"
+)
+
 type Appointment struct {
 	Base
-	Case        Case
+	CaseId      uuid.UUID
+	Case        *Case
 	EventId     string
 	Title       string
 	Detail      string
+	Location    string
+	DateTime    time.Time
+	Emails      []string
 	IsPublished bool
 }

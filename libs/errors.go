@@ -13,6 +13,7 @@ var (
 	ErrNotFound            = fmt.Errorf("not found")
 	ErrConflict            = fmt.Errorf("conflict")
 	ErrBadParamInput       = fmt.Errorf("bad param input")
+	ErrBadParamInputFormat = fmt.Errorf("bad param input format")
 )
 
 func StatusCode(err error) int {
