@@ -179,3 +179,34 @@ func (t FolderController) ArchiveFolder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }
+
+// GetFolderLog
+func (t FolderController) GetFolderLog(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		t.logger.Error("User not found")
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	var paramId = c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	folderLog, err := t.folderService.GetFolderLog(id)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": folderLog})
+}

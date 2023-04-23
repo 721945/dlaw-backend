@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/infrastructure/google_storage"
@@ -17,6 +18,7 @@ type FolderService struct {
 	casePermissionRepo repositories.CasePermissionRepository
 	storageService     google_storage.GoogleStorage
 	casedUsedRepo      repositories.CaseUsedLogRepository
+	actionLogRepo      repositories.ActionLogRepository
 }
 
 func NewFolderService(
@@ -26,6 +28,7 @@ func NewFolderService(
 	casePermissionRepo repositories.CasePermissionRepository,
 	storageService google_storage.GoogleStorage,
 	casedUsedRepo repositories.CaseUsedLogRepository,
+	actionLogRepo repositories.ActionLogRepository,
 ) FolderService {
 	return FolderService{
 		logger:             logger,
@@ -34,6 +37,7 @@ func NewFolderService(
 		casePermissionRepo: casePermissionRepo,
 		storageService:     storageService,
 		casedUsedRepo:      casedUsedRepo,
+		actionLogRepo:      actionLogRepo,
 	}
 }
 
@@ -178,6 +182,39 @@ func (s *FolderService) UnArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
 	return s.folderRepo.UnArchiveFolder(id)
 }
 
+// GetActionLogs Get action logs
+func (s *FolderService) GetActionLogs(folderId uuid.UUID, userId uuid.UUID) ([]dtos.ActionLogDto, error) {
+
+	err := s.checkPermission(userId, folderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	logs, err := s.actionLogRepo.GetActionLogsByFolderId(folderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	actionLogs := make([]dtos.ActionLogDto, len(logs))
+
+	for i, log := range logs {
+		var url models.FileUrl
+		if log.File != nil {
+			url, err = s.getSignedFileUrl(*log.File)
+			if err != nil {
+				s.logger.Info(err)
+				return nil, err
+			}
+		}
+		urlDto := dtos.ToFileActionLogDto(log.File, url.PreviewUrl)
+		actionLogs[i] = dtos.ToActionLogDto(log, urlDto)
+	}
+
+	return actionLogs, nil
+}
+
 func (s *FolderService) checkPermission(userId uuid.UUID, folderId uuid.UUID) error {
 	folder, err := s.folderRepo.GetFolder(folderId)
 
@@ -197,4 +234,89 @@ func (s *FolderService) checkPermission(userId uuid.UUID, folderId uuid.UUID) er
 		return nil
 	}
 	return libs.ErrUnauthorized
+}
+
+// get signed url for files
+// TODO : Refactor this to option use download or not
+func (s *FolderService) getSignedFileUrls(files []models.File) (fileUrls []models.FileUrl, err error) {
+
+	cloudNames := make([]string, len(files))
+	previewCloudNames := make([]string, len(files))
+	downloadNames := make([]string, len(files))
+
+	for i, file := range files {
+		cloudNames[i] = file.CloudName
+		downloadNames[i] = file.Name
+		previewCloudNames[i] = file.PreviewCloudName
+	}
+
+	urlsCh := make(chan []string)
+	previewUrlsCh := make(chan []string)
+
+	// Run the two calls to GetSignedUrls in parallel using goroutines
+	go func() {
+		urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
+		if err != nil {
+			s.logger.Info(err)
+			urlsCh <- nil
+		} else {
+			urlsCh <- urls
+		}
+	}()
+
+	go func() {
+		previewUrls, err := s.storageService.GetSignedUrls(previewCloudNames, []string{}, downloadNames)
+		if err != nil {
+			s.logger.Info(err)
+			previewUrlsCh <- nil
+		} else {
+			previewUrlsCh <- previewUrls
+		}
+	}()
+
+	// Wait for both goroutines to complete and merge the results
+	urls := <-urlsCh
+	previewUrls := <-previewUrlsCh
+
+	if urls == nil || previewUrls == nil {
+		return nil, errors.New("error getting signed urls")
+	}
+
+	fileUrls = make([]models.FileUrl, len(files))
+
+	for i, _ := range files {
+		fileUrls[i] = models.FileUrl{
+			Url:        urls[i],
+			PreviewUrl: previewUrls[i],
+		}
+	}
+
+	return fileUrls, nil
+}
+
+// getSignedFileUrl
+func (s *FolderService) getSignedFileUrl(file models.File) (fileUrl models.FileUrl, err error) {
+
+	cloudNames := []string{file.CloudName}
+	previewCloudNames := []string{file.PreviewCloudName}
+	downloadNames := []string{file.Name}
+
+	urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
+	if err != nil {
+		s.logger.Info(err)
+		return models.FileUrl{}, err
+	}
+
+	previewUrls, err := s.storageService.GetSignedUrls(previewCloudNames, []string{}, downloadNames)
+	if err != nil {
+		s.logger.Info(err)
+		return models.FileUrl{}, err
+	}
+
+	fileUrl = models.FileUrl{
+		Url:        urls[0],
+		PreviewUrl: previewUrls[0],
+	}
+
+	return fileUrl, nil
 }
