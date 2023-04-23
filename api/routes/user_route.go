@@ -34,8 +34,10 @@ func (u UserRoute) Setup() {
 		newApi.POST("", u.userController.CreateUser)
 		newApi.GET("", u.userController.GetUsers)
 		newApi.GET("/:id", u.userController.GetUser)
-		newApi.GET("/me", u.userController.GetMe)
-		newApi.PUT("/:id", u.userController.UpdateUser)
+		newApi.GET("/me", u.userController.GetMe).Use(u.authMiddleware.Handler())
+		newApi.PATCH("/:id", u.userController.UpdateUser)
+		newApi.PATCH("/me", u.userController.UpdateUser).Use(u.authMiddleware.Handler())
+
 	}
 	//}	api := u.handler.Gin.Group("/users")
 	//{
