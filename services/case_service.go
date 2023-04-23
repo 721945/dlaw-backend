@@ -160,7 +160,7 @@ func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, e
 }
 
 func (s CaseService) checkPermission(caseId uuid.UUID, userId uuid.UUID) (bool, error) {
-	permissionCase, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(caseId, userId)
+	permissionCase, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(userId, caseId)
 
 	if err != nil {
 		return false, err

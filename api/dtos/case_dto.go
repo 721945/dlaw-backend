@@ -28,16 +28,16 @@ type OwnerDto struct {
 }
 
 type CreateCaseDto struct {
-	RedCaseNumber   string  `json:"redCaseNumber"`
-	BlackCaseNumber string  `json:"blackCaseNumber"`
-	Name            string  `json:"name"`
-	Email           *string `json:"email"`
-	CaseTitle       *string `json:"caseTitle"`
-	CaseContent     *string `json:"caseContent"`
+	RedCaseNumber   string  `json:"redCaseNumber" binding:"required"`
+	BlackCaseNumber string  `json:"blackCaseNumber" binding:"required"`
+	Name            string  `json:"name" binding:"required"`
+	Email           *string `json:"email" binding:"required"`
+	CaseTitle       *string `json:"caseTitle" binding:"required"`
+	CaseContent     *string `json:"caseContent" binding:"required"`
 }
 
 type UpdateCaseDto struct {
-	RedCaseNumber   string  `json:"redCaseNumber"`
+	RedCaseNumber   string  `json:"redCaseNumber" `
 	BlackCaseNumber string  `json:"blackCaseNumber"`
 	Name            string  `json:"name"`
 	Email           *string `json:"email"`
