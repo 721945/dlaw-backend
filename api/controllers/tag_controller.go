@@ -117,3 +117,17 @@ func (t TagController) DeleteTag(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }
+
+// GetTagMenus
+
+func (t TagController) GetTagMenus(c *gin.Context) {
+	tags, err := t.tagService.GetTagMenus()
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{"data": tags})
+}
