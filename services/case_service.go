@@ -92,18 +92,36 @@ func (s CaseService) UpdateCase(id uuid.UUID, dto dtos.UpdateCaseDto, userId uui
 		return libs.ErrUnauthorized
 	}
 
+	folder, err := s.folderRepo.GetRootFolder(id)
+
+	if err != nil {
+		return err
+	}
+
 	mCase := dto.ToModel()
 
-	err = s.caseRepo.UpdateCase(id, mCase)
+	if mCase.Title != "" {
+		folder.Name = mCase.Title
 
-	//if err != nil {
-	//	return err
-	//}
+		err = s.folderRepo.UpdateFolder(folder.ID, *folder)
+	}
+
+	err = s.caseRepo.UpdateCase(id, mCase)
 
 	return err
 }
 
-func (s CaseService) DeleteCase(id uuid.UUID) error {
+func (s CaseService) DeleteCase(id uuid.UUID, userId uuid.UUID) error {
+	can, err := s.checkPermission(id, userId)
+
+	if err != nil {
+		return err
+	}
+
+	if !can {
+		return libs.ErrUnauthorized
+	}
+
 	return s.caseRepo.DeleteCase(id)
 }
 
@@ -121,7 +139,7 @@ func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, e
 		caseIds[i] = permissionCase.CaseId
 	}
 
-	cases, err := s.caseRepo.GetCasesByIds(caseIds)
+	cases, err := s.caseRepo.GetCasesByIds(caseIds, false)
 
 	if err != nil {
 		return casesDto, err
@@ -148,4 +166,59 @@ func (s CaseService) checkPermission(caseId uuid.UUID, userId uuid.UUID) (bool, 
 	}
 
 	return false, nil
+}
+
+func (s CaseService) ArchiveCase(id uuid.UUID, userId uuid.UUID) error {
+	can, err := s.checkPermission(id, userId)
+
+	if err != nil {
+		return err
+	}
+
+	if !can {
+		return libs.ErrUnauthorized
+	}
+
+	return s.caseRepo.ArchiveCase(id)
+}
+func (s CaseService) UnArchiveCase(id uuid.UUID, userId uuid.UUID) error {
+	can, err := s.checkPermission(id, userId)
+
+	if err != nil {
+		return err
+	}
+
+	if !can {
+		return libs.ErrUnauthorized
+	}
+
+	return s.caseRepo.ArchiveCase(id)
+}
+
+func (s CaseService) GetArchivedCases(userId uuid.UUID) (casesDto []dtos.CaseDetailDto, err error) {
+	permissionCases, err := s.casePermissionRepo.GetCasePermissionsByUserId(userId)
+
+	if err != nil {
+		return casesDto, err
+	}
+
+	caseIds := make([]uuid.UUID, len(permissionCases))
+
+	for i, permissionCase := range permissionCases {
+		caseIds[i] = permissionCase.CaseId
+	}
+
+	cases, err := s.caseRepo.GetCasesByIds(caseIds, true)
+
+	if err != nil {
+		return casesDto, err
+	}
+
+	casesDto = make([]dtos.CaseDetailDto, len(cases))
+
+	for _, mCase := range cases {
+		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
+	}
+
+	return casesDto, nil
 }

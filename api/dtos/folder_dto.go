@@ -31,16 +31,16 @@ func ToFolderDto(folder models.Folder) FolderDto {
 }
 
 type CreateFolderDto struct {
+	Name           string `json:"name" binding:"required"`
+	ParentFolderId string `json:"parentFolderId" binding:"required"`
+}
+
+type UpdateFolderDto struct {
 	Name           string `json:"name"`
 	ParentFolderId string `json:"parentFolderId"`
 }
 
-type UpdateFolderDto struct {
-	Name           *string `json:"name"`
-	ParentFolderId *string `json:"parentFolderId"`
-}
-
-func (dto CreateFolderDto) ToFolder(caseId uuid.UUID) models.Folder {
+func (dto CreateFolderDto) ToModel(caseId uuid.UUID) models.Folder {
 
 	parentFolderId, err := uuid.Parse(dto.ParentFolderId)
 
@@ -61,19 +61,18 @@ func (dto CreateFolderDto) ToFolder(caseId uuid.UUID) models.Folder {
 	}
 }
 
-func (dto UpdateFolderDto) ToFolder() models.Folder {
+func (dto UpdateFolderDto) ToModel() models.Folder {
 
-	parentFolderId, err := uuid.Parse(*dto.ParentFolderId)
+	parentFolderId, err := uuid.Parse(dto.ParentFolderId)
 
 	if err != nil {
 		return models.Folder{
-			Name:           *dto.Name,
-			ParentFolderId: nil,
+			Name: dto.Name,
 		}
 	}
 
 	return models.Folder{
-		Name:           *dto.Name,
+		Name:           dto.Name,
 		ParentFolderId: &parentFolderId,
 	}
 }

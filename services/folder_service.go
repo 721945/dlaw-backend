@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/infrastructure/google_storage"
 	"github.com/721945/dlaw-backend/libs"
@@ -44,24 +45,7 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *model
 		return nil, err
 	}
 
-	//subFolders, err := s.folderRepo.GetSubFolders(id)
-
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//folder.SubFolders = subFolders
-
-	//files, err := s.fileRepo.GetFilesByFolderId(id)
 	files := folder.Files
-
-	// Check if cloudname and previewcloudname is the same or not to avoid duplicate
-	// If it the same just use the cloudname
-	//for i, file := range files {
-	//	if file.CloudName == file.PreviewCloudName {
-	//		files[i].PreviewCloudName = ""
-	//	}
-	//}
 
 	cloudNames := make([]string, len(files))
 	previewCloudNames := make([]string, len(files))
@@ -73,10 +57,6 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *model
 		previewCloudNames[i] = file.PreviewCloudName
 	}
 
-	s.logger.Info("cloudNames: ", cloudNames)
-	s.logger.Info("previewCloudNames: ", previewCloudNames)
-	s.logger.Info("downloadNames: ", downloadNames)
-	//
 	urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
 
 	if err != nil {
@@ -84,13 +64,11 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *model
 		return nil, err
 	}
 
-	s.logger.Info("urls: ", urls)
 	previewUrls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
 	if err != nil {
 		s.logger.Info(err)
 		return nil, err
 	}
-	s.logger.Info("previewUrls: ", previewUrls)
 
 	newFiles := make([]models.File, len(files))
 	for i, file := range files {
@@ -128,7 +106,7 @@ func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto) (*uuid.UUID, erro
 		return nil, err
 	}
 
-	folder := dto.ToFolder(*parent.CaseId)
+	folder := dto.ToModel(*parent.CaseId)
 
 	folder, err = s.folderRepo.CreateFolder(folder)
 
@@ -147,7 +125,17 @@ func (s *FolderService) UpdateFolder(id uuid.UUID, dto dtos.UpdateFolderDto, use
 		return err
 	}
 
-	folder := dto.ToFolder()
+	checkFolder, err := s.folderRepo.GetFolder(id)
+
+	if err != nil {
+		return err
+	}
+
+	if checkFolder.ParentFolderId == nil {
+		return fmt.Errorf("Can not update root folder")
+	}
+
+	folder := dto.ToModel()
 
 	return s.folderRepo.UpdateFolder(id, folder)
 }

@@ -27,6 +27,10 @@ func (r *FolderRepository) GetFolder(id uuid.UUID) (folder *models.Folder, err e
 	return folder, r.db.DB.First(&folder, id).Error
 }
 
+func (r *FolderRepository) GetRootFolder(caseId uuid.UUID) (folder *models.Folder, err error) {
+	return folder, r.db.DB.Where("case_id = ? AND parent_folder_id IS NULL", caseId).First(&folder).Error
+}
+
 func (r *FolderRepository) GetFolderWithPermission(id uuid.UUID) (folder *models.Folder, err error) {
 	return folder, r.db.DB.First(&folder, id).Error
 }
