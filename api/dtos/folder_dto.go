@@ -12,6 +12,7 @@ type FolderDto struct {
 	Files      []FileDto   `json:"files"`
 	CreatedAt  string      `json:"createdAt"`
 	UpdatedAt  string      `json:"updatedAt"`
+	Tags       []TagDto    `json:"tags"`
 }
 
 func ToFolderDtos(folders []models.Folder) []FolderDto {
@@ -32,6 +33,7 @@ func ToFolderDto(folder models.Folder) FolderDto {
 		CreatedAt:  folder.CreatedAt.String(),
 		UpdatedAt:  folder.UpdatedAt.String(),
 		SubFolders: ToFolderDtos(folder.SubFolders),
+		Tags:       ToTagDtos(folder.Tags),
 	}
 }
 

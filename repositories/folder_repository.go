@@ -59,6 +59,27 @@ func (r *FolderRepository) UnArchiveFolder(id uuid.UUID) error {
 	return r.db.DB.Model(&models.Folder{}).Where("id = ?", id).Update("is_archived", false).Error
 }
 
+//func (r *FolderRepository) UpdateTags(id uuid.UUID, tags []models.Tag) error {
+//	//err := r.db.DB.Model(&models.Folder{}).Where("id = ?", id).Association("Tags").Clear()
+//	//if err != nil {
+//	//	r.logger.Info(err)
+//	//	return err
+//	//}
+//return r.db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Model(&models.Folder{}).Where("id = ?", id).Updates(models.Folder{Tags: tags}).Error
+//}
+
+func (r *FolderRepository) UpdateTags(id uuid.UUID, tags []models.Tag) error {
+	model := models.Folder{
+		Base: models.Base{ID: id},
+	}
+	err := r.db.DB.Model(&model).Association("Tags").Clear()
+	if err != nil {
+		r.logger.Info(err)
+		return err
+	}
+	return r.db.DB.Model(&model).Association("Tags").Append(&tags)
+}
+
 //func (r *FolderRepository) GetCasePermissionByFolderId(folderId uuid.UUID) (folders []models.Folder, err error) {
 //
 //}
