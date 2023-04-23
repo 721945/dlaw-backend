@@ -14,4 +14,5 @@ type User struct {
 	ActionLogs           []ActionLog         `gorm:"foreignKey:UserId"`
 	ActorPermissionLogs  []CasePermissionLog `gorm:"foreignKey:ActorUserId"`
 	TargetPermissionLogs []CasePermissionLog `gorm:"foreignKey:TargetUserId"`
+	CaseUsedLogs         []CaseUsedLog       `gorm:"foreignKey:UserId"`
 }

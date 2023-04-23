@@ -45,8 +45,12 @@ func (r *CaseRepository) GetCasesByFolderId(folderId uuid.UUID) (cases []models.
 
 func (r *CaseRepository) ArchiveCase(id uuid.UUID) error {
 	return r.db.DB.Model(&models.Case{}).Where("id = ?", id).Update("is_archive", true).Error
-
 }
+
 func (r *CaseRepository) UnArchiveCase(id uuid.UUID) error {
 	return r.db.DB.Model(&models.Case{}).Where("id = ?", id).Update("is_archive", false).Error
+}
+
+func (r *CaseRepository) GetCasesSortedByFrequency(userId uuid.UUID) (cases []models.Case, err error) {
+	return cases, r.db.DB.Joins("CaseUsedLogs", "user_id = ?", userId).Preload("Folders", "parent_folder_id IS NULL").Order("count DESC").Limit(10).Find(&cases).Error
 }

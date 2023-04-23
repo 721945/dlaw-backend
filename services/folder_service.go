@@ -16,6 +16,7 @@ type FolderService struct {
 	fileRepo           repositories.FileRepository
 	casePermissionRepo repositories.CasePermissionRepository
 	storageService     google_storage.GoogleStorage
+	casedUsedRepo      repositories.CaseUsedLogRepository
 }
 
 func NewFolderService(
@@ -24,6 +25,7 @@ func NewFolderService(
 	fileRepo repositories.FileRepository,
 	casePermissionRepo repositories.CasePermissionRepository,
 	storageService google_storage.GoogleStorage,
+	casedUsedRepo repositories.CaseUsedLogRepository,
 ) FolderService {
 	return FolderService{
 		logger:             logger,
@@ -31,6 +33,7 @@ func NewFolderService(
 		fileRepo:           fileRepo,
 		casePermissionRepo: casePermissionRepo,
 		storageService:     storageService,
+		casedUsedRepo:      casedUsedRepo,
 	}
 }
 
@@ -40,6 +43,8 @@ func (s *FolderService) GetFolders() (folders []models.Folder, err error) {
 
 func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (folder *models.Folder, err error) {
 	folder, err = s.folderRepo.GetFolderContent(id)
+
+	err = s.casedUsedRepo.IncrementCaseUsedLog(*folder.CaseId)
 
 	if err != nil {
 		return nil, err

@@ -273,3 +273,161 @@ func (ctrl CaseController) GetArchivedCases(c *gin.Context) {
 		"data": mCase,
 	})
 }
+
+func (ctrl CaseController) GetFrequentlyUsed(c *gin.Context) {
+
+	userId, isExisted := c.Get("id")
+
+	if !isExisted {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	mCase, err := ctrl.caseService.GetFrequencyCases(userId.(uuid.UUID))
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": mCase,
+	})
+}
+
+func (ctrl CaseController) GetMembers(c *gin.Context) {
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	mCase, err := ctrl.caseService.GetMembers(id)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": mCase,
+	})
+}
+
+func (ctrl CaseController) AddMember(c *gin.Context) {
+
+	var input dtos.AddMemberDto
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.AddMember(id, input)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "ok",
+	})
+}
+
+func (ctrl CaseController) RemoveMember(c *gin.Context) {
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	paramMember := c.Param("member")
+
+	memberId, err := uuid.Parse(paramMember)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.RemoveMember(id, memberId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "ok",
+	})
+}
+
+func (ctrl CaseController) UpdateMember(c *gin.Context) {
+
+	var input dtos.UpdateMemberDto
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	paramMember := c.Param("member")
+
+	memberId, err := uuid.Parse(paramMember)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = ctrl.caseService.UpdateMember(id, memberId, input)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "ok",
+	})
+}
