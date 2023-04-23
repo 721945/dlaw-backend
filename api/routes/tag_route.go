@@ -24,5 +24,6 @@ func (r TagRoute) Setup() {
 		api.GET("/:id", r.ctrl.GetTag)
 		api.DELETE("/:id", r.ctrl.DeleteTag)
 		api.PUT("/:id", r.ctrl.UpdateTag)
+		api.GET("/menu", r.ctrl.GetTagMenus)
 	}
 }

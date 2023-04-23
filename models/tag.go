@@ -2,5 +2,6 @@ package models
 
 type Tag struct {
 	Base
-	Name string
+	Name     string
+	ShowMenu bool `gorm:"default:false"`
 }

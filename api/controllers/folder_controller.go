@@ -200,7 +200,7 @@ func (t FolderController) GetFolderLog(c *gin.Context) {
 		return
 	}
 
-	folderLog, err := t.folderService.GetFolderLog(id)
+	folderLog, err := t.folderService.GetFolderLogs(id, userId.(uuid.UUID))
 
 	if err != nil {
 		t.logger.Error(err)

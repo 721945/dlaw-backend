@@ -27,6 +27,16 @@ func (s *TagService) GetTags() ([]dtos.TagDto, error) {
 	return dtos.ToTagDtos(tags), nil
 }
 
+func (s *TagService) GetTagMenus() ([]dtos.TagDto, error) {
+	tags, err := s.tagRepo.GetShowMenuTags()
+
+	if err != nil {
+		return []dtos.TagDto{}, err
+	}
+
+	return dtos.ToTagDtos(tags), nil
+}
+
 func (s *TagService) GetTag(id uuid.UUID) (*dtos.TagDto, error) {
 
 	tagModel, err := s.tagRepo.GetTag(id)

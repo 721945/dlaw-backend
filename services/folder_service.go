@@ -183,7 +183,7 @@ func (s *FolderService) UnArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
 }
 
 // GetActionLogs Get action logs
-func (s *FolderService) GetActionLogs(folderId uuid.UUID, userId uuid.UUID) ([]dtos.ActionLogDto, error) {
+func (s *FolderService) GetFolderLogs(folderId uuid.UUID, userId uuid.UUID) ([]dtos.ActionLogDto, error) {
 
 	err := s.checkPermission(userId, folderId)
 
