@@ -156,3 +156,40 @@ func (u UserController) UpdateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
+
+// UpdateCurrentUser
+
+func (u UserController) UpdateCurrentUser(c *gin.Context) {
+	var input dtos.UpdateUserDto
+	trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
+	if err := c.ShouldBindJSON(&input); err != nil {
+		//u.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// Get id from jwt token
+	us, existed := c.Get("id")
+
+	if existed {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing id in jwt token"})
+		return
+	}
+
+	id := us.(uuid.UUID)
+
+	user := models.User{
+		Email:     input.Email,
+		Password:  input.Password,
+		Firstname: input.FirstName,
+		Lastname:  input.LastName,
+	}
+
+	err := (u.service).WithTrx(trxHandle).UpdateUser(id, user)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": user})
+}

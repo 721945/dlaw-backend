@@ -23,7 +23,7 @@ type UserDto struct {
 	LastName  string `json:"lastName"`
 }
 
-func ToDto(user *models.User) *UserDto {
+func ToUserDto(user *models.User) *UserDto {
 	return &UserDto{
 		ID:        user.ID.String(),
 		Email:     user.Email,
