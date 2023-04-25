@@ -150,10 +150,8 @@ func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, e
 
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
 
-	s.logger.Info(cases)
-
-	for _, mCase := range cases {
-		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
+	for i, mCase := range cases {
+		casesDto[i] = dtos.ToCaseDto(mCase)
 	}
 
 	return casesDto, nil
@@ -221,8 +219,8 @@ func (s CaseService) GetArchivedCases(userId uuid.UUID) (casesDto []dtos.CaseDet
 
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
 
-	for _, mCase := range cases {
-		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
+	for i, mCase := range cases {
+		casesDto[i] = dtos.ToCaseDto(mCase)
 	}
 
 	return casesDto, nil
@@ -249,8 +247,8 @@ func (s CaseService) GetFrequencyCases(userId uuid.UUID) (casesDto []dtos.CaseDe
 
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
 
-	for _, mCase := range cases {
-		casesDto = append(casesDto, dtos.ToCaseDto(mCase))
+	for i, mCase := range cases {
+		casesDto[i] = dtos.ToCaseDto(mCase)
 	}
 
 	return casesDto, nil
