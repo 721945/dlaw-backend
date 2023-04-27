@@ -14,6 +14,7 @@ type CaseService struct {
 	folderRepo         repositories.FolderRepository
 	permissionRepo     repositories.PermissionRepository
 	casePermissionRepo repositories.CasePermissionRepository
+	caseUsedRepo       repositories.CaseUsedLogRepository
 	permissionLogRepo  repositories.CasePermissionLogRepository
 	userRepo           repositories.UserRepository
 }
@@ -26,6 +27,7 @@ func NewCaseService(
 	cp repositories.CasePermissionRepository,
 	pl repositories.CasePermissionLogRepository,
 	u repositories.UserRepository,
+	cup repositories.CaseUsedLogRepository,
 ) CaseService {
 	return CaseService{
 		logger:             logger,
@@ -35,6 +37,7 @@ func NewCaseService(
 		casePermissionRepo: cp,
 		permissionLogRepo:  pl,
 		userRepo:           u,
+		caseUsedRepo:       cup,
 	}
 }
 
@@ -226,7 +229,7 @@ func (s CaseService) GetArchivedCases(userId uuid.UUID) (casesDto []dtos.CaseDet
 	return casesDto, nil
 }
 
-func (s CaseService) GetFrequencyCases(userId uuid.UUID) (casesDto []dtos.CaseDetailDto, err error) {
+func (s CaseService) GetFrequencyCases(userId uuid.UUID) (casesDto []dtos.CaseDto, err error) {
 	permissionCases, err := s.casePermissionRepo.GetCasePermissionsByUserId(userId)
 
 	if err != nil {
@@ -239,16 +242,18 @@ func (s CaseService) GetFrequencyCases(userId uuid.UUID) (casesDto []dtos.CaseDe
 		caseIds[i] = permissionCase.CaseId
 	}
 
-	cases, err := s.caseRepo.GetCasesByIds(caseIds, false)
+	casesUsed, err := s.caseUsedRepo.GetCaseUsedLogWithCaseByCaseIdsAndUserId(caseIds, userId)
+
+	//cases, err := s.caseRepo.GetCasesSortedByFrequency(userId)
 
 	if err != nil {
 		return casesDto, err
 	}
 
-	casesDto = make([]dtos.CaseDetailDto, len(cases))
+	casesDto = make([]dtos.CaseDto, len(casesUsed))
 
-	for i, mCase := range cases {
-		casesDto[i] = dtos.ToCaseDto(mCase)
+	for i, mCase := range casesUsed {
+		casesDto[i] = dtos.ToSimpleCaseDto(*mCase.Case)
 	}
 
 	return casesDto, nil

@@ -7,6 +7,7 @@ var Module = fx.Options(
 	fx.Provide(NewMiddlewares),
 	fx.Provide(NewCorsMiddleware),
 	fx.Provide(NewJWTAuthMiddleware),
+	fx.Provide(NewPaginationMiddleware),
 )
 
 type IMiddleware interface {

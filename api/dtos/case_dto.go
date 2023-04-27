@@ -8,7 +8,8 @@ import (
 type CaseDto struct {
 	Id          string `json:"id"`
 	Name        string `json:"name"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
+	FolderId    string `json:"folderId"`
 }
 
 type CaseDetailDto struct {
@@ -101,5 +102,13 @@ func ToCaseDto(mCase models.Case) CaseDetailDto {
 		CreatedAt: mCase.CreatedAt,
 		UpdatedAt: mCase.UpdatedAt,
 		FolderId:  mCase.Folders[0].ID.String(),
+	}
+}
+
+func ToSimpleCaseDto(mCase models.Case) CaseDto {
+	return CaseDto{
+		Id:       mCase.ID.String(),
+		Name:     mCase.Title,
+		FolderId: mCase.Folders[0].ID.String(),
 	}
 }
