@@ -49,9 +49,6 @@ func (s *FolderService) GetFolders() (folders []models.Folder, err error) {
 }
 
 func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (dto *dtos.FolderDto, err error) {
-	// FIXME : Fix this
-	//_, err = s.casedUsedRepo.CreateCaseUsedLog(models.CaseUsedLog{CaseId: id, UserId: userId})
-	//_, err = s.casedUsedRepo.FindOrCreate(id, userId)
 
 	if err != nil {
 		return nil, err
@@ -60,6 +57,20 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (dto *dtos.Fol
 	//err = s.casedUsedRepo.IncrementCaseUsedLog(*folder.CaseId, userId)
 
 	folderModel, err := s.folderRepo.GetFolderContent(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// FIXME : Fix this
+	//_, err = s.casedUsedRepo.CreateCaseUsedLog(models.CaseUsedLog{CaseId: , UserId: userId})
+	_, err = s.casedUsedRepo.FindOrCreate(*folderModel.CaseId, userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.casedUsedRepo.IncrementCaseUsedLog(*folderModel.CaseId, userId)
 
 	if err != nil {
 		return nil, err

@@ -52,5 +52,7 @@ func (r *CaseRepository) UnArchiveCase(id uuid.UUID) error {
 }
 
 func (r *CaseRepository) GetCasesSortedByFrequency(userId uuid.UUID) (cases []models.Case, err error) {
-	return cases, r.db.DB.Joins("CaseUsedLogs", "user_id = ?", userId).Preload("Folders", "parent_folder_id IS NULL").Order("count DESC").Limit(10).Find(&cases).Error
+	//return cases, r.db.DB.Preload("CaseUsedLogs", "user_id = ?", userId).Find(&cases).Error
+	//return cases, r.db.DB.Joins("JOIN case_used_logs ON case_used_logs.user_id = users.id").Preload("Folders", "parent_folder_id IS NULL").Order("count DESC").Limit(10).Find(&cases).Error
+	return cases, r.db.DB.Preload("CaseUsedLogs", "user_id = ?", userId).Preload("Folders", "parent_folder_id IS NULL").Order("count DESC").Limit(10).Find(&cases).Error
 }

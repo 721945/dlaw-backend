@@ -42,3 +42,7 @@ func (r CaseUsedLogRepository) FindOrCreate(caseId uuid.UUID, userId uuid.UUID) 
 	err := r.db.DB.Where("case_id = ? AND user_id = ?", caseId, userId).FirstOrCreate(&mCase).Error
 	return mCase, err
 }
+
+func (r CaseUsedLogRepository) GetCaseUsedLogWithCaseByCaseIdsAndUserId(caseIds []uuid.UUID, userId uuid.UUID) (cases []models.CaseUsedLog, err error) {
+	return cases, r.db.DB.Preload("Case", "is_archive = false").Preload("Case.Folders", "parent_folder_id IS NULL").Where("case_id IN (?) AND user_id = ?", caseIds, userId).Find(&cases).Error
+}
