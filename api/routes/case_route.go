@@ -45,6 +45,5 @@ func (r CaseRoute) Setup() {
 		api.PATCH("/:id/archive", r.caseCtrl.ArchiveCase)
 		api.DELETE("/:id", r.caseCtrl.DeleteCase)
 		api.DELETE("/:id/members/:member", r.caseCtrl.RemoveMember)
-		//api.PUT("", r.caseCtrl.UpdateCase)
 	}
 }

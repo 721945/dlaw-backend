@@ -28,7 +28,7 @@ type OwnerDto struct {
 }
 
 type CreateCaseDto struct {
-	RedCaseNumber   string  `json:"redCaseNumber" binding:"required"`
+	RedCaseNumber   string  `json:"redCaseNumber"`
 	BlackCaseNumber string  `json:"blackCaseNumber" binding:"required"`
 	Name            string  `json:"name" binding:"required"`
 	Email           *string `json:"email" binding:"required"`

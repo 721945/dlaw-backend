@@ -20,21 +20,14 @@ func NewFileController(logger *libs.Logger, s services.FileService) FileControll
 }
 
 func (f FileController) GetFiles(c *gin.Context) {
-	actions, err := f.fileService.GetFiles()
+	dto, err := f.fileService.GetFiles()
 	if err != nil {
 		f.logger.Error(err)
 		_ = c.Error(err)
 		return
 	}
 
-	actionsDto := make([]dtos.FileDto, len(actions))
-
-	for i, action := range actions {
-		actionsDto[i] = dtos.ToFileDto(action)
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": actionsDto})
-
+	c.JSON(http.StatusOK, gin.H{"data": dto})
 }
 
 func (f FileController) GetFile(c *gin.Context) {
@@ -48,7 +41,7 @@ func (f FileController) GetFile(c *gin.Context) {
 		return
 	}
 
-	action, err := f.fileService.GetFile(id)
+	dto, err := f.fileService.GetFile(id)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -56,7 +49,7 @@ func (f FileController) GetFile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": dtos.ToFileDto(*action)})
+	c.JSON(http.StatusOK, gin.H{"data": dto})
 }
 
 func (f FileController) CreateFile(c *gin.Context) {
@@ -67,14 +60,15 @@ func (f FileController) CreateFile(c *gin.Context) {
 		return
 	}
 
-	action, err := f.fileService.CreateFile(input.ToModel())
+	dto, err := f.fileService.CreateFile(input.ToModel())
+
 	if err != nil {
 		f.logger.Error(err)
 		_ = c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": dtos.ToFileDto(action)})
+	c.JSON(http.StatusCreated, gin.H{"data": dto})
 }
 
 func (f FileController) UpdateFile(c *gin.Context) {
@@ -102,7 +96,9 @@ func (f FileController) UpdateFile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"data": "ok",
+	})
 }
 
 func (f FileController) DeleteFile(c *gin.Context) {
@@ -122,7 +118,9 @@ func (f FileController) DeleteFile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{
+		"data": "ok",
+	})
 }
 
 func (f FileController) GetSignedUrl(c *gin.Context) {
@@ -145,12 +143,7 @@ func (f FileController) GetSignedUrl(c *gin.Context) {
 }
 
 func (f FileController) UploadFile(c *gin.Context) {
-	//var input dtos.UploadFileDto
-	//if err := c.ShouldBindJSON(&input); err != nil {
-	//	f.logger.Error(err)
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
+
 	userId, isExisted := c.Get("id")
 
 	if !isExisted {

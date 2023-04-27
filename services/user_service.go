@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"github.com/721945/dlaw-backend/api/dtos"
+	"github.com/721945/dlaw-backend/api/utils"
 	"github.com/721945/dlaw-backend/infrastructure/smtp"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
@@ -22,6 +23,7 @@ type UserService interface {
 	GetUsers() ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	ForgetPassword(email string) error
+	ChangedPassword(id uuid.UUID, current string, newPassword string) error
 }
 
 type userService struct {
@@ -87,7 +89,8 @@ func (u userService) ForgetPassword(email string) error {
 
 	otp := generateOTP()
 	user.OtpSecret = &otp
-	*user.OtpExpiredAt = time.Now().Add(time.Minute * 5)
+	timeLeft := time.Now().Add(time.Minute * 5)
+	user.OtpExpiredAt = &timeLeft
 
 	err = u.userRepo.UpdateUser(user.ID, *user)
 
@@ -95,8 +98,39 @@ func (u userService) ForgetPassword(email string) error {
 		return err
 	}
 
+	err = u.smtp.SendOTPtoEmail(email, otp, 5)
+
+	if err != nil {
+		return err
+	}
+
 	// send email
 	return nil
+}
+
+func (u userService) ChangedPassword(id uuid.UUID, current string, new string) error {
+	user, err := u.userRepo.GetUser(id)
+
+	if err != nil {
+		return err
+	}
+
+	isSame := utils.CheckPasswordHash(user.Password, current)
+
+	if !isSame {
+		return fmt.Errorf("wrong password")
+	}
+
+	hashedPassword, err := utils.HashPassword(new)
+
+	if err != nil {
+		return err
+	}
+
+	user.Password = hashedPassword
+
+	return u.userRepo.UpdateUser(id, *user)
+
 }
 
 func generateOTP() string {
