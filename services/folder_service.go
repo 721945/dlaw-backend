@@ -19,6 +19,7 @@ type FolderService struct {
 	storageService     google_storage.GoogleStorage
 	casedUsedRepo      repositories.CaseUsedLogRepository
 	actionLogRepo      repositories.ActionLogRepository
+	tagRepo            repositories.TagRepository
 }
 
 func NewFolderService(
@@ -29,6 +30,7 @@ func NewFolderService(
 	storageService google_storage.GoogleStorage,
 	casedUsedRepo repositories.CaseUsedLogRepository,
 	actionLogRepo repositories.ActionLogRepository,
+	tagRepo repositories.TagRepository,
 ) FolderService {
 	return FolderService{
 		logger:             logger,
@@ -38,6 +40,7 @@ func NewFolderService(
 		storageService:     storageService,
 		casedUsedRepo:      casedUsedRepo,
 		actionLogRepo:      actionLogRepo,
+		tagRepo:            tagRepo,
 	}
 }
 
@@ -103,7 +106,15 @@ func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto) (*uuid.UUID, erro
 		return nil, err
 	}
 
+	tagFolder, err := s.tagRepo.GetTagByName("folder")
+
+	if err != nil {
+		return nil, err
+	}
+
 	folder := dto.ToModel(*parent.CaseId)
+
+	folder.Tags = []models.Tag{*tagFolder}
 
 	folder, err = s.folderRepo.CreateFolder(folder)
 

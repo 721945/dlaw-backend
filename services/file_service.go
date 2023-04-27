@@ -330,8 +330,15 @@ func (s *FileService) updateFolderTagByFolderId(folderId uuid.UUID) error {
 		return err
 	}
 
+	tag, err := s.tagRepo.GetTagByNames([]string{"folder"})
+
+	if err != nil {
+		return err
+	}
 	// make it distinct
 	tags := make(map[string]models.Tag)
+
+	tags[tag[0].Name] = tag[0]
 
 	for _, file := range files {
 		for _, tag := range file.Tags {
