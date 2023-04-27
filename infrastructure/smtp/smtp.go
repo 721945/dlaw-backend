@@ -16,7 +16,8 @@ func NewSMTP() SMTP {
 	return SMTP{
 		Host:     "smtp.gmail.com",
 		Port:     587,
-		Username: "dlaw.project@gmail.com",
+		Username: "dlaw.service.mail@gmail.com",
+		//Username: "dlaw.project@gmail.com",
 		Password: "Aa123123123",
 	}
 }

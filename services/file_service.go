@@ -1,7 +1,9 @@
 package services
 
 import (
+	"errors"
 	"fmt"
+	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/infrastructure/google_storage"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
@@ -48,16 +50,68 @@ func NewFileService(
 	}
 }
 
-func (s *FileService) GetFiles() (files []models.File, err error) {
-	return s.fileRepo.GetFiles()
+func (s *FileService) GetFiles() (dto []dtos.FileDto, err error) {
+	files, err := s.fileRepo.GetFiles()
+
+	if err != nil {
+		return nil, err
+	}
+
+	urls, err := s.getSignedFileUrls(files)
+
+	if err != nil {
+		return nil, err
+	}
+
+	newFiles := make([]models.File, len(files))
+
+	for i, file := range files {
+		newFiles[i] = file
+		newFiles[i].Url = &models.FileUrl{
+			Url:        urls[i].Url,
+			PreviewUrl: urls[i].PreviewUrl,
+		}
+	}
+	dto = make([]dtos.FileDto, 0)
+
+	for _, file := range newFiles {
+		dto = append(dto, dtos.ToFileDto(file))
+	}
+
+	return dto, err
 }
 
-func (s *FileService) GetFile(id uuid.UUID) (file *models.File, err error) {
-	return s.fileRepo.GetFile(id)
+func (s *FileService) GetFile(id uuid.UUID) (dto *dtos.FileDto, err error) {
+	file, err := s.fileRepo.GetFile(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	url, err := s.getSignedFileUrls([]models.File{*file})
+
+	if err != nil {
+		return nil, err
+	}
+
+	file.Url = &models.FileUrl{
+		Url:        url[0].Url,
+		PreviewUrl: url[0].PreviewUrl,
+	}
+
+	fileDto := dtos.ToFileDto(*file)
+
+	return &fileDto, err
 }
 
-func (s *FileService) CreateFile(file models.File) (models.File, error) {
-	return s.fileRepo.CreateFile(file)
+func (s *FileService) CreateFile(file models.File) (string, error) {
+	f, err := s.fileRepo.CreateFile(file)
+
+	if err != nil {
+		return "", err
+	}
+
+	return f.ID.String(), nil
 }
 
 func (s *FileService) UpdateFile(id uuid.UUID, file models.File) error {
@@ -295,4 +349,60 @@ func (s *FileService) updateFolderTagByFolderId(folderId uuid.UUID) error {
 
 	return err
 
+}
+
+func (s *FileService) getSignedFileUrls(files []models.File) (fileUrls []models.FileUrl, err error) {
+
+	cloudNames := make([]string, len(files))
+	previewCloudNames := make([]string, len(files))
+	downloadNames := make([]string, len(files))
+
+	for i, file := range files {
+		cloudNames[i] = file.CloudName
+		downloadNames[i] = file.Name
+		previewCloudNames[i] = file.PreviewCloudName
+	}
+
+	urlsCh := make(chan []string)
+	previewUrlsCh := make(chan []string)
+
+	// Run the two calls to GetSignedUrls in parallel using goroutines
+	go func() {
+		urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
+		if err != nil {
+			s.logger.Info(err)
+			urlsCh <- nil
+		} else {
+			urlsCh <- urls
+		}
+	}()
+
+	go func() {
+		previewUrls, err := s.storageService.GetSignedUrls(previewCloudNames, []string{}, downloadNames)
+		if err != nil {
+			s.logger.Info(err)
+			previewUrlsCh <- nil
+		} else {
+			previewUrlsCh <- previewUrls
+		}
+	}()
+
+	// Wait for both goroutines to complete and merge the results
+	urls := <-urlsCh
+	previewUrls := <-previewUrlsCh
+
+	if urls == nil || previewUrls == nil {
+		return nil, errors.New("error getting signed urls")
+	}
+
+	fileUrls = make([]models.FileUrl, len(files))
+
+	for i, _ := range files {
+		fileUrls[i] = models.FileUrl{
+			Url:        urls[i],
+			PreviewUrl: previewUrls[i],
+		}
+	}
+
+	return fileUrls, nil
 }

@@ -31,8 +31,8 @@ func (u AuthRoute) Setup() {
 	u.logger.Info("Setting auth routes")
 	{
 		u.handler.Gin.POST("/login", u.authController.Login)
-		u.handler.Gin.POST("/forget-password", nil)
-		u.handler.Gin.POST("/reset-password", nil)
-		u.handler.Gin.POST("/change-password", nil).Use(u.authMiddleware.Handler())
+		u.handler.Gin.POST("/forget-password", u.authController.ForgetPassword)
+		u.handler.Gin.POST("/reset-password", u.authController.ResetPassword)
+		u.handler.Gin.POST("/change-password", u.authController.ChangePassword).Use(u.authMiddleware.Handler())
 	}
 }
