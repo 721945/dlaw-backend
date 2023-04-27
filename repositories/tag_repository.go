@@ -42,3 +42,7 @@ func (r *TagRepository) DeleteTag(id uuid.UUID) error {
 func (r *TagRepository) GetTagByNames(names []string) (tags []models.Tag, err error) {
 	return tags, r.db.DB.Where("name IN (?)", names).Find(&tags).Error
 }
+
+func (r *TagRepository) GetTagByName(name string) (tag *models.Tag, err error) {
+	return tag, r.db.DB.Where("name = ?", name).First(&tag).Error
+}
