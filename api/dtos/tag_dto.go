@@ -9,12 +9,26 @@ type TagDto struct {
 	Name string `json:"name"`
 }
 
+type TagCountDto struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
 type CreateTagDto struct {
 	Name string `json:"name" binding:"required"`
 }
 
 type UpdateTagDto struct {
 	Name string `json:"name" binding:"required"`
+}
+
+func ToTagCountDto(tag models.TagCount) TagCountDto {
+	return TagCountDto{
+		ID:    tag.ID.String(),
+		Name:  tag.Name,
+		Count: tag.Count,
+	}
 }
 
 func ToTagDto(tag models.Tag) TagDto {

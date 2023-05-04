@@ -135,12 +135,12 @@ func (s *FileService) UploadFile(
 ) (string, error) {
 	// TODO: NEED TO CHECK FOR REPLACE FILE
 
-	err := s.checkPermission(userId, folderId)
-	mimeTypeSTtring := convertMimeTypeToString(fileType)
+	caseId, err := s.checkPermissionAndGetCaseId(userId, folderId)
+	mimeTypeToString := convertMimeTypeToString(fileType)
 	if err != nil {
 		return "", err
 	}
-	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeSTtring)
+	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeToString)
 
 	if err != nil {
 		return "", err
@@ -168,7 +168,7 @@ func (s *FileService) UploadFile(
 		return "", err
 	}
 
-	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeSTtring})
+	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeToString})
 
 	// Do the ocr and then update the tag
 
@@ -179,6 +179,7 @@ func (s *FileService) UploadFile(
 		CloudName:        cloudName,
 		PreviewCloudName: previewCloudName,
 		Tags:             tag,
+		CaseId:           caseId,
 	}
 
 	//
@@ -244,26 +245,26 @@ func checkNeedConvert(fileType string) bool {
 	return false
 }
 
-func (s *FileService) checkPermission(userId uuid.UUID, folderId uuid.UUID) error {
+func (s *FileService) checkPermissionAndGetCaseId(userId uuid.UUID, folderId uuid.UUID) (*uuid.UUID, error) {
 	// TODO : Improve to get permission by folder id later
 	folder, err := s.folderRepo.GetFolder(folderId)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	performerRole, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(userId, *folder.CaseId)
 
 	if err != nil {
-		return libs.ErrUnauthorized
+		return nil, libs.ErrUnauthorized
 	}
 
 	permission := (*performerRole).Permission.Name
 
 	if permission == "owner" || permission == "admin" {
-		return nil
+		return folder.CaseId, nil
 	}
-	return libs.ErrUnauthorized
+	return nil, libs.ErrUnauthorized
 }
 
 func convertMimeTypeToString(mimeType string) string {
@@ -412,4 +413,47 @@ func (s *FileService) getSignedFileUrls(files []models.File) (fileUrls []models.
 	}
 
 	return fileUrls, nil
+}
+
+func (s *FileService) CountFilesInTags(userId uuid.UUID) ([]dtos.TagCountDto, error) {
+
+	casePermissions, err := s.casePermissionRepo.GetCasePermissionsByUserId(userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	caseIds := make([]uuid.UUID, len(casePermissions))
+
+	for i, casePermission := range casePermissions {
+		caseIds[i] = casePermission.CaseId
+	}
+
+	files, err := s.fileRepo.GetFilesByCaseIds(caseIds)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fileIds := make([]uuid.UUID, len(files))
+
+	for i, file := range files {
+		fileIds[i] = file.ID
+	}
+
+	tagCount, err := s.tagRepo.CountFilesInTags(fileIds)
+
+	s.logger.Info(tagCount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tagDtos := make([]dtos.TagCountDto, len(tagCount))
+
+	for i, tag := range tagCount {
+		tagDtos[i] = dtos.ToTagCountDto(tag)
+	}
+
+	return tagDtos, nil
 }

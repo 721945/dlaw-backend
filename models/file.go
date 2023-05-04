@@ -6,6 +6,7 @@ type File struct {
 	Base
 	TypeId           *uuid.UUID
 	FolderId         *uuid.UUID
+	CaseId           *uuid.UUID
 	Name             string
 	CloudName        string
 	PreviewCloudName string

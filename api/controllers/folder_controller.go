@@ -210,3 +210,24 @@ func (t FolderController) GetFolderLog(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": folderLog})
 }
+
+// GetFolderRoot
+func (t FolderController) GetFolderRoot(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		t.logger.Error("User not found")
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	folder, err := t.folderService.GetFolderRoot(userId.(uuid.UUID))
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": folder})
+}

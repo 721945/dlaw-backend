@@ -20,7 +20,7 @@ func (r *TagRepository) GetTags() (tags []models.Tag, err error) {
 }
 
 func (r *TagRepository) GetShowMenuTags() (tags []models.Tag, err error) {
-	return tags, r.db.DB.Where("show_menu = false").Find(&tags).Error
+	return tags, r.db.DB.Where("show_menu = true").Find(&tags).Error
 }
 
 func (r *TagRepository) GetTag(id uuid.UUID) (tag *models.Tag, err error) {
@@ -45,4 +45,13 @@ func (r *TagRepository) GetTagByNames(names []string) (tags []models.Tag, err er
 
 func (r *TagRepository) GetTagByName(name string) (tag *models.Tag, err error) {
 	return tag, r.db.DB.Where("name = ?", name).First(&tag).Error
+}
+
+func (r *TagRepository) CountFilesInTags(fileIds []uuid.UUID) (tags []models.TagCount, err error) {
+	//return tags, r.db.DB.Table("file_tags").Select("tag_id as id, COUNT(file_id) as count, tags.name as name").Joins("LEFT JOIN tags ON tags.id = file_tags.tag_id").Group("tag_id").Group("name").Where("file_id IN (?) AND tags.show_menu = TRUE", fileIds).Find(&tags).Error
+	return tags, r.db.DB.Table("tags").Select("id, COALESCE(COUNT(file_tags.file_id), 0) as count, name").Joins("LEFT JOIN file_tags ON tags.id = file_tags.tag_id").Group("id").Group("name").Where("tags.show_menu = TRUE").Where("file_tags.file_id IN (?) OR file_tags.file_id IS NULL", fileIds).Find(&tags).Error
+	//return tags, r.db.DB.Where("show_menu = true").Find(&tags).Error
+	//return tags, r.db.DB.Where("show_menu = true").Find(&tags).Error
+	//return count, r.db.DB.Table("file_tags").Select("tag_id, COUNT(file_id) as count").Where("file_id IN (?)", fileIds).Group("tag_id").Find(&count).Error
+	//return count, r.db.DB.Table("file_tags").Select("tag_id, COUNT(file_id) as count, show_menu").Where("file_id IN (?) AND show_menu = TRUE", fileIds).Group("tag_id").Find(&count).Error
 }
