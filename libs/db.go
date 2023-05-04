@@ -61,6 +61,7 @@ func NewDatabase(env Env, myLogger *Logger) Database {
 	//	&models.Folder{},
 	//	&models.Tag{},
 	//	&models.User{},
+	//	&models.FileViewLog{},
 	//)
 	//&models.FileVersion{},
 	//	&models.FileUrl{},

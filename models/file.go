@@ -10,10 +10,8 @@ type File struct {
 	Name             string
 	CloudName        string
 	PreviewCloudName string
-	Tags             []Tag       `gorm:"many2many:file_tags;"`
-	ActionLogs       []ActionLog `gorm:"foreignKey:FileId"`
-	Url              *FileUrl
-	//Urls         []FileUrl     `gorm:"foreignKey:FileId"`
-	//FileVersions []FileVersion `gorm:"foreignKey:FileId"`
-	//UploadBy   User        `gorm:"foreignKey:UploadByUserId"`
+	Url              *FileUrl      `gorm:"-"`
+	Tags             []Tag         `gorm:"many2many:file_tags;"`
+	ActionLogs       []ActionLog   `gorm:"foreignKey:FileId"`
+	ViewLogs         []FileViewLog `gorm:"foreignKey:FileId"`
 }
