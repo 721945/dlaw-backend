@@ -30,13 +30,15 @@ func NewAppointmentRoute(
 func (r AppointmentRoute) Setup() {
 	r.logger.Info("Setting appointment routes")
 	api := r.handler.Gin.Group("/appointments")
+	api.Use(r.authMiddleware.Handler())
 	{
+
 		api.GET("", r.ctrl.GetAppointments)
-		api.POST("", r.ctrl.CreateAppointment).Use(r.authMiddleware.Handler())
-		api.GET("/:id", r.ctrl.GetAppointment).Use(r.authMiddleware.Handler())
-		api.DELETE("/:id", r.ctrl.DeleteAppointment).Use(r.authMiddleware.Handler())
-		api.PATCH("/:id", r.ctrl.UpdateAppointment).Use(r.authMiddleware.Handler())
-		api.GET("/me", r.ctrl.GetOwnAppointment).Use(r.authMiddleware.Handler())
+		api.POST("", r.ctrl.CreateAppointment)
+		api.GET("/:id", r.ctrl.GetAppointment)
+		api.DELETE("/:id", r.ctrl.DeleteAppointment)
+		api.PATCH("/:id", r.ctrl.UpdateAppointment)
+		api.GET("/me", r.ctrl.GetOwnAppointment)
 		api.GET("/public", r.ctrl.GetOwnAppointment)
 
 	}
