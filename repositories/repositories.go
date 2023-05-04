@@ -17,4 +17,5 @@ var Module = fx.Options(
 	fx.Provide(NewCasePermissionRepository),
 	fx.Provide(NewActionLogRepository),
 	fx.Provide(NewCaseUsedLogRepository),
+	fx.Provide(NewFileViewLogRepository),
 )

@@ -24,6 +24,7 @@ type FileService struct {
 	actionRepo         repositories.ActionRepository
 	actionLogRepo      repositories.ActionLogRepository
 	tagRepo            repositories.TagRepository
+	fileViewLogRepo    repositories.FileViewLogRepository
 }
 
 func NewFileService(
@@ -36,6 +37,7 @@ func NewFileService(
 	actionRepo repositories.ActionRepository,
 	actionLogRepo repositories.ActionLogRepository,
 	tagRepo repositories.TagRepository,
+	fileViewLogRepo repositories.FileViewLogRepository,
 ) FileService {
 	return FileService{
 		logger:             logger,
@@ -47,6 +49,7 @@ func NewFileService(
 		actionRepo:         actionRepo,
 		actionLogRepo:      actionLogRepo,
 		tagRepo:            tagRepo,
+		fileViewLogRepo:    fileViewLogRepo,
 	}
 }
 
@@ -81,8 +84,19 @@ func (s *FileService) GetFiles() (dto []dtos.FileDto, err error) {
 	return dto, err
 }
 
-func (s *FileService) GetFile(id uuid.UUID) (dto *dtos.FileDto, err error) {
+func (s *FileService) GetFile(id uuid.UUID, userId *uuid.UUID) (dto *dtos.FileDto, err error) {
 	file, err := s.fileRepo.GetFile(id)
+
+	if userId != nil {
+		_, err := s.fileViewLogRepo.CreateFileViewLog(models.FileViewLog{
+			FileId: id,
+			UserId: *userId,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if err != nil {
 		return nil, err
