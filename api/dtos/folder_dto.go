@@ -54,6 +54,10 @@ type UpdateFolderDto struct {
 	ParentFolderId string `json:"parentFolderId"`
 }
 
+type MoveFolderDto struct {
+	TargetFolderId string `json:"targetFolderId" binding:"required"`
+}
+
 func (dto CreateFolderDto) ToModel(caseId uuid.UUID) models.Folder {
 
 	parentFolderId, err := uuid.Parse(dto.ParentFolderId)
@@ -88,5 +92,18 @@ func (dto UpdateFolderDto) ToModel() models.Folder {
 	return models.Folder{
 		Name:           dto.Name,
 		ParentFolderId: &parentFolderId,
+	}
+}
+
+func (dto MoveFolderDto) ToModel() models.Folder {
+
+	targetFolderId, err := uuid.Parse(dto.TargetFolderId)
+
+	if err != nil {
+		return models.Folder{}
+	}
+
+	return models.Folder{
+		ParentFolderId: &targetFolderId,
 	}
 }

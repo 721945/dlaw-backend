@@ -158,6 +158,28 @@ func (s *FolderService) UpdateFolder(id uuid.UUID, dto dtos.UpdateFolderDto, use
 
 	return s.folderRepo.UpdateFolder(id, folder)
 }
+func (s *FolderService) MoveFolder(id uuid.UUID, dto dtos.MoveFolderDto, userId uuid.UUID) error {
+
+	err := s.checkPermission(userId, id)
+
+	if err != nil {
+		return err
+	}
+
+	checkFolder, err := s.folderRepo.GetFolder(id)
+
+	if err != nil {
+		return err
+	}
+
+	if checkFolder.ParentFolderId == nil {
+		return fmt.Errorf("Can not update root folder")
+	}
+
+	folder := dto.ToModel()
+
+	return s.folderRepo.UpdateFolder(id, folder)
+}
 
 func (s *FolderService) DeleteFolder(id uuid.UUID, userId uuid.UUID) error {
 
