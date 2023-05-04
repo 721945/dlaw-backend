@@ -23,6 +23,9 @@ func (r *FileRepository) GetFiles() (files []models.File, err error) {
 func (r *FileRepository) GetFile(id uuid.UUID) (file *models.File, err error) {
 	return file, r.db.DB.First(&file, id).Error
 }
+func (r *FileRepository) GetFileContent(id uuid.UUID) (file *models.File, err error) {
+	return file, r.db.DB.Preload("Tags").Preload("FileType").First(&file, id).Error
+}
 
 func (r *FileRepository) GetFilesByFolderId(folderId uuid.UUID) (files []models.File, err error) {
 	return files, r.db.DB.Preload(clause.Associations).Where("folder_id = ?", folderId).Find(&files).Error

@@ -41,7 +41,11 @@ func (f FileController) GetFile(c *gin.Context) {
 		return
 	}
 
-	dto, err := f.fileService.GetFile(id)
+	userId, _ := c.Get("id")
+
+	user := userId.(uuid.UUID)
+
+	dto, err := f.fileService.GetFile(id, &user)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -206,6 +210,26 @@ func (f FileController) CountFileInTags(c *gin.Context) {
 	}
 
 	dto, err := f.fileService.CountFilesInTags(id.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": dto})
+}
+
+func (f FileController) RecentViewedFiles(c *gin.Context) {
+	id, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	dto, err := f.fileService.GetRecentFileOpened(id.(uuid.UUID))
 
 	if err != nil {
 		f.logger.Error(err)

@@ -471,3 +471,33 @@ func (s *FileService) CountFilesInTags(userId uuid.UUID) ([]dtos.TagCountDto, er
 
 	return tagDtos, nil
 }
+
+func (s *FileService) GetRecentFileOpened(userId uuid.UUID) ([]dtos.FileDto, error) {
+
+	fileViews, err := s.fileViewLogRepo.GetFileViewLogsForUser(userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]models.File, len(fileViews))
+
+	for i, fileView := range fileViews {
+		files[i] = *fileView.File
+	}
+
+	fileUrls, err := s.getSignedFileUrls(files)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dto := make([]dtos.FileDto, len(fileViews))
+
+	for i, fileView := range fileViews {
+		fileView.File.Url = &fileUrls[i]
+		dto[i] = dtos.ToFileDto(*fileView.File)
+	}
+
+	return dto, nil
+}

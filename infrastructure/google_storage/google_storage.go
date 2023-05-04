@@ -96,16 +96,11 @@ func (g GoogleStorage) GetSignedUrls(names, versions, fileNames []string) ([]str
 		}
 	}(client)
 
-	g.logger.Info("Start of get signed urls")
-
-	g.logger.Info("PK:" + g.privateKey)
-
 	// TODO : Change this to read from env
 	expirationTime := time.Now().Add(time.Hour * 2)
 
 	bucket := client.Bucket(g.bucket)
 
-	// TODO : Make this more security
 	opts := &storage.SignedURLOptions{
 		GoogleAccessID: g.clientEmail,
 		Method:         http.MethodGet,
