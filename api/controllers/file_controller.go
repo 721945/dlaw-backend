@@ -92,7 +92,7 @@ func (f FileController) UpdateFile(c *gin.Context) {
 		return
 	}
 
-	err = f.fileService.UpdateFile(id, input.ToModel())
+	err = f.fileService.UpdateFile(id, input)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -241,14 +241,17 @@ func (f FileController) RecentViewedFiles(c *gin.Context) {
 }
 
 func (f FileController) MoveFile(c *gin.Context) {
-	var input dtos.MoveFileDto
-	if err := c.ShouldBindJSON(&input); err != nil {
-		f.logger.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
 		return
 	}
 
-	dto, err := f.fileService.CreateFile(input)
+	id := c.Param("id")
+
+	fileId, err := uuid.Parse(id)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -256,5 +259,21 @@ func (f FileController) MoveFile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": dto})
+	var input dtos.MoveFileDto
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		f.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = f.fileService.MoveFile(fileId, input, userId.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": "ok"})
 }

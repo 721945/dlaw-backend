@@ -39,8 +39,8 @@ func (r FileRoute) Setup() {
 
 		api.POST("", r.ctrl.CreateFile)
 		api.POST("/upload", r.ctrl.UploadFile)
-		
-		api.PATCH("/:id/move", r.ctrl.CreateFile)
+
+		api.PATCH("/:id/move", r.ctrl.MoveFile)
 		api.PATCH("/:id", r.ctrl.UpdateFile)
 
 		api.DELETE("/:id", r.ctrl.DeleteFile)
