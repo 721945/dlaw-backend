@@ -20,11 +20,16 @@ type FileDto struct {
 }
 
 func ToFileDto(file models.File) FileDto {
+	var url, previewUrl string
+	if file.Url != nil {
+		url = file.Url.Url
+		previewUrl = file.Url.PreviewUrl
+	}
 	return FileDto{
 		Id:         file.ID.String(),
 		Name:       file.Name,
-		Url:        file.Url.Url,
-		PreviewUrl: file.Url.PreviewUrl,
+		Url:        url,
+		PreviewUrl: previewUrl,
 		Tags:       ToTagDtos(file.Tags),
 		CreatedAt:  file.CreatedAt.String(),
 		UpdatedAt:  file.UpdatedAt.String(),

@@ -36,6 +36,7 @@ func (r FileRoute) Setup() {
 		api.POST("", r.ctrl.CreateFile)
 		api.GET("/:id", r.ctrl.GetFile)
 		api.GET("/tags/count", r.ctrl.CountFileInTags)
+		api.GET("/recent", r.ctrl.RecentViewedFiles)
 		api.DELETE("/:id", r.ctrl.DeleteFile)
 		api.PUT("", r.ctrl.UpdateFile)
 		api.POST("/upload", r.ctrl.UploadFile)
