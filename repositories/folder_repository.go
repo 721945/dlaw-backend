@@ -81,20 +81,25 @@ func (r *FolderRepository) UpdateTags(id uuid.UUID, tags []models.Tag) error {
 }
 
 func (r *FolderRepository) GetParentFolder(id uuid.UUID) (folder *models.Folder, err error) {
-	return folder, r.db.DB.Preload("ParentFolder").Where("id = ?", id).First(&folder).Error
+	return folder, r.db.DB.Where("id = ?", id).First(&folder).Error
 }
 
-func (r *FolderRepository) GetFolderToRoot(id uuid.UUID) (folders []models.Folder, err error) {
+func (r *FolderRepository) GetFromRootToFolder(id uuid.UUID) (folders []models.Folder, err error) {
 
 	folder, err := r.GetParentFolder(id)
 
-	if folder.ParentFolder != nil {
-		folders = append(folders, *folder)
-		return r.GetFolderToRoot(folder.ParentFolder.ID)
+	//
+	if folder.ParentFolderId != nil {
+
+		parentFolder, err := r.GetFromRootToFolder(*folder.ParentFolderId)
+		if err != nil {
+			return folders, err
+		}
+		folders = append(folders, parentFolder...)
 	}
 
 	folders = append(folders, *folder)
-
+	//
 	return folders, err
 }
 

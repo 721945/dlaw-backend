@@ -193,7 +193,7 @@ func (s *FolderService) UnArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
 }
 
 // GetActionLogs Get action logs
-func (s *FolderService) GetFolderLogs(folderId uuid.UUID, userId uuid.UUID) ([]dtos.ActionLogDto, error) {
+func (s *FolderService) GetFolderLogs(userId, folderId uuid.UUID) ([]dtos.ActionLogDto, error) {
 
 	err := s.checkPermission(userId, folderId)
 
@@ -332,7 +332,7 @@ func (s *FolderService) getSignedFileUrl(file models.File) (fileUrl models.FileU
 }
 
 // GetFolderRoot
-func (s *FolderService) GetFolderRoot(folderId uuid.UUID, userId uuid.UUID) ([]dtos.SimpleFolderDto, error) {
+func (s *FolderService) GetFolderRoot(userId, folderId uuid.UUID) ([]dtos.SimpleFolderDto, error) {
 
 	err := s.checkPermission(userId, folderId)
 
@@ -340,7 +340,7 @@ func (s *FolderService) GetFolderRoot(folderId uuid.UUID, userId uuid.UUID) ([]d
 		return nil, err
 	}
 
-	folders, err := s.folderRepo.GetFolderToRoot(folderId)
+	folders, err := s.folderRepo.GetFromRootToFolder(folderId)
 
 	if err != nil {
 		return nil, err
