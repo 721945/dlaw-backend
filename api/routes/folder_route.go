@@ -28,12 +28,15 @@ func (r FolderRoute) Setup() {
 	api := r.handler.Gin.Group("/folders")
 	{
 		api.GET("", r.controller.GetFolders)
-		api.POST("", r.controller.CreateFolder)
 		api.GET("/:id", r.controller.GetFolder)
 		api.GET("/:id/root", r.controller.GetFolderRoot)
 		api.GET("/:id/log", r.controller.GetFolderLog)
-		api.DELETE("/:id", r.controller.DeleteFolder)
-		//api.DELETE("/:id/archive", r.controller.ArchiveFolder)
+
+		api.POST("", r.controller.CreateFolder)
+
+		api.PATCH("/:id/move", r.controller.MoveFolder)
 		api.PATCH("/:id", r.controller.UpdateFolder)
+
+		api.DELETE("/:id", r.controller.DeleteFolder)
 	}
 }

@@ -33,13 +33,16 @@ func (r FileRoute) Setup() {
 	api.Use(r.authMiddleware.Handler())
 	{
 		api.GET("", r.ctrl.GetFiles)
-		api.POST("", r.ctrl.CreateFile)
-		api.PATCH("/:id/move", r.ctrl.CreateFile)
 		api.GET("/:id", r.ctrl.GetFile)
 		api.GET("/tags/count", r.ctrl.CountFileInTags)
 		api.GET("/recent", r.ctrl.RecentViewedFiles)
-		api.DELETE("/:id", r.ctrl.DeleteFile)
-		api.PATCH("/:id", r.ctrl.UpdateFile)
+
+		api.POST("", r.ctrl.CreateFile)
 		api.POST("/upload", r.ctrl.UploadFile)
+		
+		api.PATCH("/:id/move", r.ctrl.CreateFile)
+		api.PATCH("/:id", r.ctrl.UpdateFile)
+
+		api.DELETE("/:id", r.ctrl.DeleteFile)
 	}
 }

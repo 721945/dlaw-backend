@@ -153,7 +153,7 @@ func (s *FileService) UploadFile(
 	folderId uuid.UUID,
 	userId uuid.UUID,
 ) (string, error) {
-	// TODO: NEED TO CHECK NAME AND FOLDER BEFORE UPLOAD FOR REPLACE FILE
+	// TODO : NEED TO CHECK NAME AND FOLDER BEFORE UPLOAD FOR REPLACE FILE
 
 	caseId, err := s.checkPermissionAndGetCaseId(userId, folderId)
 	mimeTypeToString := convertMimeTypeToString(fileType)
@@ -179,7 +179,7 @@ func (s *FileService) UploadFile(
 	versionPreview = version
 
 	if needConvert {
-		//	DO CONVERT
+		//	TODO : DO CONVERT
 		//	previewCloudName = generateUniqueName(fileName)
 		//	versionPreview, err = s.storageService.UploadFile(file, previewCloudName)
 	}

@@ -246,3 +246,41 @@ func (t FolderController) GetFolderRoot(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": folder})
 }
+
+func (t FolderController) MoveFolder(c *gin.Context) {
+	var input dtos.MoveFolderDto
+	//
+	var paramId = c.Param("id")
+	//
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+	//
+	if err := c.ShouldBindJSON(&input); err != nil {
+		t.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	err = t.folderService.MoveFolder(id, input, userId.(uuid.UUID))
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}
