@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
+	"github.com/meilisearch/meilisearch-go"
 	"gorm.io/gorm/clause"
 )
 
@@ -48,4 +49,63 @@ func (r *FileRepository) DeleteFile(id uuid.UUID) error {
 
 func (r *FileRepository) GetFilesByCaseIds(caseIds []uuid.UUID) (files []models.File, err error) {
 	return files, r.db.DB.Where("case_id IN ?", caseIds).Find(&files).Error
+}
+
+func (r *FileRepository) CreateFileDocument(file models.MeiliFile) (resp *meilisearch.TaskInfo, err error) {
+	return r.db.Meili.Index("files").AddDocuments(file)
+}
+
+func (r *FileRepository) UpdateFileDocument(file models.MeiliFile) (resp *meilisearch.TaskInfo, err error) {
+	return r.db.Meili.Index("files").UpdateDocuments(file)
+}
+
+func (r *FileRepository) DeleteFileDocument(id []string) (resp *meilisearch.TaskInfo, err error) {
+	return r.db.Meili.Index("files").DeleteDocuments(id)
+}
+
+func (r *FileRepository) SearchFiles(query string) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, nil)
+}
+
+func (r *FileRepository) SearchFilesByCaseId(query string, caseId uuid.UUID) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "case_id = " + caseId.String(),
+	})
+}
+
+func (r *FileRepository) SearchFilesByFolderId(query string, folderId uuid.UUID) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "folder_id = " + folderId.String(),
+	})
+}
+
+// SearchFilesByTag : Search by tag name
+func (r *FileRepository) SearchFilesByTag(query string, tag string) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "tags = " + tag,
+	})
+}
+
+func (r *FileRepository) SearchFilesByCaseIdAndTag(query string, caseId uuid.UUID, tag string) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "case_id = " + caseId.String() + " AND tags = " + tag,
+	})
+}
+
+func (r *FileRepository) SearchFilesByFolderIdAndTag(query string, folderId uuid.UUID, tag string) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "folder_id = " + folderId.String() + " AND tags = " + tag,
+	})
+}
+
+func (r *FileRepository) SearchFilesByCaseIdAndFolderId(query string, caseId uuid.UUID, folderId uuid.UUID) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "case_id = " + caseId.String() + " AND folder_id = " + folderId.String(),
+	})
+}
+
+func (r *FileRepository) SearchFilesByCaseIdAndFolderIdAndTag(query string, caseId uuid.UUID, folderId uuid.UUID, tag string) (resp *meilisearch.SearchResponse, err error) {
+	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
+		Filter: "case_id = " + caseId.String() + " AND folder_id = " + folderId.String() + " AND tags = " + tag,
+	})
 }
