@@ -48,18 +48,18 @@ func NewDatabase(env Env, myLogger *Logger) Database {
 
 	// Uncomment if want to Migrate the schema
 	//err = db.AutoMigrate(
-	//	//&models.Action{},
-	//	//&models.Permission{},
-	//	//&models.ActionLog{},
-	//	//&models.Appointment{},
+	//	&models.Action{},
+	//	&models.Permission{},
+	//	&models.ActionLog{},
+	//	&models.Appointment{},
 	//	&models.Case{},
-	//	//&models.CasePermission{},
-	//	//&models.CasePermissionLog{},
+	//	&models.CasePermission{},
+	//	&models.CasePermissionLog{},
 	//	&models.CaseUsedLog{},
-	//	//&models.FileType{},
-	//	//&models.File{},
-	//	//&models.Folder{},
-	//	//&models.Tag{},
+	//	&models.FileType{},
+	//	&models.File{},
+	//	&models.Folder{},
+	//	&models.Tag{},
 	//	&models.User{},
 	//)
 	//&models.FileVersion{},

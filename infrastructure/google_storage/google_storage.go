@@ -96,6 +96,10 @@ func (g GoogleStorage) GetSignedUrls(names, versions, fileNames []string) ([]str
 		}
 	}(client)
 
+	g.logger.Info("Start of get signed urls")
+
+	g.logger.Info("PK:" + g.privateKey)
+
 	// TODO : Change this to read from env
 	expirationTime := time.Now().Add(time.Hour * 2)
 

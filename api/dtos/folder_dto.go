@@ -16,6 +16,11 @@ type FolderDto struct {
 	CaseId     string      `json:"caseId"`
 }
 
+type SimpleFolderDto struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func ToFolderDtos(folders []models.Folder) []FolderDto {
 	var dtos []FolderDto
 

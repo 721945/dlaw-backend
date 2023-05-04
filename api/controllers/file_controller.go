@@ -195,3 +195,23 @@ func (f FileController) UploadFile(c *gin.Context) {
 		"data": url,
 	})
 }
+
+func (f FileController) CountFileInTags(c *gin.Context) {
+	id, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	dto, err := f.fileService.CountFilesInTags(id.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": dto})
+}

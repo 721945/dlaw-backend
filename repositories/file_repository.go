@@ -42,3 +42,7 @@ func (r *FileRepository) UpdateFile(id uuid.UUID, file models.File) error {
 func (r *FileRepository) DeleteFile(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.File{}, id).Error
 }
+
+func (r *FileRepository) GetFilesByCaseIds(caseIds []uuid.UUID) (files []models.File, err error) {
+	return files, r.db.DB.Where("case_id IN ?", caseIds).Find(&files).Error
+}

@@ -80,6 +80,24 @@ func (r *FolderRepository) UpdateTags(id uuid.UUID, tags []models.Tag) error {
 	return r.db.DB.Model(&model).Association("Tags").Append(&tags)
 }
 
+func (r *FolderRepository) GetParentFolder(id uuid.UUID) (folder *models.Folder, err error) {
+	return folder, r.db.DB.Preload("ParentFolder").Where("id = ?", id).First(&folder).Error
+}
+
+func (r *FolderRepository) GetFolderToRoot(id uuid.UUID) (folders []models.Folder, err error) {
+
+	folder, err := r.GetParentFolder(id)
+
+	if folder.ParentFolder != nil {
+		folders = append(folders, *folder)
+		return r.GetFolderToRoot(folder.ParentFolder.ID)
+	}
+
+	folders = append(folders, *folder)
+
+	return folders, err
+}
+
 //func (r *FolderRepository) GetCasePermissionByFolderId(folderId uuid.UUID) (folders []models.Folder, err error) {
 //
 //}

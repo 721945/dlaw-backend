@@ -330,3 +330,31 @@ func (s *FolderService) getSignedFileUrl(file models.File) (fileUrl models.FileU
 
 	return fileUrl, nil
 }
+
+// GetFolderRoot
+func (s *FolderService) GetFolderRoot(folderId uuid.UUID, userId uuid.UUID) ([]dtos.SimpleFolderDto, error) {
+
+	err := s.checkPermission(userId, folderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	folders, err := s.folderRepo.GetFolderToRoot(folderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	folderDtos := make([]dtos.SimpleFolderDto, len(folders))
+
+	for i, folder := range folders {
+		folderDtos[i] = dtos.SimpleFolderDto{
+			Id:   folder.ID.String(),
+			Name: folder.Name,
+		}
+	}
+
+	return folderDtos, nil
+
+}
