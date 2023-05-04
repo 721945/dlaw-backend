@@ -221,7 +221,22 @@ func (t FolderController) GetFolderRoot(c *gin.Context) {
 		return
 	}
 
-	folder, err := t.folderService.GetFolderRoot(userId.(uuid.UUID))
+	id := c.Param("id")
+
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+	folderId, err := uuid.Parse(id)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	folder, err := t.folderService.GetFolderRoot(userId.(uuid.UUID), folderId)
 
 	if err != nil {
 		t.logger.Error(err)
