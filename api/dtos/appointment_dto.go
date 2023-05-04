@@ -8,13 +8,13 @@ import (
 )
 
 type CreateAppointmentDto struct {
-	CaseId    string   `json:"caseId" binding:"required"`
-	Title     string   `json:"title" binding:"required"`
-	Location  string   `json:"location" `
-	Detail    string   `json:"detail" `
-	Emails    []string `json:"emails" binding:"required"`
-	StartDate string   `json:"startDate" binding:"required"`
-	DateTime  string   `json:"dateTime" binding:"required"`
+	CaseId   string   `json:"caseId" binding:"required"`
+	Title    string   `json:"title" binding:"required"`
+	Location string   `json:"location" `
+	Detail   string   `json:"detail" `
+	Emails   []string `json:"emails" binding:"required"`
+	//StartDate string   `json:"startDate" binding:"required"`
+	DateTime string `json:"dateTime" binding:"required"`
 }
 
 type UpdateAppointmentDto struct {

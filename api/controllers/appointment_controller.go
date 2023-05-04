@@ -90,7 +90,9 @@ func (p AppointmentController) CreateAppointment(c *gin.Context) {
 		_ = c.Error(libs.ErrUnauthorized)
 		return
 	}
+
 	var input dtos.CreateAppointmentDto
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		p.logger.Error(err)
 		_ = c.Error(err)
