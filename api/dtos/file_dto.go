@@ -2,11 +2,11 @@ package dtos
 
 import (
 	"github.com/721945/dlaw-backend/models"
+	"github.com/google/uuid"
 )
 
 type CreateFileDto struct {
 	Name string `json:"name" binding:"required"`
-	Url  string `json:"url" binding:"required"`
 }
 
 type FileDto struct {
@@ -54,7 +54,6 @@ func (c CreateFileDto) ToModel() models.File {
 
 type UpdateFileDto struct {
 	Name string `json:"name"`
-	Url  string `json:"url"`
 }
 
 func (u UpdateFileDto) ToModel() models.File {
@@ -65,4 +64,19 @@ func (u UpdateFileDto) ToModel() models.File {
 
 type GetSingleFileDto struct {
 	Amount int `json:"amount"`
+}
+
+type MoveFileDto struct {
+	TargetFolderId string `json:"targetFolderId" binding:"required"`
+}
+
+func (m MoveFileDto) ToModel() *models.File {
+	id, err := uuid.Parse(m.TargetFolderId)
+	if err != nil {
+		return nil
+	}
+
+	return &models.File{
+		FolderId: &id,
+	}
 }

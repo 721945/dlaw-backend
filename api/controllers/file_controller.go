@@ -76,19 +76,19 @@ func (f FileController) CreateFile(c *gin.Context) {
 }
 
 func (f FileController) UpdateFile(c *gin.Context) {
-	var input dtos.UpdateFileDto
-	if err := c.ShouldBindJSON(&input); err != nil {
-		f.logger.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	paramId := c.Param("id")
 	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		f.logger.Error(err)
 		_ = c.Error(err)
+		return
+	}
+
+	var input dtos.UpdateFileDto
+	if err := c.ShouldBindJSON(&input); err != nil {
+		f.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -238,4 +238,23 @@ func (f FileController) RecentViewedFiles(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": dto})
+}
+
+func (f FileController) MoveFile(c *gin.Context) {
+	var input dtos.MoveFileDto
+	if err := c.ShouldBindJSON(&input); err != nil {
+		f.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	dto, err := f.fileService.CreateFile(input)
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": dto})
 }
