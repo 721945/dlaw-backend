@@ -128,17 +128,23 @@ func (s *FileService) CreateFile(file models.File) (string, error) {
 	return f.ID.String(), nil
 }
 
-func (s *FileService) UpdateFile(id uuid.UUID, file models.File) error {
-	return s.fileRepo.UpdateFile(id, file)
+func (s *FileService) UpdateFile(id uuid.UUID, dto dtos.UpdateFileDto) error {
+	model := dto.ToModel()
+	return s.fileRepo.UpdateFile(id, model)
+}
+
+func (s *FileService) MoveFile(id uuid.UUID, dto dtos.MoveFileDto) error {
+	model := dto.ToModel()
+	if model == nil {
+		return errors.New("invalid dto")
+	}
+
+	return s.fileRepo.UpdateFile(id, *model)
 }
 
 func (s *FileService) DeleteFile(id uuid.UUID) error {
 	return s.fileRepo.DeleteFile(id)
 }
-
-//func (s *FileService) GetSignedUrl(amount int) ([]string, error) {
-//	return s.storageService.GetSignedUrls(amount)
-//}
 
 func (s *FileService) UploadFile(
 	file multipart.File,
@@ -147,7 +153,7 @@ func (s *FileService) UploadFile(
 	folderId uuid.UUID,
 	userId uuid.UUID,
 ) (string, error) {
-	// TODO: NEED TO CHECK FOR REPLACE FILE
+	// TODO: NEED TO CHECK NAME AND FOLDER BEFORE UPLOAD FOR REPLACE FILE
 
 	caseId, err := s.checkPermissionAndGetCaseId(userId, folderId)
 	mimeTypeToString := convertMimeTypeToString(fileType)

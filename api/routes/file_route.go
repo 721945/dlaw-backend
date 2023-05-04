@@ -34,11 +34,12 @@ func (r FileRoute) Setup() {
 	{
 		api.GET("", r.ctrl.GetFiles)
 		api.POST("", r.ctrl.CreateFile)
+		api.PATCH("/:id/move", r.ctrl.CreateFile)
 		api.GET("/:id", r.ctrl.GetFile)
 		api.GET("/tags/count", r.ctrl.CountFileInTags)
 		api.GET("/recent", r.ctrl.RecentViewedFiles)
 		api.DELETE("/:id", r.ctrl.DeleteFile)
-		api.PUT("", r.ctrl.UpdateFile)
+		api.PATCH("/:id", r.ctrl.UpdateFile)
 		api.POST("/upload", r.ctrl.UploadFile)
 	}
 }
