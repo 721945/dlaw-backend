@@ -32,8 +32,6 @@ func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 		if len(t) == 2 {
 			authToken := t[1]
 
-			m.logger.Info(authToken)
-			
 			user, err := m.service.VerifyToken(authToken)
 
 			if err != nil {
@@ -42,7 +40,7 @@ func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 				return
 			}
 
-			m.logger.Info(user.ID)
+			m.logger.Info("USER : ", user.ID)
 
 			c.Set("user", user)
 			c.Set("id", user.ID)

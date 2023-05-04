@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/721945/dlaw-backend/api/dtos"
+	"github.com/721945/dlaw-backend/infrastructure/google_calendar"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
@@ -13,6 +14,7 @@ type AppointmentService struct {
 	appointmentRepo repositories.AppointmentRepository
 	caseRepo        repositories.CaseRepository
 	casePermission  repositories.CasePermissionRepository
+	calendarService google_calendar.GoogleCalendar
 }
 
 func NewAppointmentService(
@@ -20,12 +22,14 @@ func NewAppointmentService(
 	r repositories.AppointmentRepository,
 	cr repositories.CaseRepository,
 	cpr repositories.CasePermissionRepository,
+	cld google_calendar.GoogleCalendar,
 ) AppointmentService {
 	return AppointmentService{
 		logger:          logger,
 		appointmentRepo: r,
 		caseRepo:        cr,
 		casePermission:  cpr,
+		calendarService: cld,
 	}
 }
 
@@ -76,7 +80,13 @@ func (s *AppointmentService) CreateAppointment(userId uuid.UUID, dto dtos.Create
 		return "", libs.ErrNotFound
 	}
 
-	appointmentModel := dto.ToAppointmentModel(*caseId, "")
+	// Create event
+	event, err := s.calendarService.CreateEvent(dto.Title, dto.DateTime, dto.DateTime, dto.Emails, &dto.Location, &dto.Detail)
+	if err != nil {
+		return "", err
+	}
+
+	appointmentModel := dto.ToAppointmentModel(*caseId, event.Id)
 
 	appointment, err := s.appointmentRepo.CreateAppointment(appointmentModel)
 
