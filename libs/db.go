@@ -2,6 +2,7 @@ package libs
 
 import (
 	"fmt"
+	"github.com/meilisearch/meilisearch-go"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -20,7 +21,8 @@ type Config struct {
 }
 
 type Database struct {
-	DB *gorm.DB
+	DB    *gorm.DB
+	Meili *meilisearch.Client
 }
 
 func NewDatabase(env Env, myLogger *Logger) Database {
@@ -70,7 +72,12 @@ func NewDatabase(env Env, myLogger *Logger) Database {
 		myLogger.Fatal("👹 Can't migrate database: ", err)
 	}
 
-	return Database{DB: db}
+	meili := meilisearch.NewClient(meilisearch.ClientConfig{
+		Host:   env.MeiliHost,
+		APIKey: env.MeiliApiKey,
+	})
+
+	return Database{DB: db, Meili: meili}
 }
 
 //func (db *Database) Migrates(x uint) {

@@ -15,3 +15,14 @@ type File struct {
 	ActionLogs       []ActionLog   `gorm:"foreignKey:FileId"`
 	ViewLogs         []FileViewLog `gorm:"foreignKey:FileId"`
 }
+
+type MeiliFile struct {
+	Id        string   `json:"id"`
+	FileId    string   `json:"file_id"`
+	Name      string   `json:"name"`
+	Type      string   `json:"type"`
+	Content   string   `json:"content"`
+	Tags      []string `json:"tags"`
+	FolderIds []string `json:"folder_ids"`
+	CaseId    string   `json:"case_id"`
+}
