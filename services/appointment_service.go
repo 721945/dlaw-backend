@@ -81,12 +81,12 @@ func (s *AppointmentService) CreateAppointment(userId uuid.UUID, dto dtos.Create
 	}
 
 	// Create event
-	event, err := s.calendarService.CreateEvent(dto.Title, dto.DateTime, dto.DateTime, dto.Emails, &dto.Location, &dto.Detail)
+	// event, err := s.calendarService.CreateEvent(dto.Title, dto.DateTime, dto.DateTime, dto.Emails, &dto.Location, &dto.Detail)
 	if err != nil {
 		return "", err
 	}
 
-	appointmentModel := dto.ToAppointmentModel(*caseId, event.Id)
+	appointmentModel := dto.ToAppointmentModel(*caseId, "")
 
 	appointment, err := s.appointmentRepo.CreateAppointment(appointmentModel)
 

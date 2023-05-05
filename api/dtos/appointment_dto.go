@@ -42,6 +42,12 @@ func (c *CreateAppointmentDto) ToAppointmentModel(caseId uuid.UUID, eventId stri
 		fmt.Println(err)
 		return models.Appointment{}
 	}
+	emails := make([]models.Email, len(c.Emails))
+	for i, email := range c.Emails {
+		emails[i] = models.Email{
+			Email: email,
+		}
+	}
 	return models.Appointment{
 		CaseId:      caseId,
 		EventId:     eventId,
@@ -49,7 +55,7 @@ func (c *CreateAppointmentDto) ToAppointmentModel(caseId uuid.UUID, eventId stri
 		Detail:      c.Detail,
 		Location:    c.Location,
 		DateTime:    t,
-		Emails:      c.Emails,
+		Emails:      emails,
 		IsPublished: false,
 	}
 }
@@ -61,11 +67,18 @@ func (u *UpdateAppointmentDto) ToAppointmentModel() models.Appointment {
 		fmt.Println(err)
 		return models.Appointment{}
 	}
+	emails := make([]models.Email, len(u.Emails))
+	for i, email := range u.Emails {
+		emails[i] = models.Email{
+			Email: email,
+		}
+	}
+
 	return models.Appointment{
 		Title:    u.Title,
 		Location: u.Location,
 		Detail:   u.Detail,
-		Emails:   u.Emails,
+		Emails:   emails,
 		DateTime: t,
 		//DateTime: u.DateTime,
 	}
@@ -76,9 +89,14 @@ func ToAppointmentDto(appointment models.Appointment) AppointmentDto {
 	if appointment.CreatedAt == appointment.UpdatedAt {
 		updatedAt = ""
 	}
+	emails := make([]string, len(appointment.Emails))
+	for i, email := range appointment.Emails {
+		emails[i] = email.Email
+	}
+
 	return AppointmentDto{
 		ID:        appointment.ID.String(),
-		Emails:    appointment.Emails,
+		Emails:    emails,
 		Title:     appointment.Title,
 		Detail:    appointment.Detail,
 		Location:  appointment.Location,

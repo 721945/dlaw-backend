@@ -54,6 +54,7 @@ func NewDatabase(env Env, myLogger *Logger) Database {
 	//	&models.Permission{},
 	//	&models.ActionLog{},
 	//	&models.Appointment{},
+	//	&models.Email{},
 	//	&models.Case{},
 	//	&models.CasePermission{},
 	//	&models.CasePermissionLog{},
