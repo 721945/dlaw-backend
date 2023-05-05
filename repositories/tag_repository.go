@@ -43,6 +43,10 @@ func (r *TagRepository) GetTagByNames(names []string) (tags []models.Tag, err er
 	return tags, r.db.DB.Where("name IN (?)", names).Find(&tags).Error
 }
 
+func (r *TagRepository) GetEtcTag() (tag *models.Tag, err error) {
+	return tag, r.db.DB.Where("name = ?", "etc").First(&tag).Error
+}
+
 func (r *TagRepository) GetTagByName(name string) (tag *models.Tag, err error) {
 	return tag, r.db.DB.Where("name = ?", name).First(&tag).Error
 }

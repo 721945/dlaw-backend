@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:3000", "https://localhost:3000", "www.dlaw-dms.com","https://www.dlaw-dms.com" ,"https://app.dlaw-dms.com", "https://www.app.dlaw-dms.com"],
+    "method": ["GET", "POST"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]
