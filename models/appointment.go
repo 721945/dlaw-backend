@@ -14,6 +14,20 @@ type Appointment struct {
 	Detail      string
 	Location    string
 	DateTime    time.Time
-	Emails      []string `gorm:"type:text"`
+	Emails      []Email
 	IsPublished bool
 }
+
+type Email struct {
+	Base
+	AppointmentId uuid.UUID
+	Appointment   *Appointment
+	Email         string
+}
+
+//func (a Appointment) BeforeCreate(tx *gorm.DB) (err error) {
+//
+//	a.Emails = strings.Join(a.Emails, ",")
+//
+//	return
+//}

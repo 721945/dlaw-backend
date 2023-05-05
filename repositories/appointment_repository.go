@@ -16,12 +16,11 @@ func NewAppointmentRepository(logger *libs.Logger, db libs.Database) Appointment
 }
 
 func (r *AppointmentRepository) GetAppointments() (appointments []models.Appointment, err error) {
-	return appointments, r.db.DB.Find(&appointments).Error
-
+	return appointments, r.db.DB.Preload("Emails").Find(&appointments).Error
 }
 
 func (r *AppointmentRepository) GetAppointment(id uuid.UUID) (appointment *models.Appointment, err error) {
-	return appointment, r.db.DB.First(&appointment, id).Error
+	return appointment, r.db.DB.Preload("Emails").First(&appointment, id).Error
 }
 
 func (r *AppointmentRepository) CreateAppointment(appointment models.Appointment) (models.Appointment, error) {
@@ -37,10 +36,10 @@ func (r *AppointmentRepository) DeleteAppointment(id uuid.UUID) error {
 }
 
 func (r *AppointmentRepository) GetAppointmentByCaseIds(caseIds []uuid.UUID) (appointments []models.Appointment, err error) {
-	return appointments, r.db.DB.Preload("User").Where("case_id IN (?)", caseIds).Find(&appointments).Error
+	return appointments, r.db.DB.Preload("Emails").Where("case_id IN (?)", caseIds).Find(&appointments).Error
 }
 
 func (r *AppointmentRepository) GetPublicAppointments() (appointments []models.Appointment, err error) {
-	return appointments, r.db.DB.Where("is_public = true").Find(&appointments).Error
+	return appointments, r.db.DB.Preload("Emails").Where("is_public = true").Find(&appointments).Error
 
 }
