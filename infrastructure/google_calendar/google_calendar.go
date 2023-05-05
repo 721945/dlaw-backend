@@ -3,6 +3,7 @@ package google_calendar
 import (
 	"context"
 	"fmt"
+	"github.com/721945/dlaw-backend/libs"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 )
@@ -11,8 +12,8 @@ type GoogleCalendar struct {
 	srv *calendar.Service
 }
 
-func NewGoogleCalendar() GoogleCalendar {
-	srv, err := getCalendarClient("/Users/iam721945/.config/gcloud/application_default_credentials.json")
+func NewGoogleCalendar(env libs.Env) GoogleCalendar {
+	srv, err := getCalendarClient(env.GOOGLE_CRED_PATH)
 
 	if err != nil {
 		panic(err)

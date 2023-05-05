@@ -20,6 +20,7 @@ type Env struct {
 	GoogleCloudStorageClientEmail string `mapstructure:"GOOGLE_CLOUD_STORAGE_CLIENT_EMAIL"`
 	MeiliHost                     string `mapstructure:"MEILI_HOST"`
 	MeiliApiKey                   string `mapstructure:"MEILI_MASTER_KEY"`
+	GOOGLE_CRED_PATH              string `mapstructure:"GOOGLE_CRED_PATH"`
 }
 
 func NewEnv() Env {
@@ -40,6 +41,7 @@ func NewEnv() Env {
 		GoogleCloudStorageClientEmail: viper.GetString("GOOGLE_CLOUD_STORAGE_CLIENT_EMAIL"),
 		MeiliHost:                     viper.GetString("MEILI_HOST"),
 		MeiliApiKey:                   viper.GetString("MEILI_MASTER_KEY"),
+		GOOGLE_CRED_PATH:              viper.GetString("GOOGLE_CRED_PATH"),
 	}
 
 	//log.Fatal("ERROR 1")
