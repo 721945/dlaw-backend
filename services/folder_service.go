@@ -380,3 +380,20 @@ func (s *FolderService) GetFolderRoot(userId, folderId uuid.UUID) ([]dtos.Simple
 	return folderDtos, nil
 
 }
+
+func (s *FolderService) GetTagMenus(folderId uuid.UUID) ([]dtos.TagCountDto, error) {
+
+	tags, err := s.tagRepo.CountFilesInTagsByFolderId(folderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tagMenus := make([]dtos.TagCountDto, len(tags))
+
+	for i, tag := range tags {
+		tagMenus[i] = dtos.ToTagCountDto(tag)
+	}
+
+	return tagMenus, nil
+}

@@ -31,6 +31,7 @@ func (r FolderRoute) Setup() {
 		api.GET("/:id", r.controller.GetFolder)
 		api.GET("/:id/root", r.controller.GetFolderRoot)
 		api.GET("/:id/log", r.controller.GetFolderLog)
+		api.GET("/:id/menu", r.controller.GetTagMenus)
 
 		api.POST("", r.controller.CreateFolder)
 
@@ -38,5 +39,6 @@ func (r FolderRoute) Setup() {
 		api.PATCH("/:id", r.controller.UpdateFolder)
 
 		api.DELETE("/:id", r.controller.DeleteFolder)
+
 	}
 }
