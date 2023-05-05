@@ -38,3 +38,7 @@ func (r *FileTypeRepository) DeleteFileType(id uuid.UUID) error {
 func (r *FileTypeRepository) GetFileTypeByName(name string) (fileType *models.FileType, err error) {
 	return fileType, r.db.DB.Where("name = ?", name).First(&fileType).Error
 }
+
+func (r *FileTypeRepository) GetEtcFileType() (fileType *models.FileType, err error) {
+	return fileType, r.db.DB.Where("name = ?", "etc").First(&fileType).Error
+}

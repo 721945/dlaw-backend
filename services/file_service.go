@@ -165,7 +165,7 @@ func (s *FileService) UploadFile(
 	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeToString)
 
 	if err != nil {
-		return "", err
+		fileT, err = s.fileTypeRepo.GetEtcFileType()
 	}
 
 	needConvert := checkNeedConvert(fileType)
@@ -191,6 +191,15 @@ func (s *FileService) UploadFile(
 	}
 
 	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeToString})
+
+	if err != nil {
+		tagEtc, err := s.tagRepo.GetEtcTag()
+		if err != nil {
+			return "", err
+		}
+		tag = make([]models.Tag, 0)
+		tag = append(tag, *tagEtc)
+	}
 
 	// Do the ocr and then update the tag
 
