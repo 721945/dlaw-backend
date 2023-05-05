@@ -23,8 +23,16 @@ func (r *FileViewLogRepository) GetFileViewLog(id uuid.UUID) (permissionLog *mod
 	return permissionLog, r.db.DB.First(&permissionLog, id).Error
 }
 
-func (r *FileViewLogRepository) CreateFileViewLog(permissionLog models.FileViewLog) (models.FileViewLog, error) {
-	return permissionLog, r.db.DB.Create(&permissionLog).Error
+func (r *FileViewLogRepository) CreateFileViewLog(log models.FileViewLog) (models.FileViewLog, error) {
+	var fileViewLog models.FileViewLog
+	fileViewLog = log
+	res := r.db.DB.Where("file_id = ? AND user_id = ?", log.FileId, log.UserId).FirstOrCreate(&fileViewLog)
+
+	if res.Error != nil {
+		return log, res.Error
+	}
+
+	return log, r.db.DB.Model(&models.FileViewLog{}).Where("id = ?", fileViewLog.ID).Updates(log).Error
 }
 
 func (r *FileViewLogRepository) UpdateFileViewLog(id uuid.UUID, log models.FileViewLog) error {
@@ -36,5 +44,5 @@ func (r *FileViewLogRepository) DeleteFileViewLog(id uuid.UUID) error {
 }
 
 func (r *FileViewLogRepository) GetFileViewLogsForUser(userId uuid.UUID) (logs []models.FileViewLog, err error) {
-	return logs, r.db.DB.Preload("File").Distinct().Limit(10).Where("user_id = ?", userId).Find(&logs).Error
+	return logs, r.db.DB.Preload("File").Order("updated_at DESC").Distinct().Limit(10).Where("user_id = ?", userId).Find(&logs).Error
 }

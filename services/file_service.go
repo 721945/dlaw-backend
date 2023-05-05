@@ -85,7 +85,7 @@ func (s *FileService) GetFiles() (dto []dtos.FileDto, err error) {
 }
 
 func (s *FileService) GetFile(id uuid.UUID, userId *uuid.UUID) (dto *dtos.FileDto, err error) {
-	file, err := s.fileRepo.GetFile(id)
+	file, err := s.fileRepo.GetFileContent(id)
 
 	if userId != nil {
 		_, err := s.fileViewLogRepo.CreateFileViewLog(models.FileViewLog{

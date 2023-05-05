@@ -17,13 +17,17 @@ type FileDto struct {
 	Tags       []TagDto `json:"tags,omitempty"`
 	CreatedAt  string   `json:"createdAt"`
 	UpdatedAt  string   `json:"updatedAt"`
+	Type       string   `json:"type,omitempty"`
 }
 
 func ToFileDto(file models.File) FileDto {
-	var url, previewUrl string
+	var url, previewUrl, fileType string
 	if file.Url != nil {
 		url = file.Url.Url
 		previewUrl = file.Url.PreviewUrl
+	}
+	if file.FileType != nil {
+		fileType = file.FileType.Name
 	}
 	return FileDto{
 		Id:         file.ID.String(),
@@ -33,6 +37,7 @@ func ToFileDto(file models.File) FileDto {
 		Tags:       ToTagDtos(file.Tags),
 		CreatedAt:  file.CreatedAt.String(),
 		UpdatedAt:  file.UpdatedAt.String(),
+		Type:       fileType,
 	}
 }
 

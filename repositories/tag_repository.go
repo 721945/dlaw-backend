@@ -53,6 +53,7 @@ func (r *TagRepository) CountFilesInTags(fileIds []uuid.UUID) (tags []models.Tag
 		Joins("LEFT JOIN (SELECT file_tags.tag_id, COUNT(DISTINCT file_tags.file_id) as count FROM file_tags WHERE file_tags.file_id IN (?) GROUP BY file_tags.tag_id) as file_counts ON tags.id = file_counts.tag_id", fileIds).
 		Group("tags.id").
 		Group("tags.name").
+		Group("file_counts.count").
 		Where("tags.show_menu = TRUE").
 		Find(&tags).Error
 	//Select("id, COALESCE(COUNT(file_tags.file_id), 0) as count, name").
