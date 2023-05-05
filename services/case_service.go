@@ -259,6 +259,25 @@ func (s CaseService) GetFrequencyCases(userId uuid.UUID) (casesDto []dtos.CaseDt
 	return casesDto, nil
 }
 
+func (s CaseService) GetFolders(caseId uuid.UUID) (dto []dtos.SimpleFolderDto, err error) {
+	folders, err := s.folderRepo.GetFoldersByCaseId(caseId)
+
+	if err != nil {
+		return dto, err
+	}
+
+	dto = make([]dtos.SimpleFolderDto, len(folders))
+
+	for i, folder := range folders {
+		dto[i] = dtos.SimpleFolderDto{
+			Id:   folder.ID.String(),
+			Name: folder.Name,
+		}
+	}
+
+	return dto, nil
+}
+
 func (s CaseService) GetMembers(caseId uuid.UUID) (members []dtos.MemberDto, err error) {
 	permissions, err := s.casePermissionRepo.GetCasePermissionsByCaseId(caseId)
 

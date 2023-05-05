@@ -103,6 +103,11 @@ func (r *FolderRepository) GetFromRootToFolder(id uuid.UUID) (folders []models.F
 	return folders, err
 }
 
+// GetFoldersByCaseId returns all folders for a case
+func (r *FolderRepository) GetFoldersByCaseId(caseId uuid.UUID) (folders []models.Folder, err error) {
+	return folders, r.db.DB.Where("case_id = ?", caseId).Find(&folders).Error
+}
+
 //func (r *FolderRepository) GetCasePermissionByFolderId(folderId uuid.UUID) (folders []models.Folder, err error) {
 //
 //}

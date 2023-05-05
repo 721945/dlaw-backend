@@ -321,6 +321,31 @@ func (ctrl CaseController) GetMembers(c *gin.Context) {
 	})
 }
 
+func (ctrl CaseController) GetFolders(c *gin.Context) {
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	folders, err := ctrl.caseService.GetFolders(id)
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": folders,
+	})
+}
+
 func (ctrl CaseController) AddMember(c *gin.Context) {
 
 	var input dtos.AddMemberDto
