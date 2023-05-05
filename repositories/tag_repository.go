@@ -48,10 +48,40 @@ func (r *TagRepository) GetTagByName(name string) (tag *models.Tag, err error) {
 }
 
 func (r *TagRepository) CountFilesInTags(fileIds []uuid.UUID) (tags []models.TagCount, err error) {
-	//return tags, r.db.DB.Table("file_tags").Select("tag_id as id, COUNT(file_id) as count, tags.name as name").Joins("LEFT JOIN tags ON tags.id = file_tags.tag_id").Group("tag_id").Group("name").Where("file_id IN (?) AND tags.show_menu = TRUE", fileIds).Find(&tags).Error
-	return tags, r.db.DB.Table("tags").Select("id, COALESCE(COUNT(file_tags.file_id), 0) as count, name").Joins("LEFT JOIN file_tags ON tags.id = file_tags.tag_id").Group("id").Group("name").Where("tags.show_menu = TRUE").Where("file_tags.file_id IN (?) OR file_tags.file_id IS NULL", fileIds).Find(&tags).Error
-	//return tags, r.db.DB.Where("show_menu = true").Find(&tags).Error
-	//return tags, r.db.DB.Where("show_menu = true").Find(&tags).Error
-	//return count, r.db.DB.Table("file_tags").Select("tag_id, COUNT(file_id) as count").Where("file_id IN (?)", fileIds).Group("tag_id").Find(&count).Error
-	//return count, r.db.DB.Table("file_tags").Select("tag_id, COUNT(file_id) as count, show_menu").Where("file_id IN (?) AND show_menu = TRUE", fileIds).Group("tag_id").Find(&count).Error
+	return tags, r.db.DB.Table("tags").
+		Select("tags.id, tags.name, COALESCE(file_counts.count, 0) as count").
+		Joins("LEFT JOIN (SELECT file_tags.tag_id, COUNT(DISTINCT file_tags.file_id) as count FROM file_tags WHERE file_tags.file_id IN (?) GROUP BY file_tags.tag_id) as file_counts ON tags.id = file_counts.tag_id", fileIds).
+		Group("tags.id").
+		Group("tags.name").
+		Where("tags.show_menu = TRUE").
+		Find(&tags).Error
+	//Select("id, COALESCE(COUNT(file_tags.file_id), 0) as count, name").
+	//Joins("LEFT JOIN file_tags ON tags.id = file_tags.tag_id").
+	//Group("id").Group("name").
+	//Where("tags.show_menu = TRUE").
+	//Where("file_tags.file_id IN (?) OR file_tags.file_id IS NULL", fileIds).
+	//Find(&tags).Error
+}
+
+func (r *TagRepository) CountFilesInTagsByFolderId(folderId uuid.UUID) (tags []models.TagCount, err error) {
+	return tags, r.db.DB.Table("tags").
+		Select("tags.id, tags.name, COALESCE(file_counts.count, 0) as count").
+		Joins("LEFT JOIN (SELECT file_tags.tag_id, COUNT(DISTINCT file_tags.file_id) as count FROM file_tags JOIN files ON file_tags.file_id = files.id WHERE files.folder_id = ? GROUP BY file_tags.tag_id) as file_counts ON tags.id = file_counts.tag_id", folderId).
+		Where("tags.show_menu = TRUE").
+		Find(&tags).Error
+	//Select("tags.id, tags.name, COUNT(DISTINCT file_tags.file_id) as count").
+	//Joins("LEFT JOIN file_tags ON tags.id = file_tags.tag_id").
+	//Joins("LEFT JOIN files ON file_tags.file_id = files.id").
+	//Where("tags.show_menu = TRUE").
+	//Where("files.folder_id = ?", folderId).
+	//Group("tags.id").
+	//Group("tags.name").
+	//Find(&tags).Error
+	//Select("id, COALESCE(COUNT(file_tags.file_id), 0) as count, name").
+	//Joins("LEFT JOIN file_tags ON tags.id = file_tags.tag_id").
+	//Joins("LEFT JOIN files ON file_tags.file_id = files.id").
+	//Where("tags.show_menu = TRUE").
+	//Where("file_tags.file_id IN (SELECT id FROM files WHERE folder_id = ?) OR file_tags.file_id IS NULL", folderId).
+	//Group("id").Group("name").
+	//Find(&tags).Error
 }

@@ -284,3 +284,25 @@ func (t FolderController) MoveFolder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{})
 }
+
+func (t FolderController) GetTagMenus(c *gin.Context) {
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	tags, err := t.folderService.GetTagMenus(id)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{"data": tags})
+}
