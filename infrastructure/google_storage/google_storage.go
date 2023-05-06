@@ -141,4 +141,37 @@ func (g GoogleStorage) GetSignedUrls(names, versions, fileNames []string) ([]str
 	return urls, nil
 }
 
-//func signed
+func (g GoogleStorage) GetFileSize(name, version string) (int64, error) {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer func(client *storage.Client) {
+		err := client.Close()
+		if err != nil {
+			g.logger.Error("Error closing Google Cloud Storage client: %v", err)
+			panic(err)
+		}
+	}(client)
+
+	bucket := client.Bucket(g.bucket)
+
+	objectName := name
+
+	if version != "" {
+		objectName = fmt.Sprintf("%s/%s", name, version)
+	}
+
+	obj := bucket.Object(objectName)
+
+	attrs, err := obj.Attrs(ctx)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return attrs.Size, nil
+}

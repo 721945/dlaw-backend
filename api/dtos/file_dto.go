@@ -1,6 +1,7 @@
 package dtos
 
 import (
+	"github.com/721945/dlaw-backend/api/utils"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
 )
@@ -18,6 +19,7 @@ type FileDto struct {
 	CreatedAt  string   `json:"createdAt"`
 	UpdatedAt  string   `json:"updatedAt"`
 	Type       string   `json:"type,omitempty"`
+	Size       string   `json:"size,omitempty"`
 }
 
 func ToFileDto(file models.File) FileDto {
@@ -38,6 +40,28 @@ func ToFileDto(file models.File) FileDto {
 		CreatedAt:  file.CreatedAt.String(),
 		UpdatedAt:  file.UpdatedAt.String(),
 		Type:       fileType,
+	}
+}
+func ToFileWithSizeDto(file models.File, size int64) FileDto {
+	var url, previewUrl, fileType string
+	if file.Url != nil {
+		url = file.Url.Url
+		previewUrl = file.Url.PreviewUrl
+	}
+	if file.FileType != nil {
+		fileType = file.FileType.Name
+	}
+
+	return FileDto{
+		Id:         file.ID.String(),
+		Name:       file.Name,
+		Url:        url,
+		PreviewUrl: previewUrl,
+		Tags:       ToTagDtos(file.Tags),
+		CreatedAt:  file.CreatedAt.String(),
+		UpdatedAt:  file.UpdatedAt.String(),
+		Type:       fileType,
+		Size:       utils.FormatFileSize(size),
 	}
 }
 

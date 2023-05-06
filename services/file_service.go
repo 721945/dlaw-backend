@@ -113,7 +113,13 @@ func (s *FileService) GetFile(id uuid.UUID, userId *uuid.UUID) (dto *dtos.FileDt
 		PreviewUrl: url[0].PreviewUrl,
 	}
 
-	fileDto := dtos.ToFileDto(*file)
+	size, err := s.storageService.GetFileSize(file.CloudName, "")
+
+	if err != nil {
+		return nil, err
+	}
+
+	fileDto := dtos.ToFileWithSizeDto(*file, size)
 
 	return &fileDto, err
 }
