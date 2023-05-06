@@ -154,8 +154,8 @@ func (s *FileService) DeleteFile(id uuid.UUID) error {
 	return s.fileRepo.DeleteFile(id)
 }
 
-func (s *FileService) getFileByName(name string) (*models.File, error) {
-	return s.fileRepo.GetFileByName(name)
+func (s *FileService) getFileByNameInFolderId(name string, folderId uuid.UUID) (*models.File, error) {
+	return s.fileRepo.GetFileByName(name, folderId)
 }
 
 func (s *FileService) UploadFile(
@@ -165,7 +165,7 @@ func (s *FileService) UploadFile(
 	folderId uuid.UUID,
 	userId uuid.UUID,
 ) (string, error) {
-	fileInDb, _ := s.getFileByName(fileName)
+	fileInDb, _ := s.getFileByNameInFolderId(fileName, folderId)
 
 	if (*fileInDb).Name != "" {
 		return s.uploadReplaceFile(file, fileType, *fileInDb, userId)
