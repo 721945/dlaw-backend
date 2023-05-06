@@ -22,8 +22,8 @@ func ToActionLogDto(actionLog models.ActionLog, file *FileActionLogDto) ActionLo
 	return ActionLogDto{
 		Id:         actionLog.ID.String(),
 		FolderId:   actionLog.FolderId.String(),
-		Action:     actionLog.Action.Name,
 		FolderName: actionLog.Folder.Name,
+		Action:     actionLog.Action.Name,
 		User:       *ToUserDto(actionLog.User),
 		CreatedAt:  actionLog.CreatedAt.Format("2006-01-02 15:04:05"),
 		File:       file,
