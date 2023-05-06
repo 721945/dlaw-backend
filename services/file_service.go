@@ -154,6 +154,10 @@ func (s *FileService) DeleteFile(id uuid.UUID) error {
 	return s.fileRepo.DeleteFile(id)
 }
 
+func (s *FileService) getFileByName(name string) (*models.File, error) {
+	return s.fileRepo.GetFileByName(name)
+}
+
 func (s *FileService) UploadFile(
 	file multipart.File,
 	fileName string,
@@ -161,17 +165,27 @@ func (s *FileService) UploadFile(
 	folderId uuid.UUID,
 	userId uuid.UUID,
 ) (string, error) {
-	// TODO : NEED TO CHECK NAME AND FOLDER BEFORE UPLOAD FOR REPLACE FILE
+	fileInDb, _ := s.getFileByName(fileName)
+
+	if (*fileInDb).Name != "" {
+		return s.uploadReplaceFile(file, fileType, *fileInDb, userId)
+	}
+
+	return s.uploadNewFile(file, fileName, fileType, folderId, userId)
+}
+
+func (s *FileService) uploadNewFile(
+	file multipart.File,
+	fileName string,
+	fileType string,
+	folderId uuid.UUID,
+	userId uuid.UUID,
+) (string, error) {
 
 	caseId, err := s.checkPermissionAndGetCaseId(userId, folderId)
 	mimeTypeToString := convertMimeTypeToString(fileType)
 	if err != nil {
 		return "", err
-	}
-	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeToString)
-
-	if err != nil {
-		fileT, err = s.fileTypeRepo.GetEtcFileType()
 	}
 
 	needConvert := checkNeedConvert(fileType)
@@ -181,6 +195,8 @@ func (s *FileService) UploadFile(
 	cloudName := generateUniqueName()
 
 	previewCloudName := cloudName
+
+	s.logger.Info(cloudName, previewCloudName)
 
 	version, err = s.storageService.UploadFile(file, cloudName)
 
@@ -196,6 +212,11 @@ func (s *FileService) UploadFile(
 		return "", err
 	}
 
+	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeToString)
+
+	if err != nil {
+		fileT, err = s.fileTypeRepo.GetEtcFileType()
+	}
 	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeToString})
 
 	if err != nil {
@@ -254,6 +275,71 @@ func (s *FileService) UploadFile(
 	}
 
 	return fileRes.ID.String(), nil
+}
+
+func (s *FileService) uploadReplaceFile(
+	file multipart.File,
+	fileType string,
+	fileDb models.File,
+	userId uuid.UUID,
+) (string, error) {
+
+	needConvert := checkNeedConvert(fileType)
+
+	version, versionPreview := "", ""
+
+	cloudName := fileDb.CloudName
+
+	//previewCloudName := fileDb.PreviewCloudName
+
+	if needConvert {
+		//	TODO : DO CONVERT
+		//	previewCloudName = generateUniqueName(fileName)
+		//	versionPreview, err = s.storageService.UploadFile(file, previewCloudName)
+	}
+
+	version, err := s.storageService.UploadFile(file, cloudName)
+
+	versionPreview = version
+
+	if err != nil {
+		return "", err
+	}
+
+	modelFile := models.File{}
+
+	err = s.fileRepo.UpdateFile(fileDb.ID, modelFile)
+
+	if err != nil {
+		return "", err
+	}
+
+	action, err := s.actionRepo.GetActionByName("upload")
+
+	if err != nil {
+		return "", err
+	}
+
+	actionLog := models.ActionLog{
+		FolderId:             *fileDb.FolderId,
+		FileId:               &fileDb.ID,
+		UserId:               userId,
+		ActionId:             action.ID,
+		FileVersionId:        &version,
+		FilePreviewVersionId: &versionPreview,
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	_, err = s.actionLogRepo.CreateActionLog(actionLog)
+
+	if err != nil {
+		return "", err
+	}
+
+	return "updated", nil
 }
 
 func generateUniqueName() string {
