@@ -3,8 +3,8 @@ package dtos
 import "github.com/721945/dlaw-backend/models"
 
 type AddMemberDto struct {
-	UserId     string `json:"userId" binding:"required"`
-	Permission string `json:"permission" binding:"required"`
+	UserIds    []string `json:"userIds" binding:"required"`
+	Permission string   `json:"permission" binding:"required"`
 }
 
 type UpdateMemberDto struct {

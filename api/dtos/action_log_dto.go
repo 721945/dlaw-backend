@@ -3,12 +3,13 @@ package dtos
 import "github.com/721945/dlaw-backend/models"
 
 type ActionLogDto struct {
-	Id        string            `json:"id"`
-	FolderId  string            `json:"folderId"`
-	Action    string            `json:"action"`
-	User      UserDto           `json:"user"`
-	CreatedAt string            `json:"createdAt"`
-	File      *FileActionLogDto `json:"file,omitempty"`
+	Id         string            `json:"id"`
+	FolderId   string            `json:"folderId"`
+	FolderName string            `json:"folderName"`
+	Action     string            `json:"action"`
+	User       UserDto           `json:"user"`
+	CreatedAt  string            `json:"createdAt"`
+	File       *FileActionLogDto `json:"file,omitempty"`
 }
 
 type FileActionLogDto struct {
@@ -19,12 +20,13 @@ type FileActionLogDto struct {
 
 func ToActionLogDto(actionLog models.ActionLog, file *FileActionLogDto) ActionLogDto {
 	return ActionLogDto{
-		Id:        actionLog.ID.String(),
-		FolderId:  actionLog.FolderId.String(),
-		Action:    actionLog.Action.Name,
-		User:      *ToUserDto(actionLog.User),
-		CreatedAt: actionLog.CreatedAt.Format("2006-01-02 15:04:05"),
-		File:      file,
+		Id:         actionLog.ID.String(),
+		FolderId:   actionLog.FolderId.String(),
+		Action:     actionLog.Action.Name,
+		FolderName: actionLog.Folder.Name,
+		User:       *ToUserDto(actionLog.User),
+		CreatedAt:  actionLog.CreatedAt.Format("2006-01-02 15:04:05"),
+		File:       file,
 	}
 }
 
