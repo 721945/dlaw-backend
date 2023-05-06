@@ -19,11 +19,10 @@ type File struct {
 
 type MeiliFile struct {
 	Id        string   `json:"id"`
-	FileId    string   `json:"file_id"`
-	Name      string   `json:"name"`
-	Type      string   `json:"type"`
-	Content   string   `json:"content"`
-	Tags      []string `json:"tags"`
-	FolderIds []string `json:"folder_ids"`
-	CaseId    string   `json:"case_id"`
+	Name      string   `json:"name,omitempty"`
+	Type      string   `json:"type,omitempty"`
+	Content   string   `json:"content,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
+	FolderIds []string `json:"folder_ids,omitempty"`
+	CaseId    string   `json:"case_id,omitempty"`
 }

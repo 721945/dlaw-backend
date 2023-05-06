@@ -36,6 +36,7 @@ func (r *FileRepository) GetFileContent(id uuid.UUID) (file *models.File, err er
 func (r *FileRepository) GetFilesByFolderId(folderId uuid.UUID) (files []models.File, err error) {
 	return files, r.db.DB.Preload(clause.Associations).Where("folder_id = ?", folderId).Find(&files).Error
 }
+
 func (r *FileRepository) GetFilesWithTagByFolderId(folderId uuid.UUID) (files []models.File, err error) {
 	return files, r.db.DB.Preload("Tags").Where("folder_id = ?", folderId).Find(&files).Error
 }
@@ -57,11 +58,11 @@ func (r *FileRepository) GetFilesByCaseIds(caseIds []uuid.UUID) (files []models.
 }
 
 func (r *FileRepository) CreateFileDocument(file models.MeiliFile) (resp *meilisearch.TaskInfo, err error) {
-	return r.db.Meili.Index("files").AddDocuments(file)
+	return r.db.Meili.Index("files").AddDocuments([]models.MeiliFile{file}, "id")
 }
 
 func (r *FileRepository) UpdateFileDocument(file models.MeiliFile) (resp *meilisearch.TaskInfo, err error) {
-	return r.db.Meili.Index("files").UpdateDocuments(file)
+	return r.db.Meili.Index("files").UpdateDocuments(file, "id")
 }
 
 func (r *FileRepository) DeleteFileDocument(id []string) (resp *meilisearch.TaskInfo, err error) {
