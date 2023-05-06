@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/infrastructure/google_storage"
+	"github.com/721945/dlaw-backend/infrastructure/google_vision"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
@@ -18,13 +19,14 @@ type FileService struct {
 	logger             *libs.Logger
 	fileRepo           repositories.FileRepository
 	fileTypeRepo       repositories.FileTypeRepository
-	storageService     google_storage.GoogleStorage
 	folderRepo         repositories.FolderRepository
 	casePermissionRepo repositories.CasePermissionRepository
 	actionRepo         repositories.ActionRepository
 	actionLogRepo      repositories.ActionLogRepository
 	tagRepo            repositories.TagRepository
 	fileViewLogRepo    repositories.FileViewLogRepository
+	storageService     google_storage.GoogleStorage
+	ocrService         google_vision.GoogleVision
 }
 
 func NewFileService(
@@ -38,6 +40,7 @@ func NewFileService(
 	actionLogRepo repositories.ActionLogRepository,
 	tagRepo repositories.TagRepository,
 	fileViewLogRepo repositories.FileViewLogRepository,
+	ocrService google_vision.GoogleVision,
 ) FileService {
 	return FileService{
 		logger:             logger,
@@ -50,6 +53,7 @@ func NewFileService(
 		actionLogRepo:      actionLogRepo,
 		tagRepo:            tagRepo,
 		fileViewLogRepo:    fileViewLogRepo,
+		ocrService:         ocrService,
 	}
 }
 
@@ -184,6 +188,7 @@ func (s *FileService) uploadNewFile(
 
 	caseId, err := s.checkPermissionAndGetCaseId(userId, folderId)
 	mimeTypeToString := convertMimeTypeToString(fileType)
+
 	if err != nil {
 		return "", err
 	}
@@ -199,6 +204,7 @@ func (s *FileService) uploadNewFile(
 	s.logger.Info(cloudName, previewCloudName)
 
 	version, err = s.storageService.UploadFile(file, cloudName)
+	// if type is image do ocr and then add data to Meilisearch
 
 	versionPreview = version
 
@@ -242,6 +248,60 @@ func (s *FileService) uploadNewFile(
 
 	//
 	fileRes, err := s.fileRepo.CreateFile(modelFile)
+
+	tagString := make([]string, 0)
+	for _, t := range fileRes.Tags {
+		tagString = append(tagString, t.Name)
+	}
+
+	folderTilRoot, err := s.folderRepo.GetFromRootToFolder(folderId)
+
+	if err != nil {
+		return "", err
+	}
+
+	folderString := make([]string, 0)
+
+	for _, f := range folderTilRoot {
+		folderString = append(folderString, f.ID.String())
+	}
+
+	modelMeili := models.MeiliFile{
+		Id:        fileRes.ID.String(),
+		Name:      fileRes.Name,
+		Type:      mimeTypeToString,
+		Tags:      tagString,
+		FolderIds: folderString,
+		CaseId:    caseId.String(),
+	}
+
+	res, err := s.fileRepo.CreateFileDocument(modelMeili)
+
+	if err != nil {
+		return "", err
+	}
+
+	s.logger.Info("RES ->", *res)
+
+	if mimeTypeToString == "image" {
+		go func(name string) {
+			ocrData, err := s.ocrService.GetTextFromImageName(name)
+			if err != nil {
+				s.logger.Error(err)
+			}
+			if ocrData != "" {
+				modelMeili := models.MeiliFile{
+					Id:      fileRes.ID.String(),
+					Content: ocrData,
+				}
+				_, err := s.fileRepo.UpdateFileDocument(modelMeili)
+
+				if err != nil {
+					s.logger.Error(err)
+				}
+			}
+		}(previewCloudName)
+	}
 
 	if err != nil {
 		return "", err

@@ -6,49 +6,52 @@ import (
 	"cloud.google.com/go/vision/v2/apiv1/visionpb"
 	"context"
 	"github.com/721945/dlaw-backend/libs"
-	"io/ioutil"
+	"io"
 	"log"
 )
 
 type GoogleVision struct {
 	logger *libs.Logger
+	bucket string
 }
 
-func NewGoogleVision(logger *libs.Logger) GoogleVision {
-	return GoogleVision{logger: logger}
+func NewGoogleVision(logger *libs.Logger, env libs.Env) GoogleVision {
+	return GoogleVision{logger: logger, bucket: env.Bucket}
 }
 
-//func (g *GoogleVision) GetTextFromImageUrl(url string) (string, error) {
-//	ctx := context.Background()
-//	client, err := vision.NewImageAnnotatorClient(ctx)
-//
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	defer func(client *vision.ImageAnnotatorClient) {
-//		err := client.Close()
-//		if err != nil {
-//			panic(err)
-//		}
-//	}(client)
-//
-//	image := vision.NewImageFromURI(url)
-//
-//	annotations, err := client.DetectTexts(ctx, image, nil, 10)
-//
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	g.logger.Info(annotations)
-//
-//	if len(annotations) == 0 {
-//		return "", nil
-//	}
-//
-//	return annotations[0].Description, nil
-//}
+func (g *GoogleVision) GetTextFromImageName(name string) (string, error) {
+	ctx := context.Background()
+	client, err := vision.NewImageAnnotatorClient(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	defer func(client *vision.ImageAnnotatorClient) {
+		err := client.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(client)
+
+	url := "gs://" + g.bucket + "/" + name
+
+	image := vision.NewImageFromURI(url)
+
+	annotations, err := client.DetectTexts(ctx, image, nil, 10)
+
+	if err != nil {
+		return "", err
+	}
+
+	g.logger.Info(annotations)
+
+	if len(annotations) == 0 {
+		return "", nil
+	}
+
+	return annotations[0].Description, nil
+}
 
 func (g *GoogleVision) GetTextFromPdfUrl(obj storage.ObjectHandle) (string, error) {
 	ctx := context.Background()
@@ -64,10 +67,15 @@ func (g *GoogleVision) GetTextFromPdfUrl(obj storage.ObjectHandle) (string, erro
 		log.Fatalf("Failed to create reader: %v", err)
 	}
 
-	defer reader.Close()
+	defer func(reader *storage.Reader) {
+		err := reader.Close()
+		if err != nil {
+			g.logger.Error(err)
+		}
+	}(reader)
 
 	// Extract text from PDF using Google Vision API
-	imageBytes, err := ioutil.ReadAll(reader)
+	imageBytes, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatalf("Failed to read file: %v", err)
 	}
@@ -78,7 +86,12 @@ func (g *GoogleVision) GetTextFromPdfUrl(obj storage.ObjectHandle) (string, erro
 	if err != nil {
 		log.Fatalf("Failed to create Vision client: %v", err)
 	}
-	defer client.Close()
+	defer func(client *vision.ImageAnnotatorClient) {
+		err := client.Close()
+		if err != nil {
+			g.logger.Error(err)
+		}
+	}(client)
 	response, err := client.DetectDocumentText(ctx, &image, nil)
 	if err != nil {
 		log.Fatalf("Failed to detect text: %v", err)
