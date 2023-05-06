@@ -4,7 +4,6 @@ import (
 	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/infrastructure/google_calendar"
 	"github.com/721945/dlaw-backend/libs"
-	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/google/uuid"
 )
@@ -59,8 +58,17 @@ func (s *AppointmentService) GetAppointmentsByUser(userId uuid.UUID) (appointmen
 
 	return
 }
-func (s *AppointmentService) GetAppointment(id uuid.UUID) (appointment *models.Appointment, err error) {
-	return s.appointmentRepo.GetAppointment(id)
+
+func (s *AppointmentService) GetAppointment(id uuid.UUID) (appointment *dtos.AppointmentDto, err error) {
+	model, err := s.appointmentRepo.GetAppointment(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	dto := dtos.ToAppointmentDto(*model)
+
+	return &dto, nil
 }
 
 func (s *AppointmentService) CreateAppointment(userId uuid.UUID, dto dtos.CreateAppointmentDto) (string, error) {

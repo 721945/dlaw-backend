@@ -18,9 +18,15 @@ func NewPermissionService(logger *libs.Logger, r repositories.PermissionReposito
 
 }
 
-func (s *PermissionService) GetPermissions() (permissions []models.Permission, err error) {
-	return s.permissionRepo.GetPermissions()
+func (s *PermissionService) GetPermissions() (permissions []dtos.PermissionDto, err error) {
+	permissionModels, err := s.permissionRepo.GetPermissions()
 
+	permissions = make([]dtos.PermissionDto, len(permissionModels))
+
+	for i, permission := range permissionModels {
+		permissions[i] = *dtos.ToPermissionDto(&permission)
+	}
+	return permissions, err
 }
 
 func (s *PermissionService) GetPermission(id uuid.UUID) (permissionDto *dtos.PermissionDto, err error) {
@@ -47,8 +53,10 @@ func (s *PermissionService) GetPermissionByName(name string) (permissionDto *dto
 	return permissionDto, nil
 }
 
-func (s *PermissionService) CreatePermission(permission models.Permission) (models.Permission, error) {
-	return s.permissionRepo.CreatePermission(permission)
+func (s *PermissionService) CreatePermission(permission models.Permission) (string, error) {
+	permission, err := s.permissionRepo.CreatePermission(permission)
+
+	return permission.ID.String(), err
 }
 
 func (s *PermissionService) UpdatePermission(id uuid.UUID, permission models.Permission) error {

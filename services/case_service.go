@@ -312,30 +312,82 @@ func (s CaseService) UpdateMember(caseId uuid.UUID, userId uuid.UUID, dto dtos.U
 	return err
 }
 
-func (s CaseService) AddMember(caseId uuid.UUID, dto dtos.AddMemberDto) (id string, err error) {
+func (s CaseService) AddMember(caseId uuid.UUID, dto dtos.AddMemberDto) (ids []string, err error) {
 	permission, err := s.permissionRepo.GetPermissionByName(dto.Permission)
 
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	userId, err := uuid.Parse(dto.UserId)
+	userIds := make([]uuid.UUID, len(dto.UserIds))
+
+	for i, userId := range dto.UserIds {
+		userIds[i], err = uuid.Parse(userId)
+	}
 
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	user, err := s.userRepo.GetUser(userId)
+	//user, err := s.userRepo.GetUser(userId)
+	//
+	//permissionCase := models.CasePermission{
+	//	CaseId:       caseId,
+	//	PermissionId: permission.ID,
+	//	UserId:       user.ID,
+	//}
+	//
+	//casePermission, err := s.casePermissionRepo.CreateCasePermission(permissionCase)
+	resCh := make(chan string)
 
-	permissionCase := models.CasePermission{
-		CaseId:       caseId,
-		PermissionId: permission.ID,
-		UserId:       user.ID,
+	// Start a goroutine for each user to create a case permission concurrently
+	for _, uid := range userIds {
+		go func(userId uuid.UUID) {
+			permissionItem, err := s.casePermissionRepo.GetCasePermissionsByUserIdAndCaseId(userId, caseId)
+
+			if err != nil {
+				resCh <- ""
+			}
+
+			if permissionItem != nil {
+				permissionCase := models.CasePermission{
+					CaseId:       caseId,
+					PermissionId: permission.ID,
+					UserId:       userId,
+				}
+				cpm, err := s.casePermissionRepo.CreateCasePermission(permissionCase)
+				if err != nil {
+					resCh <- ""
+				} else {
+					idString := cpm.ID.String()
+					resCh <- idString
+				}
+			} else {
+				permissionCase := models.CasePermission{
+					CaseId:       caseId,
+					PermissionId: permission.ID,
+					UserId:       userId,
+				}
+				err := s.casePermissionRepo.UpdateCasePermission(permissionItem.ID, permissionCase)
+
+				if err != nil {
+					resCh <- ""
+				} else {
+					idString := permission.ID.String()
+					resCh <- idString
+				}
+			}
+		}(uid)
 	}
 
-	casePermission, err := s.casePermissionRepo.CreateCasePermission(permissionCase)
+	// Collect the results of the CreateCasePermission calls
+	casePermissionIds := make([]string, len(userIds))
+	for i := 0; i < len(userIds); i++ {
+		casePermissionId := <-resCh
+		casePermissionIds[i] = casePermissionId
+	}
 
-	return casePermission.ID.String(), err
+	return casePermissionIds, err
 }
 
 func (s CaseService) RemoveMember(caseId uuid.UUID, userId uuid.UUID) (err error) {
