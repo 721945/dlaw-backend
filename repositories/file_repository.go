@@ -25,8 +25,8 @@ func (r *FileRepository) GetFile(id uuid.UUID) (file *models.File, err error) {
 	return file, r.db.DB.First(&file, id).Error
 }
 
-func (r *FileRepository) GetFileByName(name string) (file *models.File, err error) {
-	return file, r.db.DB.Where("name = ?", name).First(&file).Error
+func (r *FileRepository) GetFileByName(name string, folderId uuid.UUID) (file *models.File, err error) {
+	return file, r.db.DB.Where("name = ? AND folder_id = ?", name, folderId).First(&file).Error
 }
 
 func (r *FileRepository) GetFileContent(id uuid.UUID) (file *models.File, err error) {
