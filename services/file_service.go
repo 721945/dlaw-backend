@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
 	"mime/multipart"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -156,10 +157,10 @@ func (s *FileService) MoveFile(id uuid.UUID, dto dtos.MoveFileDto, userId uuid.U
 	return s.fileRepo.UpdateFile(id, *model)
 }
 
-func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uuid.UUID) ([]dtos.FileDto, error) {
-
+func (s *FileService) SearchFiles(word, caseId, folderId, tag, page, limit string, userID uuid.UUID) ([]dtos.FileDto, dtos.PaginationResponse, error) {
+	var pagination dtos.PaginationResponse
 	if word == "" && caseId == "" && folderId == "" && tag == "" {
-		return nil, errors.New("invalid search params")
+		return nil, pagination, errors.New("invalid search params")
 	}
 
 	var filters []string
@@ -167,7 +168,7 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uui
 	if caseId != "" {
 		_, err := uuid.Parse(caseId)
 		if err != nil {
-			return nil, errors.New("invalid case id")
+			return nil, pagination, errors.New("invalid case id")
 		}
 		filters = append(filters, "case_id = \""+caseId+"\"")
 	}
@@ -175,7 +176,7 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uui
 	if folderId != "" {
 		_, err := uuid.Parse(folderId)
 		if err != nil {
-			return nil, errors.New("invalid folder id")
+			return nil, pagination, errors.New("invalid folder id")
 		}
 
 		filters = append(filters, "folder_id = \""+folderId+"\"")
@@ -184,18 +185,29 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uui
 	if tag != "" {
 		_, err := uuid.Parse(tag)
 		if err != nil {
-			return nil, errors.New("invalid tag id")
+			return nil, pagination, errors.New("invalid tag id")
 		}
 		filters = append(filters, "tag = \""+tag+"\"")
 	}
-	filter := strings.Join(filters, " AND ")
-	var searchResult *meilisearch.SearchResponse
-	var err error
 
-	searchResult, err = s.fileRepo.SearchFiles(word, filter)
+	pageNum, err := strconv.ParseInt(page, 10, 64)
 
 	if err != nil {
-		return nil, err
+		return nil, pagination, errors.New("invalid page number")
+	}
+
+	limitNum, err := strconv.ParseInt(limit, 10, 64)
+
+	if err != nil {
+		return nil, pagination, errors.New("invalid limit number")
+	}
+	filter := strings.Join(filters, " AND ")
+	var searchResult *meilisearch.SearchResponse
+
+	searchResult, err = s.fileRepo.SearchFiles(word, filter, pageNum, limitNum)
+
+	if err != nil {
+		return nil, pagination, err
 	}
 
 	var ids []uuid.UUID
@@ -216,7 +228,7 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uui
 	urls, err := s.getSignedFileUrls(files)
 
 	if err != nil {
-		return nil, err
+		return nil, pagination, err
 	}
 
 	newFiles := make([]models.File, len(files))
@@ -235,7 +247,11 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uui
 		dto = append(dto, dtos.ToFileDto(file))
 	}
 
-	return dto, err
+	pagination.Total = searchResult.TotalHits
+	pagination.Page = searchResult.Page
+	pagination.Limit = searchResult.Limit
+
+	return dto, pagination, err
 
 }
 

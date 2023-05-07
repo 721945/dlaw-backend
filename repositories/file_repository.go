@@ -76,51 +76,10 @@ func (r *FileRepository) DeleteFileDocument(id []string) (resp *meilisearch.Task
 	return r.db.Meili.Index("files").DeleteDocuments(id)
 }
 
-func (r *FileRepository) SearchFiles(query string, filter string) (resp *meilisearch.SearchResponse, err error) {
+func (r *FileRepository) SearchFiles(query, filter string, page, limit int64) (resp *meilisearch.SearchResponse, err error) {
 	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
 		Filter: filter,
-	})
-}
-
-func (r *FileRepository) SearchFilesByCaseId(query string, caseId uuid.UUID) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "case_id = " + caseId.String(),
-	})
-}
-
-func (r *FileRepository) SearchFilesByFolderId(query string, folderId uuid.UUID) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "folder_id = " + folderId.String(),
-	})
-}
-
-// SearchFilesByTag : Search by tag name
-func (r *FileRepository) SearchFilesByTag(query string, tag string) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "tags = " + tag,
-	})
-}
-
-func (r *FileRepository) SearchFilesByCaseIdAndTag(query string, caseId string, tag string) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "case_id = " + caseId + " AND tags = " + tag,
-	})
-}
-
-func (r *FileRepository) SearchFilesByFolderIdAndTag(query string, folderId string, tag string) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "folder_id = " + folderId + " AND tags = " + tag,
-	})
-}
-
-func (r *FileRepository) SearchFilesByCaseIdAndFolderId(query string, caseId string, folderId string) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "case_id = " + caseId + " AND folder_id = " + folderId,
-	})
-}
-
-func (r *FileRepository) SearchFilesByCaseIdAndFolderIdAndTag(query string, caseId string, folderId string, tag string) (resp *meilisearch.SearchResponse, err error) {
-	return r.db.Meili.Index("files").Search(query, &meilisearch.SearchRequest{
-		Filter: "case_id = " + caseId + " AND folder_id = " + folderId + " AND tags = " + tag,
+		Page:   page,
+		Limit:  limit,
 	})
 }

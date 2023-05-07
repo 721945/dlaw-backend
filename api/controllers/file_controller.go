@@ -290,10 +290,12 @@ func (f FileController) SearchFiles(c *gin.Context) {
 	word := c.Param("word")
 
 	folderID := c.DefaultQuery("folderId", "")
-	tagID := c.DefaultQuery("tag_id", "")
-	caseID := c.DefaultQuery("case_id", "")
+	tag := c.DefaultQuery("tag", "")
+	caseID := c.DefaultQuery("caseId", "")
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "20")
 
-	files, err := f.fileService.SearchFiles(word, caseID, folderID, tagID, userId.(uuid.UUID))
+	files, pagination, err := f.fileService.SearchFiles(word, caseID, folderID, tag, page, limit, userId.(uuid.UUID))
 
 	if err != nil {
 		f.logger.Error(err)
@@ -301,5 +303,5 @@ func (f FileController) SearchFiles(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": files})
+	c.JSON(http.StatusCreated, gin.H{"data": files, "pagination": pagination})
 }
