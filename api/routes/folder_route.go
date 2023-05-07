@@ -32,6 +32,7 @@ func (r FolderRoute) Setup() {
 		api.GET("/:id/root", r.controller.GetFolderRoot)
 		api.GET("/:id/log", r.controller.GetFolderLog)
 		api.GET("/:id/menu", r.controller.GetTagMenus)
+		api.GET("/:id/tag/:tagId/files", r.controller.GetFilesInTag)
 
 		api.POST("", r.controller.CreateFolder)
 

@@ -223,6 +223,7 @@ func (s *FileService) uploadNewFile(
 	if err != nil {
 		fileT, err = s.fileTypeRepo.GetEtcFileType()
 	}
+
 	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeToString})
 
 	if err != nil {
@@ -284,23 +285,40 @@ func (s *FileService) uploadNewFile(
 	s.logger.Info("RES ->", *res)
 
 	if mimeTypeToString == "image" {
-		go func(name string) {
+		go func(name string, tags []models.Tag) {
 			ocrData, err := s.ocrService.GetTextFromImageName(name)
 			if err != nil {
 				s.logger.Error(err)
 			}
 			if ocrData != "" {
-				modelMeili := models.MeiliFile{
-					Id:      fileRes.ID.String(),
-					Content: ocrData,
-				}
-				_, err := s.fileRepo.UpdateFileDocument(modelMeili)
+				go func() {
+					newTags := make([]models.Tag, len(tags))
+					if strings.Contains(ocrData, "ทะเบียนบ้าน") {
+					} else if strings.Contains(ocrData, "บัตรประจำตัวประชาชน") {
+						tag, _ := s.tagRepo.GetTagByName("idCard")
+						newTags = append(tags, *tag)
+					}
 
-				if err != nil {
-					s.logger.Error(err)
-				}
+					tagStrings := make([]string, 0)
+					for _, t := range newTags {
+						tagStrings = append(tagStrings, t.Name)
+					}
+
+					modelMeili := models.MeiliFile{
+						Id:      fileRes.ID.String(),
+						Content: ocrData,
+						Tags:    tagStrings,
+					}
+
+					_, err := s.fileRepo.UpdateFileDocument(modelMeili)
+
+					if err != nil {
+						s.logger.Error(err)
+					}
+				}()
+
 			}
-		}(previewCloudName)
+		}(previewCloudName, tag)
 	}
 
 	if err != nil {

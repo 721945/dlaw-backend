@@ -57,6 +57,10 @@ func (r *FileRepository) GetFilesByCaseIds(caseIds []uuid.UUID) (files []models.
 	return files, r.db.DB.Where("case_id IN ?", caseIds).Find(&files).Error
 }
 
+func (r *FileRepository) GetFilesByFolderIdAndTagId(folderId uuid.UUID, tagId uuid.UUID) (files []models.File, err error) {
+	return files, r.db.DB.Preload("Tags").Where("folder_id = ?", folderId).Joins("LEFT JOIN file_tags ON file_tags.file_id = files.id").Where("file_tags.tag_id = ?", tagId).Find(&files).Error
+}
+
 func (r *FileRepository) CreateFileDocument(file models.MeiliFile) (resp *meilisearch.TaskInfo, err error) {
 	return r.db.Meili.Index("files").AddDocuments([]models.MeiliFile{file}, "id")
 }

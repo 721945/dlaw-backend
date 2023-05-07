@@ -306,3 +306,28 @@ func (t FolderController) GetTagMenus(c *gin.Context) {
 
 	c.JSON(200, gin.H{"data": tags})
 }
+
+func (t FolderController) GetFilesInTag(c *gin.Context) {
+	paramId := c.Param("id")
+	paramTagId := c.Param("tagId")
+
+	id, err := uuid.Parse(paramId)
+
+	tagId, err := uuid.Parse(paramTagId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	files, err := t.folderService.GetFileInTagId(id, tagId)
+
+	if err != nil {
+		t.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{"data": files})
+}
