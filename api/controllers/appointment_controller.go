@@ -147,6 +147,74 @@ func (p AppointmentController) UpdateAppointment(c *gin.Context) {
 
 }
 
+func (p AppointmentController) PublishedAppointment(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		p.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	var input dtos.UpdateAppointmentDto
+
+	input.IsPublished = true
+
+	err = p.appointmentService.UpdateAppointment(id, input, userId.(uuid.UUID))
+
+	if err != nil {
+		p.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{})
+
+}
+
+func (p AppointmentController) UnPublishedAppointment(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		p.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	var input dtos.UpdateAppointmentDto
+
+	input.IsPublished = false
+
+	err = p.appointmentService.UpdateAppointment(id, input, userId.(uuid.UUID))
+
+	if err != nil {
+		p.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{})
+
+}
+
 func (p AppointmentController) DeleteAppointment(c *gin.Context) {
 
 	userId, isExist := c.Get("id")
