@@ -77,6 +77,7 @@ func ToFileDto(file models.File) FileDto {
 		IsShare:    file.IsShared,
 	}
 }
+
 func ToFileWithSizeDto(file models.File, size int64) FileDto {
 	var url, previewUrl, fileType string
 	if file.Url != nil {
