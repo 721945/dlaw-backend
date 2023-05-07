@@ -27,13 +27,14 @@ type UpdateAppointmentDto struct {
 }
 
 type AppointmentDto struct {
-	ID        string   `json:"id"`
-	Emails    []string `json:"emails"`
-	Title     string   `json:"title"`
-	Detail    string   `json:"detail"`
-	Location  string   `json:"location"`
-	DateTime  string   `json:"dateTime"`
-	UpdatedAt string   `json:"updatedAt"`
+	ID          string   `json:"id"`
+	Emails      []string `json:"emails"`
+	Title       string   `json:"title"`
+	Detail      string   `json:"detail"`
+	Location    string   `json:"location"`
+	DateTime    string   `json:"dateTime"`
+	UpdatedAt   string   `json:"updatedAt"`
+	IsPublished bool     `json:"isPublished"`
 }
 
 func (c *CreateAppointmentDto) ToAppointmentModel(caseId uuid.UUID, eventId string) models.Appointment {
@@ -95,13 +96,14 @@ func ToAppointmentDto(appointment models.Appointment) AppointmentDto {
 	}
 
 	return AppointmentDto{
-		ID:        appointment.ID.String(),
-		Emails:    emails,
-		Title:     appointment.Title,
-		Detail:    appointment.Detail,
-		Location:  appointment.Location,
-		DateTime:  utils.CovertTimeToString(appointment.DateTime),
-		UpdatedAt: updatedAt,
+		ID:          appointment.ID.String(),
+		Emails:      emails,
+		Title:       appointment.Title,
+		Detail:      appointment.Detail,
+		Location:    appointment.Location,
+		DateTime:    utils.CovertTimeToString(appointment.DateTime),
+		UpdatedAt:   updatedAt,
+		IsPublished: appointment.IsPublished,
 	}
 }
 
