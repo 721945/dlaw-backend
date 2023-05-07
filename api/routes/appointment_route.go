@@ -38,8 +38,10 @@ func (r AppointmentRoute) Setup() {
 		api.GET("/:id", r.ctrl.GetAppointment)
 		api.DELETE("/:id", r.ctrl.DeleteAppointment)
 		api.PATCH("/:id", r.ctrl.UpdateAppointment)
+		api.PATCH("/:id/publish", r.ctrl.PublishedAppointment)
+		api.PATCH("/:id/un-publish", r.ctrl.UnPublishedAppointment)
 		api.GET("/me", r.ctrl.GetOwnAppointment)
-		api.GET("/public", r.ctrl.GetOwnAppointment)
+		api.GET("/public", r.ctrl.GetPublicAppointment)
 
 	}
 
