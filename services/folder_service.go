@@ -397,3 +397,27 @@ func (s *FolderService) GetTagMenus(folderId uuid.UUID) ([]dtos.TagCountDto, err
 
 	return tagMenus, nil
 }
+
+func (s *FolderService) GetFileInTagId(folderId, tagId uuid.UUID) ([]dtos.FileDto, error) {
+
+	files, err := s.fileRepo.GetFilesByFolderIdAndTagId(folderId, tagId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	urls, err := s.getSignedFileUrls(files)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for i, _ := range files {
+		files[i].Url = &models.FileUrl{
+			Url:        urls[i].Url,
+			PreviewUrl: urls[i].PreviewUrl,
+		}
+	}
+
+	return dtos.ToFileDtos(files), nil
+}
