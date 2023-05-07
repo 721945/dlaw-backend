@@ -2,10 +2,12 @@ package services
 
 import (
 	"github.com/721945/dlaw-backend/api/dtos"
+	"github.com/721945/dlaw-backend/infrastructure/google_storage"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/google/uuid"
+	"sync"
 )
 
 type CaseService struct {
@@ -17,6 +19,7 @@ type CaseService struct {
 	caseUsedRepo       repositories.CaseUsedLogRepository
 	permissionLogRepo  repositories.CasePermissionLogRepository
 	userRepo           repositories.UserRepository
+	storage            google_storage.GoogleStorage
 }
 
 func NewCaseService(
@@ -28,6 +31,7 @@ func NewCaseService(
 	pl repositories.CasePermissionLogRepository,
 	u repositories.UserRepository,
 	cup repositories.CaseUsedLogRepository,
+	storage google_storage.GoogleStorage,
 ) CaseService {
 	return CaseService{
 		logger:             logger,
@@ -38,6 +42,7 @@ func NewCaseService(
 		permissionLogRepo:  pl,
 		userRepo:           u,
 		caseUsedRepo:       cup,
+		storage:            storage,
 	}
 }
 
@@ -224,6 +229,46 @@ func (s CaseService) GetArchivedCases(userId uuid.UUID) (casesDto []dtos.CaseDet
 
 	for i, mCase := range cases {
 		casesDto[i] = dtos.ToCaseDto(mCase)
+	}
+
+	return casesDto, nil
+}
+
+func (s CaseService) GetPublicCases() (casesDto []dtos.CasePublicDto, err error) {
+	cases, err := s.caseRepo.GetCasesWhichFileIsPublic()
+
+	if err != nil {
+		return casesDto, err
+	}
+
+	var wg sync.WaitGroup
+	for _, myCase := range cases {
+		wg.Add(1)
+
+		go func(myCase models.Case) {
+			urls, err := s.storage.GetSignedFileUrls(myCase.Files)
+
+			newFiles := make([]models.File, len(myCase.Files))
+			if err != nil {
+
+			}
+
+			for i, file := range myCase.Files {
+				newFiles[i] = file
+				newFiles[i].Url = &urls[i]
+			}
+
+			myCase.Files = newFiles
+
+		}(myCase)
+	}
+
+	wg.Wait()
+
+	casesDto = make([]dtos.CasePublicDto, len(cases))
+	//
+	for i, mCase := range cases {
+		casesDto[i] = dtos.ToCasePublicDto(mCase)
 	}
 
 	return casesDto, nil
