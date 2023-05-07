@@ -26,3 +26,7 @@ type MeiliFile struct {
 	FolderIds []string `json:"folder_ids,omitempty"`
 	CaseId    string   `json:"case_id,omitempty"`
 }
+
+type MeiliFileResponse struct {
+	ID string `json:"id"`
+}

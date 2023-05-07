@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/721945/dlaw-backend/api/dtos"
@@ -10,6 +11,7 @@ import (
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/google/uuid"
+	"github.com/meilisearch/meilisearch-go"
 	"mime/multipart"
 	"strings"
 	"time"
@@ -152,6 +154,89 @@ func (s *FileService) MoveFile(id uuid.UUID, dto dtos.MoveFileDto, userId uuid.U
 	}
 
 	return s.fileRepo.UpdateFile(id, *model)
+}
+
+func (s *FileService) SearchFiles(word, caseId, folderId, tag string, userID uuid.UUID) ([]dtos.FileDto, error) {
+
+	if word == "" && caseId == "" && folderId == "" && tag == "" {
+		return nil, errors.New("invalid search params")
+	}
+
+	var filters []string
+
+	if caseId != "" {
+		_, err := uuid.Parse(caseId)
+		if err != nil {
+			return nil, errors.New("invalid case id")
+		}
+		filters = append(filters, "case_id = \""+caseId+"\"")
+	}
+
+	if folderId != "" {
+		_, err := uuid.Parse(folderId)
+		if err != nil {
+			return nil, errors.New("invalid folder id")
+		}
+
+		filters = append(filters, "folder_id = \""+folderId+"\"")
+	}
+
+	if tag != "" {
+		_, err := uuid.Parse(tag)
+		if err != nil {
+			return nil, errors.New("invalid tag id")
+		}
+		filters = append(filters, "tag = \""+tag+"\"")
+	}
+	filter := strings.Join(filters, " AND ")
+	var searchResult *meilisearch.SearchResponse
+	var err error
+
+	searchResult, err = s.fileRepo.SearchFiles(word, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var ids []uuid.UUID
+	for _, hit := range searchResult.Hits {
+		var result models.MeiliFileResponse
+		s.logger.Info("Hit: %v\n", hit)
+		documentsBytes, _ := json.Marshal(hit)
+		err := json.Unmarshal(documentsBytes, &result)
+		if err != nil {
+			s.logger.Error("Error: %v\n", err)
+		}
+		id, _ := uuid.Parse(result.ID)
+		ids = append(ids, id)
+	}
+
+	files, err := s.fileRepo.GetFilesByIds(ids)
+
+	urls, err := s.getSignedFileUrls(files)
+
+	if err != nil {
+		return nil, err
+	}
+
+	newFiles := make([]models.File, len(files))
+
+	for i, file := range files {
+		newFiles[i] = file
+		newFiles[i].Url = &models.FileUrl{
+			Url:        urls[i].Url,
+			PreviewUrl: urls[i].PreviewUrl,
+		}
+	}
+
+	dto := make([]dtos.FileDto, 0)
+
+	for _, file := range newFiles {
+		dto = append(dto, dtos.ToFileDto(file))
+	}
+
+	return dto, err
+
 }
 
 func (s *FileService) DeleteFile(id uuid.UUID) error {

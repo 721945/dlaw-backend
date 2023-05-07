@@ -35,6 +35,7 @@ func (r FileRoute) Setup() {
 		api.GET("", r.ctrl.GetFiles)
 		api.GET("/:id", r.ctrl.GetFile)
 		api.GET("/tags/count", r.ctrl.CountFileInTags)
+		api.GET("/search/:word", r.ctrl.SearchFiles)
 		//api.GET("/tags/:id", r.ctrl.GetFileInTags)
 		api.GET("/recent", r.ctrl.RecentViewedFiles)
 
