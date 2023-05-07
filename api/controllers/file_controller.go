@@ -277,3 +277,29 @@ func (f FileController) MoveFile(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"data": "ok"})
 }
+
+func (f FileController) SearchFiles(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	word := c.Param("word")
+
+	folderID := c.DefaultQuery("folderId", "")
+	tagID := c.DefaultQuery("tag_id", "")
+	caseID := c.DefaultQuery("case_id", "")
+
+	files, err := f.fileService.SearchFiles(word, caseID, folderID, tagID, userId.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": files})
+}
