@@ -3,8 +3,6 @@ package routes
 import (
 	_ "github.com/721945/dlaw-backend/docs"
 	"github.com/721945/dlaw-backend/libs"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type SwaggerRoute struct {
@@ -18,5 +16,5 @@ func NewSwaggerRoute(handler libs.RequestHandler, logger *libs.Logger) SwaggerRo
 
 func (r SwaggerRoute) Setup() {
 	r.logger.Info("Setting tag routes")
-	r.handler.Gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//r.handler.Gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

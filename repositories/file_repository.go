@@ -52,6 +52,13 @@ func (r *FileRepository) UpdateFile(id uuid.UUID, file models.File) error {
 	return r.db.DB.Model(&models.File{}).Where("id = ?", id).Updates(file).Error
 }
 
+func (r *FileRepository) UpdateFilePublic(id uuid.UUID, file models.File) error {
+	return r.db.DB.Model(&models.File{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"is_shared": file.IsShared,
+		"is_public": file.IsPublic,
+	}).Error
+}
+
 func (r *FileRepository) DeleteFile(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.File{}, id).Error
 }

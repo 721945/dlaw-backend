@@ -40,6 +40,6 @@ func (r *AppointmentRepository) GetAppointmentByCaseIds(caseIds []uuid.UUID) (ap
 }
 
 func (r *AppointmentRepository) GetPublicAppointments() (appointments []models.Appointment, err error) {
-	return appointments, r.db.DB.Preload("Emails").Where("is_public = true").Find(&appointments).Error
+	return appointments, r.db.DB.Preload("Emails").Where("is_published = true").Find(&appointments).Error
 
 }

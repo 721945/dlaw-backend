@@ -29,24 +29,25 @@ func NewFileRoute(
 
 func (r FileRoute) Setup() {
 	r.logger.Info("Setting file routes")
-	api := r.handler.Gin.Group("/files")
-	api.Use(r.authMiddleware.Handler())
+	public := r.handler.Gin.Group("/files")
 	{
-		api.GET("", r.ctrl.GetFiles)
-		api.GET("/:id", r.ctrl.GetFile)
-		api.GET("/tags/count", r.ctrl.CountFileInTags)
-		api.GET("/search/:word", r.ctrl.SearchFiles)
-		//api.GET("/tags/:id", r.ctrl.GetFileInTags)
-		api.GET("/recent", r.ctrl.RecentViewedFiles)
-
-		api.POST("", r.ctrl.CreateFile)
-		api.POST("/upload", r.ctrl.UploadFile)
-
-		api.PATCH("/:id/move", r.ctrl.MoveFile)
-		api.PATCH("/:id", r.ctrl.UpdateFile)
-		api.PATCH("/:id/share", r.ctrl.ShareFile)
-		api.PATCH("/:id/public", r.ctrl.PublicFile)
-
-		api.DELETE("/:id", r.ctrl.DeleteFile)
+		public.GET("/public/:id", r.ctrl.GetPublicFile)
+	}
+	private := r.handler.Gin.Group("/files")
+	private.Use(r.authMiddleware.Handler())
+	{
+		private.GET("", r.ctrl.GetFiles)
+		private.GET("/:id", r.ctrl.GetFile)
+		private.GET("/tags/count", r.ctrl.CountFileInTags)
+		private.GET("/search/:word", r.ctrl.SearchFiles)
+		private.GET("/recent", r.ctrl.RecentViewedFiles)
+		private.POST("", r.ctrl.CreateFile)
+		private.POST("/upload", r.ctrl.UploadFile)
+		private.PATCH("/:id/move", r.ctrl.MoveFile)
+		private.PATCH("/:id", r.ctrl.UpdateFile)
+		private.PATCH("/:id/share", r.ctrl.ShareFile)
+		private.PATCH("/:id/remove-share", r.ctrl.UnShareFile)
+		private.PATCH("/:id/public", r.ctrl.PublicFile)
+		private.DELETE("/:id", r.ctrl.DeleteFile)
 	}
 }

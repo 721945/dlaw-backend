@@ -20,6 +20,8 @@ type FileDto struct {
 	UpdatedAt  string   `json:"updatedAt"`
 	Type       string   `json:"type,omitempty"`
 	Size       string   `json:"size,omitempty"`
+	IsPublic   bool     `json:"isPublic,omitempty"`
+	IsShare    bool     `json:"isShare,omitempty"`
 }
 
 type FilePublicDto struct {
@@ -71,6 +73,8 @@ func ToFileDto(file models.File) FileDto {
 		CreatedAt:  file.CreatedAt.String(),
 		UpdatedAt:  file.UpdatedAt.String(),
 		Type:       fileType,
+		IsPublic:   file.IsPublic,
+		IsShare:    file.IsShared,
 	}
 }
 func ToFileWithSizeDto(file models.File, size int64) FileDto {

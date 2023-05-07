@@ -45,15 +45,15 @@ func (m JWTAuthMiddleware) Handler() gin.HandlerFunc {
 			c.Set("user", user)
 			c.Set("id", user.ID)
 			c.Next()
-
 			return
-
 		}
 
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "you are not authorized !!",
-		})
+		m.logger.Info("Unauthorized")
 
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "you are not authorized !!!",
+		})
+		//
 		c.Abort()
 	}
 }

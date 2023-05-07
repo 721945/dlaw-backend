@@ -48,6 +48,7 @@ func (u UserController) GetUser(c *gin.Context) {
 
 func (u UserController) GetMe(c *gin.Context) {
 	id, isExisted := c.Get("id")
+
 	if !isExisted {
 		_ = c.Error(libs.ErrUnauthorized)
 		return

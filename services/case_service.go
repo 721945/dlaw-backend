@@ -7,7 +7,6 @@ import (
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/repositories"
 	"github.com/google/uuid"
-	"sync"
 )
 
 type CaseService struct {
@@ -241,29 +240,34 @@ func (s CaseService) GetPublicCases() (casesDto []dtos.CasePublicDto, err error)
 		return casesDto, err
 	}
 
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	for _, myCase := range cases {
-		wg.Add(1)
+		//wg.Add(1)
+		//go func(myCase models.Case) {
+		urls, err := s.storage.GetSignedFileUrls(myCase.Files)
 
-		go func(myCase models.Case) {
-			urls, err := s.storage.GetSignedFileUrls(myCase.Files)
+		s.logger.Info(urls)
+		if err != nil {
+			s.logger.Error(err)
+			continue
+		}
 
-			newFiles := make([]models.File, len(myCase.Files))
-			if err != nil {
+		//newFiles := make([]models.File, len(myCase.Files))
 
+		for i, _ := range myCase.Files {
+			//newFiles[i] = file
+			myCase.Files[i].Url = &models.FileUrl{
+				Url:        urls[i].Url,
+				PreviewUrl: urls[i].PreviewUrl,
 			}
+		}
 
-			for i, file := range myCase.Files {
-				newFiles[i] = file
-				newFiles[i].Url = &urls[i]
-			}
+		//myCase.Files = newFiles
 
-			myCase.Files = newFiles
-
-		}(myCase)
+		//}(myCase)
 	}
 
-	wg.Wait()
+	//wg.Wait()
 
 	casesDto = make([]dtos.CasePublicDto, len(cases))
 	//

@@ -11,6 +11,7 @@ var (
 	ErrUnauthorized        = fmt.Errorf("unauthorized")
 	ErrForbidden           = fmt.Errorf("forbidden")
 	ErrNotFound            = fmt.Errorf("not found")
+	ErrRecordNotFound      = fmt.Errorf("record not found")
 	ErrConflict            = fmt.Errorf("conflict")
 	ErrBadParamInput       = fmt.Errorf("bad param input")
 	ErrBadParamInputFormat = fmt.Errorf("bad param input format")
@@ -26,6 +27,8 @@ func StatusCode(err error) int {
 		return http.StatusInternalServerError
 	case ErrBadRequest:
 		return http.StatusBadRequest
+	case ErrBadParamInputFormat:
+		return http.StatusBadRequest
 	case ErrUnauthorized:
 		return http.StatusUnauthorized
 	case ErrForbidden:
@@ -36,6 +39,8 @@ func StatusCode(err error) int {
 		return http.StatusConflict
 	case ErrBadParamInput:
 		return http.StatusBadRequest
+	case ErrRecordNotFound:
+		return http.StatusNotFound
 	default:
 		return http.StatusInternalServerError
 	}

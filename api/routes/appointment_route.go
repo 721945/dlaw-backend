@@ -29,20 +29,22 @@ func NewAppointmentRoute(
 
 func (r AppointmentRoute) Setup() {
 	r.logger.Info("Setting appointment routes")
-	api := r.handler.Gin.Group("/appointments")
-	api.Use(r.authMiddleware.Handler())
+	public := r.handler.Gin.Group("/appointments")
 	{
-
-		api.GET("", r.ctrl.GetAppointments)
-		api.POST("", r.ctrl.CreateAppointment)
-		api.GET("/:id", r.ctrl.GetAppointment)
-		api.DELETE("/:id", r.ctrl.DeleteAppointment)
-		api.PATCH("/:id", r.ctrl.UpdateAppointment)
-		api.PATCH("/:id/publish", r.ctrl.PublishedAppointment)
-		api.PATCH("/:id/un-publish", r.ctrl.UnPublishedAppointment)
-		api.GET("/me", r.ctrl.GetOwnAppointment)
-		api.GET("/public", r.ctrl.GetPublicAppointment)
-
+		public.GET("/public", r.ctrl.GetPublicAppointment)
+	}
+	
+	private := r.handler.Gin.Group("/appointments")
+	private.Use(r.authMiddleware.Handler())
+	{
+		private.GET("", r.ctrl.GetAppointments)
+		private.POST("", r.ctrl.CreateAppointment)
+		private.GET("/:id", r.ctrl.GetAppointment)
+		private.DELETE("/:id", r.ctrl.DeleteAppointment)
+		private.PATCH("/:id", r.ctrl.UpdateAppointment)
+		private.PATCH("/:id/publish", r.ctrl.PublishedAppointment)
+		private.PATCH("/:id/un-publish", r.ctrl.UnPublishedAppointment)
+		private.GET("/me", r.ctrl.GetOwnAppointment)
 	}
 
 }

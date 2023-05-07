@@ -26,7 +26,6 @@ func (j JWTAuthService) GenerateToken(user models.User) string {
 		"email":      user.Email,
 		"first_name": user.Firstname,
 		"last_name":  user.Lastname,
-		//"iat":        time.Now().AddDate(0, 0, 7).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(j.env.JWTSecret))
@@ -79,23 +78,8 @@ func (j JWTAuthService) VerifyToken(tokenString string) (*models.User, error) {
 		Lastname:  claims["last_name"].(string),
 	}
 
-	//var tm time.Time
-	//switch iat := claims["iat"].(type) {
-	//case float64:
-	//	tm = time.Unix(int64(iat), 0)
-	//case json.Number:
-	//	v, _ := iat.Int64()
-	//	tm = time.Unix(v, 0)
-	//}
-	//
-	//if tm.Before(time.Now()) {
-	//	return nil, errors.New("token expired")
-	//}
-
 	return &user, nil
 }
-
-//
 
 func (j JWTAuthService) GetUserIDFromToken(tokenString string) (*uuid.UUID, error) {
 	user, err := j.VerifyToken(tokenString)
@@ -104,7 +88,6 @@ func (j JWTAuthService) GetUserIDFromToken(tokenString string) (*uuid.UUID, erro
 		return nil, err
 	}
 
-	//id := user["id"].(float64)
 	id := user.ID
 
 	return &id, nil
