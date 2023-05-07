@@ -22,6 +22,37 @@ type FileDto struct {
 	Size       string   `json:"size,omitempty"`
 }
 
+type FilePublicDto struct {
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Url        string `json:"url"`
+	PreviewUrl string `json:"previewUrl"`
+}
+
+func ToFilePublicDto(file models.File) FilePublicDto {
+	var url, previewUrl string
+	if file.Url != nil {
+		url = file.Url.Url
+		previewUrl = file.Url.PreviewUrl
+	}
+	return FilePublicDto{
+		Id:         file.ID.String(),
+		Name:       file.Name,
+		Url:        url,
+		PreviewUrl: previewUrl,
+	}
+}
+
+func ToFilePublicDtos(files []models.File) []FilePublicDto {
+	filesDto := make([]FilePublicDto, len(files))
+
+	for i, file := range files {
+		filesDto[i] = ToFilePublicDto(file)
+	}
+
+	return filesDto
+}
+
 func ToFileDto(file models.File) FileDto {
 	var url, previewUrl, fileType string
 	if file.Url != nil {

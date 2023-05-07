@@ -56,3 +56,7 @@ func (r *CaseRepository) GetCasesSortedByFrequency(userId uuid.UUID) (cases []mo
 	//return cases, r.db.DB.Joins("JOIN case_used_logs ON case_used_logs.user_id = users.id").Preload("Folders", "parent_folder_id IS NULL").Order("count DESC").Limit(10).Find(&cases).Error
 	return cases, r.db.DB.Preload("CaseUsedLogs", "user_id = ?", userId).Preload("Folders", "parent_folder_id IS NULL").Order("count DESC").Limit(10).Find(&cases).Error
 }
+
+func (r *CaseRepository) GetCasesWhichFileIsPublic() (cases []models.Case, err error) {
+	return cases, r.db.DB.Preload("Files", "is_public = true").Find(&cases).Error
+}

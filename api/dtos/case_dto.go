@@ -23,6 +23,16 @@ type CaseDetailDto struct {
 	FolderId  string    `json:"folderId"`
 }
 
+type CasePublicDto struct {
+	Id              string          `json:"id"`
+	Name            string          `json:"name"`
+	RedCaseNumber   string          `json:"redCaseNumber"`
+	BlackCaseNumber string          `json:"blackCaseNumber"`
+	CaseTitle       string          `json:"caseTitle"`
+	CaseContent     string          `json:"caseDetail"`
+	Files           []FilePublicDto `json:"files"`
+}
+
 type OwnerDto struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
@@ -102,6 +112,17 @@ func ToCaseDto(mCase models.Case) CaseDetailDto {
 		CreatedAt: mCase.CreatedAt,
 		UpdatedAt: mCase.UpdatedAt,
 		FolderId:  mCase.Folders[0].ID.String(),
+	}
+}
+func ToCasePublicDto(mCase models.Case) CasePublicDto {
+	return CasePublicDto{
+		Id:              mCase.ID.String(),
+		Name:            mCase.Title,
+		RedCaseNumber:   mCase.RedCaseNumber,
+		BlackCaseNumber: mCase.BlackCaseNumber,
+		CaseTitle:       *mCase.CaseTitle,
+		CaseContent:     *mCase.CaseDetail,
+		Files:           ToFilePublicDtos(mCase.Files),
 	}
 }
 

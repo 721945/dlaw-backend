@@ -37,6 +37,7 @@ func (r CaseRoute) Setup() {
 		api.GET("/me", r.caseCtrl.GetOwnCases)
 		api.GET("/freq", r.caseCtrl.GetFrequentlyUsed)
 		api.GET("/archived", r.caseCtrl.GetArchivedCases)
+		api.GET("/public", r.caseCtrl.GetPublicCases)
 		api.GET("/:id/members", r.caseCtrl.GetMembers)
 		api.GET("/:id/folders", r.caseCtrl.GetFolders)
 		api.POST("", r.caseCtrl.CreateCase)

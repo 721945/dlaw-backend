@@ -67,7 +67,7 @@ func (s *FileService) GetFiles() (dto []dtos.FileDto, err error) {
 		return nil, err
 	}
 
-	urls, err := s.getSignedFileUrls(files)
+	urls, err := s.storageService.GetSignedFileUrls(files)
 
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *FileService) GetFile(id uuid.UUID, userId *uuid.UUID) (dto *dtos.FileDt
 		return nil, err
 	}
 
-	url, err := s.getSignedFileUrls([]models.File{*file})
+	url, err := s.storageService.GetSignedFileUrls([]models.File{*file})
 
 	if err != nil {
 		return nil, err
@@ -155,6 +155,78 @@ func (s *FileService) MoveFile(id uuid.UUID, dto dtos.MoveFileDto, userId uuid.U
 	}
 
 	return s.fileRepo.UpdateFile(id, *model)
+}
+
+func (s *FileService) ShareFile(id string, userId uuid.UUID) (string, error) {
+	fileId, err := uuid.Parse(id)
+
+	if err != nil {
+		return "", err
+	}
+	_, err = s.checkPermissionAndGetCaseId(fileId, userId)
+
+	if err != nil {
+		return "", err
+	}
+
+	file, err := s.fileRepo.GetFile(fileId)
+
+	if err != nil {
+		return "", err
+	}
+
+	links, err := s.storageService.GiveAccessPublic(file.CloudName, file.Name)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = s.fileRepo.UpdateFile(fileId, models.File{
+		IsShared: true,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return links, nil
+}
+
+func (s *FileService) PublicFile(id string, userId uuid.UUID) (string, error) {
+	fileId, err := uuid.Parse(id)
+
+	if err != nil {
+		return "", err
+	}
+
+	_, err = s.checkPermissionAndGetCaseId(fileId, userId)
+
+	if err != nil {
+		return "", err
+	}
+
+	file, err := s.fileRepo.GetFile(fileId)
+
+	if err != nil {
+		return "", err
+	}
+
+	links, err := s.storageService.GiveAccessPublic(file.CloudName, file.Name)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = s.fileRepo.UpdateFile(fileId, models.File{
+		IsShared: true,
+		IsPublic: true,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return links, nil
 }
 
 func (s *FileService) SearchFiles(word, caseId, folderId, tag, page, limit string, userID uuid.UUID) ([]dtos.FileDto, dtos.PaginationResponse, error) {
@@ -225,7 +297,7 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag, page, limit strin
 
 	files, err := s.fileRepo.GetFilesByIds(ids)
 
-	urls, err := s.getSignedFileUrls(files)
+	urls, err := s.storageService.GetSignedFileUrls(files)
 
 	if err != nil {
 		return nil, pagination, err
@@ -548,7 +620,6 @@ func checkNeedConvert(fileType string) bool {
 }
 
 func (s *FileService) checkPermissionAndGetCaseId(userId uuid.UUID, folderId uuid.UUID) (*uuid.UUID, error) {
-	// TODO : Improve to get permission by folder id later
 	folder, err := s.folderRepo.GetFolder(folderId)
 
 	if err != nil {
@@ -661,62 +732,6 @@ func (s *FileService) updateFolderTagByFolderId(folderId uuid.UUID) error {
 
 }
 
-func (s *FileService) getSignedFileUrls(files []models.File) (fileUrls []models.FileUrl, err error) {
-
-	cloudNames := make([]string, len(files))
-	previewCloudNames := make([]string, len(files))
-	downloadNames := make([]string, len(files))
-
-	for i, file := range files {
-		cloudNames[i] = file.CloudName
-		downloadNames[i] = file.Name
-		previewCloudNames[i] = file.PreviewCloudName
-	}
-
-	urlsCh := make(chan []string)
-	previewUrlsCh := make(chan []string)
-
-	// Run the two calls to GetSignedUrls in parallel using goroutines
-	go func() {
-		urls, err := s.storageService.GetSignedUrls(cloudNames, []string{}, downloadNames)
-		if err != nil {
-			s.logger.Info(err)
-			urlsCh <- nil
-		} else {
-			urlsCh <- urls
-		}
-	}()
-
-	go func() {
-		previewUrls, err := s.storageService.GetSignedUrls(previewCloudNames, []string{}, downloadNames)
-		if err != nil {
-			s.logger.Info(err)
-			previewUrlsCh <- nil
-		} else {
-			previewUrlsCh <- previewUrls
-		}
-	}()
-
-	// Wait for both goroutines to complete and merge the results
-	urls := <-urlsCh
-	previewUrls := <-previewUrlsCh
-
-	if urls == nil || previewUrls == nil {
-		return nil, errors.New("error getting signed urls")
-	}
-
-	fileUrls = make([]models.FileUrl, len(files))
-
-	for i, _ := range files {
-		fileUrls[i] = models.FileUrl{
-			Url:        urls[i],
-			PreviewUrl: previewUrls[i],
-		}
-	}
-
-	return fileUrls, nil
-}
-
 func (s *FileService) CountFilesInTags(userId uuid.UUID) ([]dtos.TagCountDto, error) {
 
 	casePermissions, err := s.casePermissionRepo.GetCasePermissionsByUserId(userId)
@@ -774,7 +789,7 @@ func (s *FileService) GetRecentFileOpened(userId uuid.UUID) ([]dtos.FileDto, err
 		files[i] = *fileView.File
 	}
 
-	fileUrls, err := s.getSignedFileUrls(files)
+	fileUrls, err := s.storageService.GetSignedFileUrls(files)
 
 	if err != nil {
 		return nil, err

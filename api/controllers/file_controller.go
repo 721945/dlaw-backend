@@ -305,3 +305,47 @@ func (f FileController) SearchFiles(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"data": files, "pagination": pagination})
 }
+
+func (f FileController) ShareFile(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	id := c.Param("id")
+
+	link, err := f.fileService.ShareFile(id, userId.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": link})
+}
+
+func (f FileController) PublicFile(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	id := c.Param("id")
+
+	link, err := f.fileService.PublicFile(id, userId.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": link})
+}

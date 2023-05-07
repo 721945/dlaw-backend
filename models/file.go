@@ -10,6 +10,8 @@ type File struct {
 	Name             string
 	CloudName        string
 	PreviewCloudName string
+	IsShared         bool          `gorm:"default:false"`
+	IsPublic         bool          `gorm:"default:false"`
 	FileType         *FileType     `gorm:"foreignKey:TypeId"`
 	Url              *FileUrl      `gorm:"-"`
 	Tags             []Tag         `gorm:"many2many:file_tags;"`

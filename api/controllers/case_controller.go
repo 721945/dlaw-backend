@@ -273,6 +273,20 @@ func (ctrl CaseController) GetArchivedCases(c *gin.Context) {
 		"data": mCase,
 	})
 }
+func (ctrl CaseController) GetPublicCases(c *gin.Context) {
+
+	mCase, err := ctrl.caseService.GetPublicCases()
+
+	if err != nil {
+		ctrl.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": mCase,
+	})
+}
 
 func (ctrl CaseController) GetFrequentlyUsed(c *gin.Context) {
 

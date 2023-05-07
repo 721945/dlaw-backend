@@ -44,6 +44,8 @@ func (r FileRoute) Setup() {
 
 		api.PATCH("/:id/move", r.ctrl.MoveFile)
 		api.PATCH("/:id", r.ctrl.UpdateFile)
+		api.PATCH("/:id/share", r.ctrl.ShareFile)
+		api.PATCH("/:id/public", r.ctrl.PublicFile)
 
 		api.DELETE("/:id", r.ctrl.DeleteFile)
 	}
