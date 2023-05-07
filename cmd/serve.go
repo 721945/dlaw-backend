@@ -21,10 +21,3 @@ func RunInit(
 
 	_ = (*router.Gin).Run(":" + env.ServerPort)
 }
-
-//func RunMigration(db libs.Database, logger*libs.Logger) {
-//	logger.Info("Start Migrations")
-//	db.DB.AutoMigrate(&models.User{})
-//	logger.Info("Migrations ran successfully")
-//
-//}

@@ -55,6 +55,26 @@ func (f FileController) GetFile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": dto})
 }
+func (f FileController) GetPublicFile(c *gin.Context) {
+	paramId := c.Param("id")
+
+	id, err := uuid.Parse(paramId)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	dto, err := f.fileService.GetFile(id, nil)
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": dto})
+}
 
 func (f FileController) CreateFile(c *gin.Context) {
 	var input dtos.CreateFileDto
@@ -329,6 +349,50 @@ func (f FileController) ShareFile(c *gin.Context) {
 }
 
 func (f FileController) PublicFile(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	id := c.Param("id")
+
+	link, err := f.fileService.PublicFile(id, userId.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": link})
+}
+
+func (f FileController) UnShareFile(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		f.logger.Error("User not found")
+		_ = c.Error(libs.ErrInternalServerError)
+		return
+	}
+
+	id := c.Param("id")
+
+	err := f.fileService.RemoveShareFile(id, userId.(uuid.UUID))
+
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": "ok"})
+}
+
+func (f FileController) UnPublicFile(c *gin.Context) {
 	userId, isExist := c.Get("id")
 
 	if !isExist {

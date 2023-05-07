@@ -94,6 +94,16 @@ func (s *FileService) GetFiles() (dto []dtos.FileDto, err error) {
 func (s *FileService) GetFile(id uuid.UUID, userId *uuid.UUID) (dto *dtos.FileDto, err error) {
 	file, err := s.fileRepo.GetFileContent(id)
 
+	if err != nil {
+		return nil, err
+	}
+
+	if !file.IsPublic && !file.IsShared {
+		if userId == nil {
+			return nil, libs.ErrNotFound
+		}
+	}
+
 	if userId != nil {
 		_, err := s.fileViewLogRepo.CreateFileViewLog(models.FileViewLog{
 			FileId: id,
@@ -163,11 +173,6 @@ func (s *FileService) ShareFile(id string, userId uuid.UUID) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = s.checkPermissionAndGetCaseId(fileId, userId)
-
-	if err != nil {
-		return "", err
-	}
 
 	file, err := s.fileRepo.GetFile(fileId)
 
@@ -181,8 +186,9 @@ func (s *FileService) ShareFile(id string, userId uuid.UUID) (string, error) {
 		return "", err
 	}
 
-	err = s.fileRepo.UpdateFile(fileId, models.File{
+	err = s.fileRepo.UpdateFilePublic(fileId, models.File{
 		IsShared: true,
+		IsPublic: false,
 	})
 
 	if err != nil {
@@ -192,14 +198,39 @@ func (s *FileService) ShareFile(id string, userId uuid.UUID) (string, error) {
 	return links, nil
 }
 
-func (s *FileService) PublicFile(id string, userId uuid.UUID) (string, error) {
+func (s *FileService) RemoveShareFile(id string, userId uuid.UUID) error {
 	fileId, err := uuid.Parse(id)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	_, err = s.checkPermissionAndGetCaseId(fileId, userId)
+	file, err := s.fileRepo.GetFile(fileId)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.storageService.GiveAccessPrivate(file.CloudName)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.fileRepo.UpdateFilePublic(fileId, models.File{
+		IsShared: false,
+		IsPublic: false,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *FileService) PublicFile(id string, userId uuid.UUID) (string, error) {
+	fileId, err := uuid.Parse(id)
 
 	if err != nil {
 		return "", err
@@ -217,7 +248,7 @@ func (s *FileService) PublicFile(id string, userId uuid.UUID) (string, error) {
 		return "", err
 	}
 
-	err = s.fileRepo.UpdateFile(fileId, models.File{
+	err = s.fileRepo.UpdateFilePublic(fileId, models.File{
 		IsShared: true,
 		IsPublic: true,
 	})

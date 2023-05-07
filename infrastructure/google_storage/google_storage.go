@@ -3,7 +3,6 @@ package google_storage
 import (
 	"cloud.google.com/go/storage"
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/721945/dlaw-backend/infrastructure/google_vision"
@@ -108,6 +107,41 @@ func (g GoogleStorage) GiveAccessPublic(name, fileName string) (string, error) {
 	}
 
 	return g.getPublicFile(name, fileName), nil
+}
+
+func (g GoogleStorage) GiveAccessPrivate(name string) error {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	defer func(client *storage.Client) {
+		err := client.Close()
+		if err != nil {
+			g.logger.Error("Error closing Google Cloud Storage client: %v", err)
+			panic(err)
+		}
+	}(client)
+
+	acl := client.Bucket(g.bucket).Object(name).ACL()
+
+	rules, err := acl.List(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Loop through the existing ACL entries and remove any that grant public access.
+	for _, rule := range rules {
+		if rule.Entity == storage.AllUsers && rule.Role == storage.RoleReader {
+			if err := acl.Delete(ctx, rule.Entity); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (g GoogleStorage) GetFileSize(name, version string) (int64, error) {
@@ -270,9 +304,10 @@ func (g GoogleStorage) getSignedUrls(names, versions, fileNames []string, isShar
 }
 
 func (g GoogleStorage) getPublicFile(name, downloadName string) string {
-	encodedBucketName := base64.URLEncoding.EncodeToString([]byte(g.bucket))
-	encodedObjectName := base64.URLEncoding.EncodeToString([]byte(name))
-	urlStr := fmt.Sprintf("https://storage.googleapis.com/%s/%s?response-content-disposition=attachment;filename=%s", encodedBucketName, encodedObjectName, url.PathEscape(downloadName))
+	//encodedBucketName := base64.URLEncoding.EncodeToString([]byte(g.bucket))
+	//encodedObjectName := base64.URLEncoding.EncodeToString([]byte(name))
+	urlStr := fmt.Sprintf("https://storage.googleapis.com/%s/%s?response-content-disposition=attachment;filename=%s", g.bucket, name, url.PathEscape(downloadName))
+	//urlStr := fmt.Sprintf("https://storage.googleapis.com/%s/%s?response-content-disposition=attachment;filename=%s", encodedBucketName, encodedObjectName, url.PathEscape(downloadName))
 	downloadURL, _ := url.Parse(urlStr)
 	return downloadURL.String()
 }

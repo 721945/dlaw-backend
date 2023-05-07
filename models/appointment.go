@@ -15,7 +15,7 @@ type Appointment struct {
 	Location    string
 	DateTime    time.Time
 	Emails      []Email
-	IsPublished bool
+	IsPublished bool `gorm:"default:false"`
 }
 
 type Email struct {
