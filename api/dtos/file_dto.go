@@ -73,8 +73,6 @@ func ToFileDto(file models.File) FileDto {
 		CreatedAt:  file.CreatedAt.String(),
 		UpdatedAt:  file.UpdatedAt.String(),
 		Type:       fileType,
-		IsPublic:   file.IsPublic,
-		IsShare:    file.IsShared,
 	}
 }
 
@@ -98,6 +96,8 @@ func ToFileWithSizeDto(file models.File, size int64) FileDto {
 		UpdatedAt:  file.UpdatedAt.String(),
 		Type:       fileType,
 		Size:       utils.FormatFileSize(size),
+		IsPublic:   file.IsPublic,
+		IsShare:    file.IsShared,
 	}
 }
 
