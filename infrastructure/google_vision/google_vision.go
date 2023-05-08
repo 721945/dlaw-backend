@@ -18,6 +18,18 @@ type GoogleVision struct {
 	bucket string
 }
 
+type GcsResponse struct {
+	Responses []struct {
+		FullTextAnnotation struct {
+			Text string `json:"text"`
+		} `json:"fullTextAnnotation"`
+		Context struct {
+			Uri        string `json:"uri"`
+			PageNumber int    `json:"pageNumber"`
+		} `json:"context"`
+	} `json:"responses"`
+}
+
 func NewGoogleVision(logger *libs.Logger, env libs.Env) GoogleVision {
 	return GoogleVision{logger: logger, bucket: env.Bucket}
 }
@@ -164,15 +176,16 @@ func (g *GoogleVision) getTextFromGcs(filename string, bucket *storage.BucketHan
 
 		}
 	}(rc)
-	var output visionpb.AnnotateFileResponse
-	if err := json.NewDecoder(rc).Decode(&output); err != nil {
+
+	var response GcsResponse
+	if err := json.NewDecoder(rc).Decode(&response); err != nil {
 		log.Fatalf("Failed to parse output JSON: %v", err)
 	}
-	responses := output.GetResponses()
+
 	texts := make([]string, 0)
-	for _, response := range responses {
-		g.logger.Info(response.GetFullTextAnnotation().GetText())
-		texts = append(texts, response.GetFullTextAnnotation().GetText())
+	for _, r := range response.Responses {
+		g.logger.Info(r.FullTextAnnotation.Text)
+		texts = append(texts, r.FullTextAnnotation.Text)
 	}
 	text := strings.Join(texts, " ")
 	return text, nil
