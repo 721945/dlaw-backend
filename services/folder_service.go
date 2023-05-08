@@ -64,8 +64,6 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (dto *dtos.Fol
 		return nil, err
 	}
 
-	// FIXME : Fix this
-	//_, err = s.casedUsedRepo.CreateCaseUsedLog(models.CaseUsedLog{CaseId: , UserId: userId})
 	_, err = s.casedUsedRepo.FindOrCreate(*folderModel.CaseId, userId)
 
 	if err != nil {
@@ -323,7 +321,15 @@ func (s *FolderService) GetTagMenus(folderId uuid.UUID) ([]dtos.TagCountDto, err
 	return tagMenus, nil
 }
 
-func (s *FolderService) GetFileInTagId(folderId, tagId uuid.UUID) ([]dtos.FileDto, error) {
+func (s *FolderService) GetFileInTagId(folderId, tagId, userId uuid.UUID) (*dtos.FolderDto, error) {
+
+	err := s.checkPermission(userId, folderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	folderModel, err := s.folderRepo.GetFolderContentWithOutFiles(folderId)
 
 	files, err := s.fileRepo.GetFilesByFolderIdAndTagId(folderId, tagId)
 
@@ -344,7 +350,11 @@ func (s *FolderService) GetFileInTagId(folderId, tagId uuid.UUID) ([]dtos.FileDt
 		}
 	}
 
-	return dtos.ToFileDtos(files), nil
+	folderModel.Files = files
+
+	dto := dtos.ToFolderDto(*folderModel)
+
+	return &dto, nil
 }
 
 func (s *FolderService) addActionLog(actionName string, folderId, userId uuid.UUID) error {

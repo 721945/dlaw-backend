@@ -22,6 +22,9 @@ func (r *FolderRepository) GetFolders() (folders []models.Folder, err error) {
 func (r *FolderRepository) GetFolderContent(id uuid.UUID) (folder *models.Folder, err error) {
 	return folder, r.db.DB.Preload("SubFolders").Preload("SubFolders.Tags").Preload("Files").Preload("Files.Tags").Preload("Tags").First(&folder, id).Error
 }
+func (r *FolderRepository) GetFolderContentWithOutFiles(id uuid.UUID) (folder *models.Folder, err error) {
+	return folder, r.db.DB.Preload("SubFolders").Preload("SubFolders.Tags").Preload("Tags").First(&folder, id).Error
+}
 
 func (r *FolderRepository) GetFolder(id uuid.UUID) (folder *models.Folder, err error) {
 	return folder, r.db.DB.First(&folder, id).Error
