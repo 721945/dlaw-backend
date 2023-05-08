@@ -60,7 +60,7 @@ func (r *CaseRepository) GetCasesSortedByFrequency(userId uuid.UUID) (cases []mo
 func (r *CaseRepository) GetCasesWhichFileIsPublic() (cases []models.Case, err error) {
 	subQuery := r.db.DB.Table("files").Select("1").Where("files.case_id = cases.id AND files.is_public = ?", true)
 
-	return cases, r.db.DB.Preload("Files", "is_public = true").Where("EXISTS (?)", subQuery).Find(&cases).Error
+	return cases, r.db.DB.Preload("Files", "is_public = true").Preload("Files.FileType").Where("EXISTS (?)", subQuery).Find(&cases).Error
 }
 
 //func (r *CaseRepository) GetCasesWhichFileIsPublic() (cases []models.Case, err error) {

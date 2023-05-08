@@ -51,7 +51,41 @@ func (t FolderController) GetFolder(c *gin.Context) {
 		return
 	}
 
-	folder, err := t.folderService.GetFolder(id, userId.(uuid.UUID))
+	var dto dtos.FolderDto
+
+	tagId := c.DefaultQuery("tagId", "")
+
+	if tagId != "" {
+		tag, err := uuid.Parse(tagId)
+
+		if err != nil {
+			t.logger.Error(err)
+			_ = c.Error(err)
+			return
+		}
+
+		folder, err := t.folderService.GetFileInTagId(id, tag, userId.(uuid.UUID))
+
+		if err != nil {
+			t.logger.Error(err)
+			_ = c.Error(err)
+			return
+		}
+
+		dto = *folder
+
+	} else {
+		folder, err := t.folderService.GetFolder(id, userId.(uuid.UUID))
+
+		if err != nil {
+			t.logger.Error(err)
+			_ = c.Error(err)
+			return
+		}
+		dto = *folder
+	}
+
+	//folder, err := t.folderService.GetFolder(id, userId.(uuid.UUID))
 
 	if err != nil {
 		t.logger.Error(err)
@@ -59,7 +93,7 @@ func (t FolderController) GetFolder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"data": folder})
+	c.JSON(200, gin.H{"data": dto})
 }
 
 func (t FolderController) CreateFolder(c *gin.Context) {
@@ -314,27 +348,28 @@ func (t FolderController) GetTagMenus(c *gin.Context) {
 	c.JSON(200, gin.H{"data": tags})
 }
 
-func (t FolderController) GetFilesInTag(c *gin.Context) {
-	paramId := c.Param("id")
-	paramTagId := c.Param("tagId")
-
-	id, err := uuid.Parse(paramId)
-
-	tagId, err := uuid.Parse(paramTagId)
-
-	if err != nil {
-		t.logger.Error(err)
-		_ = c.Error(err)
-		return
-	}
-
-	files, err := t.folderService.GetFileInTagId(id, tagId)
-
-	if err != nil {
-		t.logger.Error(err)
-		_ = c.Error(err)
-		return
-	}
-
-	c.JSON(200, gin.H{"data": files})
-}
+//
+//func (t FolderController) GetFilesInTag(c *gin.Context) {
+//	paramId := c.Param("id")
+//	paramTagId := c.Param("tagId")
+//
+//	id, err := uuid.Parse(paramId)
+//
+//	tagId, err := uuid.Parse(paramTagId)
+//
+//	if err != nil {
+//		t.logger.Error(err)
+//		_ = c.Error(err)
+//		return
+//	}
+//
+//	files, err := t.folderService.GetFileInTagId(id, tagId)
+//
+//	if err != nil {
+//		t.logger.Error(err)
+//		_ = c.Error(err)
+//		return
+//	}
+//
+//	c.JSON(200, gin.H{"data": files})
+//}

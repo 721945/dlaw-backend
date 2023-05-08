@@ -37,7 +37,7 @@ func (r FolderRoute) Setup() {
 		private.GET("/:id/root", r.controller.GetFolderRoot)
 		private.GET("/:id/log", r.controller.GetFolderLog)
 		private.GET("/:id/menu", r.controller.GetTagMenus)
-		private.GET("/:id/tag/:tagId/files", r.controller.GetFilesInTag)
+		//private.GET("/:id/tag/:tagId/files", r.controller.GetFilesInTag)
 
 		private.POST("", r.controller.CreateFolder)
 

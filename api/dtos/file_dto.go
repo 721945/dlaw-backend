@@ -29,19 +29,25 @@ type FilePublicDto struct {
 	Name       string `json:"name"`
 	Url        string `json:"url"`
 	PreviewUrl string `json:"previewUrl"`
+	Type       string `json:"type,omitempty"`
 }
 
 func ToFilePublicDto(file models.File) FilePublicDto {
-	var url, previewUrl string
+	var url, previewUrl, fileType string
 	if file.Url != nil {
 		url = file.Url.Url
 		previewUrl = file.Url.PreviewUrl
 	}
+	if file.FileType != nil {
+		fileType = file.FileType.Name
+	}
+
 	return FilePublicDto{
 		Id:         file.ID.String(),
 		Name:       file.Name,
 		Url:        url,
 		PreviewUrl: previewUrl,
+		Type:       fileType,
 	}
 }
 

@@ -80,7 +80,11 @@ func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
 	if err != nil {
 		log.Fatalf("Failed to create Google Cloud Storage client: %v", err)
 	}
-	defer client.Close()
+	defer func(client *storage.Client) {
+		err := client.Close()
+		if err != nil {
+		}
+	}(client)
 
 	// Open the PDF file from the Google Cloud Storage bucket
 	bucket := client.Bucket(bucketName)
@@ -89,7 +93,11 @@ func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
 	if err != nil {
 		log.Fatalf("Failed to create object reader: %v", err)
 	}
-	defer rc.Close()
+	defer func(rc *storage.Reader) {
+		err := rc.Close()
+		if err != nil {
+		}
+	}(rc)
 
 	g.logger.Info("Start to read PDF file")
 
@@ -122,23 +130,18 @@ func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
 			},
 		},
 	}
+
 	operation, err := visionClient.AsyncBatchAnnotateFiles(ctx, asyncReq)
 	if err != nil {
 		log.Fatalf("Failed to call AsyncBatchAnnotateFiles: %v", err)
 	}
 
 	// Wait for the operation to complete and retrieve the results
-	operationResponse, err := operation.Wait(ctx)
+	_, err = operation.Wait(ctx)
+
 	if err != nil {
 		log.Fatalf("Failed to wait for operation: %v", err)
 	}
-	g.logger.Info("Done waiting for operation")
-	g.logger.Info("Response: ", operationResponse.GetResponses())
-	g.logger.Info("Response [LEN]: ", len(operationResponse.GetResponses()))
-
-	outputConfig := operationResponse.GetResponses()[0].GetOutputConfig()
-
-	g.logger.Info("OutputConfig: ", outputConfig)
 
 	prefix := fmt.Sprintf("output/%s+", filename)
 
@@ -149,16 +152,28 @@ func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
 	var texts []string
 
 	for _, fileName := range fileNames {
-		text, err := g.getTextFromGcs(fileName, bucket)
-		if err != nil {
-			//return "", err
-		}
+		text, _ := g.getTextFromGcs(fileName, bucket)
+
 		texts = append(texts, text)
+
+		_ = g.deleteFile(fileName, bucket)
 	}
 
-	textt := strings.Join(texts, " ")
+	text := strings.Join(texts, " ")
 
-	return textt, nil
+	return text, nil
+}
+
+func (g *GoogleVision) deleteFile(fileName string, bucket *storage.BucketHandle) error {
+	ctx := context.Background()
+
+	obj := bucket.Object(fileName)
+
+	if err := obj.Delete(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (g *GoogleVision) getTextFromGcs(filename string, bucket *storage.BucketHandle) (string, error) {
