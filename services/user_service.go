@@ -23,6 +23,8 @@ type UserService interface {
 	GetUsers() ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 	ForgetPassword(email string) error
+	VerifyOTP(email string, otp string) error
+	ResetPassword(email string, otp string, newPassword string) error
 	ChangedPassword(id uuid.UUID, current string, newPassword string) error
 }
 
@@ -89,7 +91,7 @@ func (u userService) ForgetPassword(email string) error {
 
 	otp := generateOTP()
 	user.OtpSecret = &otp
-	timeLeft := time.Now().Add(time.Minute * 5)
+	timeLeft := time.Now().Add(time.Minute * 30)
 	user.OtpExpiredAt = &timeLeft
 
 	err = u.userRepo.UpdateUser(user.ID, *user)
@@ -131,6 +133,51 @@ func (u userService) ChangedPassword(id uuid.UUID, current string, new string) e
 
 	return u.userRepo.UpdateUser(id, *user)
 
+}
+
+func (u userService) VerifyOTP(email string, otp string) error {
+	_, err := u.verifyOtp(email, otp)
+	return err
+}
+
+func (u userService) ResetPassword(email string, otp string, newPassword string) error {
+	user, err := u.verifyOtp(email, otp)
+
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := utils.HashPassword(newPassword)
+
+	if err != nil {
+		return err
+	}
+
+	user.Password = hashedPassword
+
+	return u.userRepo.UpdateUser(user.ID, *user)
+}
+
+func (u userService) verifyOtp(email, otp string) (*models.User, error) {
+	user, err := u.userRepo.GetUserByEmail(email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if user.OtpSecret == nil {
+		return nil, fmt.Errorf("otp not found")
+	}
+
+	if *user.OtpSecret != otp {
+		return nil, fmt.Errorf("wrong otp")
+	}
+
+	if user.OtpExpiredAt.Before(time.Now()) {
+		return nil, fmt.Errorf("otp expired")
+	}
+
+	return user, err
 }
 
 func generateOTP() string {

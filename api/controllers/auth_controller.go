@@ -73,22 +73,43 @@ func (ctrl AuthController) ForgetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
-// Reset password
+func (ctrl AuthController) CheckOtp(c *gin.Context) {
+
+	email := c.DefaultQuery("email", "")
+	otp := c.DefaultQuery("otp", "")
+
+	if email == "" || otp == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	err := ctrl.userService.VerifyOTP(email, otp)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "ok"})
+}
+
 func (ctrl AuthController) ResetPassword(c *gin.Context) {
+
 	var input dtos.ResetPasswordDto
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		_ = c.Error(libs.ErrBadRequest)
-
 		return
 	}
 
-	//err := ctrl.userService.ResetPassword(input.Email, input.Password, input.Token)
-	//
-	//if err != nil {
-	//	_ = c.Error(err)
-	//	return
-	//}
+	err := ctrl.userService.ResetPassword(input.Email, input.Otp, input.Password)
+
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
 func (ctrl AuthController) ChangePassword(c *gin.Context) {
