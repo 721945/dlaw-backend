@@ -2,6 +2,7 @@ package smtp
 
 import (
 	"fmt"
+	"github.com/721945/dlaw-backend/libs"
 	"github.com/go-gomail/gomail"
 )
 
@@ -12,13 +13,12 @@ type SMTP struct {
 	Password string
 }
 
-func NewSMTP() SMTP {
+func NewSMTP(env libs.Env) SMTP {
 	return SMTP{
 		Host:     "smtp.gmail.com",
 		Port:     587,
-		Username: "dlaw.service.mail@gmail.com",
-		//Username: "dlaw.project@gmail.com",
-		Password: "Aa123123123",
+		Username: env.SMTPAddress,
+		Password: env.SMTPPassword,
 	}
 }
 

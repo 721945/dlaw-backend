@@ -30,6 +30,7 @@ func NewAuthRoute(
 func (u AuthRoute) Setup() {
 	u.logger.Info("Setting auth routes")
 	{
+		u.handler.Gin.GET("/check-otp", u.authController.CheckOtp)
 		u.handler.Gin.POST("/login", u.authController.Login)
 		u.handler.Gin.POST("/forget-password", u.authController.ForgetPassword)
 		u.handler.Gin.POST("/reset-password", u.authController.ResetPassword)

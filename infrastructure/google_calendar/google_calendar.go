@@ -13,7 +13,7 @@ type GoogleCalendar struct {
 }
 
 func NewGoogleCalendar(env libs.Env) GoogleCalendar {
-	srv, err := getCalendarClient(env.GOOGLE_CRED_PATH)
+	srv, err := getCalendarClient(env.GoogleCredPath)
 
 	if err != nil {
 		panic(err)
