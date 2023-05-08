@@ -117,7 +117,7 @@ func (u userService) ChangedPassword(id uuid.UUID, current string, new string) e
 		return err
 	}
 
-	isSame := utils.CheckPasswordHash(user.Password, current)
+	isSame := utils.CheckPasswordHash(current, user.Password)
 
 	if !isSame {
 		return fmt.Errorf("wrong password")
