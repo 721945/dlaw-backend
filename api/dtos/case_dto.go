@@ -13,14 +13,18 @@ type CaseDto struct {
 }
 
 type CaseDetailDto struct {
-	Id        string    `json:"id"`
-	Name      string    `json:"name"`
-	Tags      []TagDto  `json:"tags"`
-	Owner     UserDto   `json:"owner"`
-	ShareWith []UserDto `json:"shareWith"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	FolderId  string    `json:"folderId"`
+	Id              string    `json:"id"`
+	Name            string    `json:"name"`
+	Tags            []TagDto  `json:"tags"`
+	Owner           UserDto   `json:"owner"`
+	ShareWith       []UserDto `json:"shareWith"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	FolderId        string    `json:"folderId"`
+	RedCaseNumber   string    `json:"redCaseNumber,omitempty"`
+	BlackCaseNumber string    `json:"blackCaseNumber,omitempty"`
+	CaseTitle       string    `json:"caseTitle,omitempty"`
+	CaseContent     string    `json:"caseDetail,omitempty"`
 }
 
 type CasePublicDto struct {
@@ -79,7 +83,7 @@ func (dto UpdateCaseDto) ToModel() models.Case {
 	}
 }
 
-func ToCaseDto(mCase models.Case) CaseDetailDto {
+func ToCaseDto(mCase models.Case, showContent bool) CaseDetailDto {
 	permissions := mCase.CasePermissions
 
 	users := make([]UserDto, len(permissions))
@@ -103,15 +107,32 @@ func ToCaseDto(mCase models.Case) CaseDetailDto {
 		}
 	}
 
+	var redCaseNumber, blackCaseNumber, caseTitle, caseDetail string
+
+	if showContent {
+		redCaseNumber = mCase.RedCaseNumber
+		blackCaseNumber = mCase.BlackCaseNumber
+		if mCase.CaseTitle != nil {
+			caseTitle = *mCase.CaseTitle
+		}
+		if mCase.CaseDetail != nil {
+			caseDetail = *mCase.CaseDetail
+		}
+	}
+
 	return CaseDetailDto{
-		Id:        mCase.ID.String(),
-		Name:      mCase.Title,
-		Tags:      ToTagDtos(mCase.Folders[0].Tags),
-		Owner:     owner,
-		ShareWith: users,
-		CreatedAt: mCase.CreatedAt,
-		UpdatedAt: mCase.UpdatedAt,
-		FolderId:  mCase.Folders[0].ID.String(),
+		Id:              mCase.ID.String(),
+		Name:            mCase.Title,
+		Tags:            ToTagDtos(mCase.Folders[0].Tags),
+		Owner:           owner,
+		ShareWith:       users,
+		CreatedAt:       mCase.CreatedAt,
+		UpdatedAt:       mCase.UpdatedAt,
+		FolderId:        mCase.Folders[0].ID.String(),
+		RedCaseNumber:   redCaseNumber,
+		BlackCaseNumber: blackCaseNumber,
+		CaseTitle:       caseTitle,
+		CaseContent:     caseDetail,
 	}
 }
 func ToCasePublicDto(mCase models.Case) CasePublicDto {

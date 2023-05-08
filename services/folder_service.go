@@ -19,6 +19,7 @@ type FolderService struct {
 	casedUsedRepo      repositories.CaseUsedLogRepository
 	actionLogRepo      repositories.ActionLogRepository
 	tagRepo            repositories.TagRepository
+	actionRepo         repositories.ActionRepository
 }
 
 func NewFolderService(
@@ -30,6 +31,7 @@ func NewFolderService(
 	casedUsedRepo repositories.CaseUsedLogRepository,
 	actionLogRepo repositories.ActionLogRepository,
 	tagRepo repositories.TagRepository,
+	actionRepo repositories.ActionRepository,
 ) FolderService {
 	return FolderService{
 		logger:             logger,
@@ -40,6 +42,7 @@ func NewFolderService(
 		casedUsedRepo:      casedUsedRepo,
 		actionLogRepo:      actionLogRepo,
 		tagRepo:            tagRepo,
+		actionRepo:         actionRepo,
 	}
 }
 
@@ -102,7 +105,7 @@ func (s *FolderService) GetFolder(id uuid.UUID, userId uuid.UUID) (dto *dtos.Fol
 	return dto, nil
 }
 
-func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto) (*uuid.UUID, error) {
+func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto, userId uuid.UUID) (*uuid.UUID, error) {
 
 	parentFolderId, err := uuid.Parse(dto.ParentFolderId)
 
@@ -132,6 +135,12 @@ func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto) (*uuid.UUID, erro
 		return nil, err
 	}
 
+	err = s.addActionLog("create", folder.ID, userId)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &folder.ID, nil
 }
 
@@ -155,8 +164,11 @@ func (s *FolderService) UpdateFolder(id uuid.UUID, dto dtos.UpdateFolderDto, use
 
 	folder := dto.ToModel()
 
+	err = s.addActionLog("update", folder.ID, userId)
+
 	return s.folderRepo.UpdateFolder(id, folder)
 }
+
 func (s *FolderService) MoveFolder(id uuid.UUID, dto dtos.MoveFolderDto, userId uuid.UUID) error {
 
 	err := s.checkPermission(userId, id)
@@ -213,7 +225,6 @@ func (s *FolderService) UnArchiveFolder(id uuid.UUID, userId uuid.UUID) error {
 	return s.folderRepo.UnArchiveFolder(id)
 }
 
-// GetActionLogs Get action logs
 func (s *FolderService) GetFolderLogs(userId, folderId uuid.UUID) ([]dtos.ActionLogDto, error) {
 
 	err := s.checkPermission(userId, folderId)
@@ -334,4 +345,26 @@ func (s *FolderService) GetFileInTagId(folderId, tagId uuid.UUID) ([]dtos.FileDt
 	}
 
 	return dtos.ToFileDtos(files), nil
+}
+
+func (s *FolderService) addActionLog(actionName string, folderId, userId uuid.UUID) error {
+	action, err := s.actionRepo.GetActionByName(actionName)
+
+	if err != nil {
+		return err
+	}
+
+	actionLog := models.ActionLog{
+		FolderId: folderId,
+		UserId:   userId,
+		ActionId: action.ID,
+	}
+
+	if err != nil {
+		return err
+	}
+
+	_, err = s.actionLogRepo.CreateActionLog(actionLog)
+
+	return err
 }

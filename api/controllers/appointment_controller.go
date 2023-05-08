@@ -165,11 +165,7 @@ func (p AppointmentController) PublishedAppointment(c *gin.Context) {
 		return
 	}
 
-	var input dtos.UpdateAppointmentDto
-
-	input.IsPublished = true
-
-	err = p.appointmentService.UpdateAppointment(id, input, userId.(uuid.UUID))
+	err = p.appointmentService.PublishAppointment(id, userId.(uuid.UUID))
 
 	if err != nil {
 		p.logger.Error(err)
@@ -199,11 +195,7 @@ func (p AppointmentController) UnPublishedAppointment(c *gin.Context) {
 		return
 	}
 
-	var input dtos.UpdateAppointmentDto
-
-	input.IsPublished = false
-
-	err = p.appointmentService.UpdateAppointment(id, input, userId.(uuid.UUID))
+	err = p.appointmentService.UnPublishAppointment(id, userId.(uuid.UUID))
 
 	if err != nil {
 		p.logger.Error(err)
@@ -211,7 +203,9 @@ func (p AppointmentController) UnPublishedAppointment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{})
+	c.JSON(200, gin.H{
+		"data": "ok",
+	})
 
 }
 
@@ -242,12 +236,14 @@ func (p AppointmentController) DeleteAppointment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{})
+	c.JSON(200, gin.H{
+		"data": "ok",
+	})
 }
 
 func (p AppointmentController) GetPublicAppointment(c *gin.Context) {
 
-	permissions, err := p.appointmentService.GetPublicAppointment()
+	appointments, err := p.appointmentService.GetPublicAppointment()
 
 	if err != nil {
 		p.logger.Error(err)
@@ -255,5 +251,5 @@ func (p AppointmentController) GetPublicAppointment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"data": permissions})
+	c.JSON(200, gin.H{"data": appointments})
 }
