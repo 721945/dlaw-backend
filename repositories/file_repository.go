@@ -20,8 +20,9 @@ func NewFileRepository(logger *libs.Logger, db libs.Database) FileRepository {
 func (r *FileRepository) GetFiles() (files []models.File, err error) {
 	return files, r.db.DB.Find(&files).Error
 }
+
 func (r *FileRepository) GetFilesByIds(ids []uuid.UUID) (files []models.File, err error) {
-	return files, r.db.DB.Preload("Tags").Where("id IN ?", ids).Find(&files).Error
+	return files, r.db.DB.Preload("FileType").Preload("Tags").Where("id IN ?", ids).Find(&files).Error
 }
 
 func (r *FileRepository) GetFile(id uuid.UUID) (file *models.File, err error) {

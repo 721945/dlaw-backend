@@ -260,9 +260,9 @@ func (s *FileService) PublicFile(id string, userId uuid.UUID) (string, error) {
 	return links, nil
 }
 
-func (s *FileService) SearchFiles(word, caseId, folderId, tag, page, limit string, userID uuid.UUID) ([]dtos.FileDto, dtos.PaginationResponse, error) {
+func (s *FileService) SearchFiles(word, caseId, folderId, tag, fileType, page, limit string, userID uuid.UUID) ([]dtos.FileDto, dtos.PaginationResponse, error) {
 	var pagination dtos.PaginationResponse
-	if word == "" && caseId == "" && folderId == "" && tag == "" {
+	if word == "" && caseId == "" && folderId == "" && tag == "" && fileType == "" {
 		return nil, pagination, errors.New("invalid search params")
 	}
 
@@ -286,11 +286,11 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag, page, limit strin
 	}
 
 	if tag != "" {
-		_, err := uuid.Parse(tag)
-		if err != nil {
-			return nil, pagination, errors.New("invalid tag id")
-		}
 		filters = append(filters, "tag = \""+tag+"\"")
+	}
+
+	if fileType != "" {
+		filters = append(filters, "type = \""+fileType+"\"")
 	}
 
 	pageNum, err := strconv.ParseInt(page, 10, 64)

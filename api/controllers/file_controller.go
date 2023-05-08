@@ -312,10 +312,11 @@ func (f FileController) SearchFiles(c *gin.Context) {
 	folderID := c.DefaultQuery("folderId", "")
 	tag := c.DefaultQuery("tag", "")
 	caseID := c.DefaultQuery("caseId", "")
+	fileType := c.DefaultQuery("type", "")
 	page := c.DefaultQuery("page", "1")
 	limit := c.DefaultQuery("limit", "20")
 
-	files, pagination, err := f.fileService.SearchFiles(word, caseID, folderID, tag, page, limit, userId.(uuid.UUID))
+	files, pagination, err := f.fileService.SearchFiles(word, caseID, folderID, tag, fileType, page, limit, userId.(uuid.UUID))
 
 	if err != nil {
 		f.logger.Error(err)
