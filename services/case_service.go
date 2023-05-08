@@ -49,8 +49,16 @@ func (s CaseService) GetCases() (cases []models.Case, err error) {
 	return s.caseRepo.GetCases()
 }
 
-func (s CaseService) GetCase(id, userId uuid.UUID) (mCase *models.Case, err error) {
-	return s.caseRepo.GetCase(id)
+func (s CaseService) GetCase(id, userId uuid.UUID) (mCase *dtos.CaseDetailDto, err error) {
+	data, err := s.caseRepo.GetCase(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	caseDto := dtos.ToCaseDto(*data, true)
+
+	return &caseDto, nil
 }
 
 func (s CaseService) CreateCase(dto dtos.CreateCaseDto, userId uuid.UUID) (string, error) {
@@ -158,7 +166,7 @@ func (s CaseService) GetOwnCases(id uuid.UUID) (casesDto []dtos.CaseDetailDto, e
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
 
 	for i, mCase := range cases {
-		casesDto[i] = dtos.ToCaseDto(mCase)
+		casesDto[i] = dtos.ToCaseDto(mCase, false)
 	}
 
 	return casesDto, nil
@@ -227,7 +235,7 @@ func (s CaseService) GetArchivedCases(userId uuid.UUID) (casesDto []dtos.CaseDet
 	casesDto = make([]dtos.CaseDetailDto, len(cases))
 
 	for i, mCase := range cases {
-		casesDto[i] = dtos.ToCaseDto(mCase)
+		casesDto[i] = dtos.ToCaseDto(mCase, false)
 	}
 
 	return casesDto, nil

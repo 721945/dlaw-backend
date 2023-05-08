@@ -31,6 +31,10 @@ func (r *AppointmentRepository) UpdateAppointment(id uuid.UUID, appointment mode
 	return r.db.DB.Model(&models.Appointment{}).Where("id = ?", id).Updates(appointment).Error
 }
 
+func (r *AppointmentRepository) UpdatePublicAppointment(id uuid.UUID, isPublic bool) error {
+	return r.db.DB.Model(&models.Appointment{}).Where("id = ?", id).Updates(map[string]interface{}{"is_published": isPublic}).Error
+}
+
 func (r *AppointmentRepository) DeleteAppointment(id uuid.UUID) error {
 	return r.db.DB.Delete(&models.Appointment{}, id).Error
 }

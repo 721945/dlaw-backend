@@ -102,7 +102,13 @@ func (s *AppointmentService) CreateAppointment(userId uuid.UUID, dto dtos.Create
 }
 
 func (s *AppointmentService) UpdateAppointment(id uuid.UUID, dto dtos.UpdateAppointmentDto, userId uuid.UUID) error {
-	caseId, err := s.getCaseByUserIdAndCaseId(userId, id)
+	appointment, err := s.appointmentRepo.GetAppointment(id)
+
+	if err != nil {
+		return err
+	}
+
+	caseId, err := s.getCaseByUserIdAndCaseId(userId, appointment.CaseId)
 
 	if err != nil {
 		return err
@@ -145,7 +151,7 @@ func (s *AppointmentService) getCaseIds(userId uuid.UUID) ([]uuid.UUID, error) {
 	return caseIds, nil
 }
 
-func (s *AppointmentService) getCaseByUserIdAndCaseId(userId uuid.UUID, caseId uuid.UUID) (*uuid.UUID, error) {
+func (s *AppointmentService) getCaseByUserIdAndCaseId(userId, caseId uuid.UUID) (*uuid.UUID, error) {
 	caseModel, err := s.casePermission.GetCasePermissionsByUserIdAndCaseId(userId, caseId)
 	if err != nil {
 		return nil, err
@@ -164,4 +170,44 @@ func (s *AppointmentService) GetPublicAppointment() (appointments []dtos.Appoint
 	appointments = dtos.ToAppointmentDtoList(appointmentModels)
 
 	return appointments, err
+}
+
+func (s *AppointmentService) PublishAppointment(id uuid.UUID, userId uuid.UUID) error {
+	appointment, err := s.appointmentRepo.GetAppointment(id)
+
+	if err != nil {
+		return err
+	}
+
+	caseId, err := s.getCaseByUserIdAndCaseId(userId, appointment.CaseId)
+
+	if err != nil {
+		return err
+	}
+
+	if caseId == nil {
+		return libs.ErrNotFound
+	}
+
+	return s.appointmentRepo.UpdatePublicAppointment(id, true)
+}
+
+func (s *AppointmentService) UnPublishAppointment(id uuid.UUID, userId uuid.UUID) error {
+	appointment, err := s.appointmentRepo.GetAppointment(id)
+
+	if err != nil {
+		return err
+	}
+
+	caseId, err := s.getCaseByUserIdAndCaseId(userId, appointment.CaseId)
+
+	if err != nil {
+		return err
+	}
+
+	if caseId == nil {
+		return libs.ErrNotFound
+	}
+
+	return s.appointmentRepo.UpdatePublicAppointment(id, false)
 }

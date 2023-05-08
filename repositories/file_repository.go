@@ -5,6 +5,7 @@ import (
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -30,7 +31,7 @@ func (r *FileRepository) GetFile(id uuid.UUID) (file *models.File, err error) {
 }
 
 func (r *FileRepository) GetFileByName(name string, folderId uuid.UUID) (file *models.File, err error) {
-	return file, r.db.DB.Where("name = ? AND folder_id = ?", name, folderId).First(&file).Error
+	return file, r.db.DB.Preload("Tags").Where("name = ? AND folder_id = ?", name, folderId).First(&file).Error
 }
 
 func (r *FileRepository) GetFileContent(id uuid.UUID) (file *models.File, err error) {
@@ -51,6 +52,10 @@ func (r *FileRepository) CreateFile(file models.File) (models.File, error) {
 
 func (r *FileRepository) UpdateFile(id uuid.UUID, file models.File) error {
 	return r.db.DB.Model(&models.File{}).Where("id = ?", id).Updates(file).Error
+}
+
+func (r *FileRepository) UpdateFileSaveAssociation(id uuid.UUID, file models.File) error {
+	return r.db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Model(&models.File{}).Where("id = ?", id).Updates(file).Error
 }
 
 func (r *FileRepository) UpdateFilePublic(id uuid.UUID, file models.File) error {

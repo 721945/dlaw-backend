@@ -63,6 +63,13 @@ func (t FolderController) GetFolder(c *gin.Context) {
 }
 
 func (t FolderController) CreateFolder(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
 	var input dtos.CreateFolderDto
 	//
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -71,7 +78,7 @@ func (t FolderController) CreateFolder(c *gin.Context) {
 		return
 	}
 
-	folder, err := t.folderService.CreateFolder(input)
+	folder, err := t.folderService.CreateFolder(input, userId.(uuid.UUID))
 	//
 	if err != nil {
 		t.logger.Error(err)

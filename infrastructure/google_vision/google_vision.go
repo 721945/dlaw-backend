@@ -5,9 +5,12 @@ import (
 	vision "cloud.google.com/go/vision/apiv1"
 	"cloud.google.com/go/vision/v2/apiv1/visionpb"
 	"context"
+	"encoding/json"
+	fmt "fmt"
 	"github.com/721945/dlaw-backend/libs"
-	"io"
+	"google.golang.org/api/iterator"
 	"log"
+	"strings"
 )
 
 type GoogleVision struct {
@@ -53,126 +56,163 @@ func (g *GoogleVision) GetTextFromImageName(name string) (string, error) {
 	return annotations[0].Description, nil
 }
 
-func (g *GoogleVision) GetTextFromPdfUrl(obj storage.ObjectHandle) (string, error) {
+func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
+
 	ctx := context.Background()
-	//client, err := storage.NewClient(ctx)
-	//if err != nil {
-	//	log.Fatalf("Failed to create client: %v", err)
-	//}
 
-	// Download file from GCS bucket
+	client, err := storage.NewClient(ctx)
 
-	reader, err := obj.NewReader(ctx)
+	bucketName := g.bucket
+	filename := name
+
 	if err != nil {
-		log.Fatalf("Failed to create reader: %v", err)
+		log.Fatalf("Failed to create Google Cloud Storage client: %v", err)
+	}
+	defer client.Close()
+
+	// Open the PDF file from the Google Cloud Storage bucket
+	bucket := client.Bucket(bucketName)
+	obj := bucket.Object(filename)
+	rc, err := obj.NewReader(ctx)
+	if err != nil {
+		log.Fatalf("Failed to create object reader: %v", err)
+	}
+	defer rc.Close()
+
+	g.logger.Info("Start to read PDF file")
+
+	// Create a Vision API client and send a request to detect text in the PDF file
+	visionClient, err := vision.NewImageAnnotatorClient(ctx)
+	if err != nil {
+		log.Fatalf("Failed to create Vision API client: %v", err)
+	}
+	feature := &visionpb.Feature{
+		Type: visionpb.Feature_DOCUMENT_TEXT_DETECTION,
+	}
+	gcsSource := &visionpb.GcsSource{
+		Uri: fmt.Sprintf("gs://%s/%s", bucketName, filename),
+	}
+	inputConfig := &visionpb.InputConfig{
+		GcsSource: gcsSource,
+		MimeType:  "application/pdf",
+	}
+	asyncReq := &visionpb.AsyncBatchAnnotateFilesRequest{
+		Requests: []*visionpb.AsyncAnnotateFileRequest{
+			{
+				Features:    []*visionpb.Feature{feature},
+				InputConfig: inputConfig,
+				OutputConfig: &visionpb.OutputConfig{
+					GcsDestination: &visionpb.GcsDestination{
+						Uri: fmt.Sprintf("gs://%s/output/%s+", bucketName, filename),
+					},
+					BatchSize: 10,
+				},
+			},
+		},
+	}
+	operation, err := visionClient.AsyncBatchAnnotateFiles(ctx, asyncReq)
+	if err != nil {
+		log.Fatalf("Failed to call AsyncBatchAnnotateFiles: %v", err)
 	}
 
-	defer func(reader *storage.Reader) {
-		err := reader.Close()
+	// Wait for the operation to complete and retrieve the results
+	operationResponse, err := operation.Wait(ctx)
+	if err != nil {
+		log.Fatalf("Failed to wait for operation: %v", err)
+	}
+	g.logger.Info("Done waiting for operation")
+	g.logger.Info("Response: ", operationResponse.GetResponses())
+	g.logger.Info("Response [LEN]: ", len(operationResponse.GetResponses()))
+
+	outputConfig := operationResponse.GetResponses()[0].GetOutputConfig()
+
+	g.logger.Info("OutputConfig: ", outputConfig)
+
+	prefix := fmt.Sprintf("output/%s+", filename)
+
+	fileNames := g.findFile(prefix)
+
+	g.logger.Info("FileNames: ", fileNames)
+
+	var texts []string
+
+	for _, fileName := range fileNames {
+		text, err := g.getTextFromGcs(fileName, bucket)
 		if err != nil {
-			g.logger.Error(err)
+			//return "", err
 		}
-	}(reader)
+		texts = append(texts, text)
+	}
 
-	// Extract text from PDF using Google Vision API
-	imageBytes, err := io.ReadAll(reader)
+	textt := strings.Join(texts, " ")
+
+	return textt, nil
+}
+
+func (g *GoogleVision) getTextFromGcs(filename string, bucket *storage.BucketHandle) (string, error) {
+	ctx := context.Background()
+
+	obj := bucket.Object(filename)
+
+	rc, err := obj.NewReader(ctx)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Fatalf("Failed to create output object reader: %v", err)
 	}
-	image := visionpb.Image{
-		Content: imageBytes,
-	}
-	client, err := vision.NewImageAnnotatorClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to create Vision client: %v", err)
-	}
-	defer func(client *vision.ImageAnnotatorClient) {
-		err := client.Close()
+	defer func(rc *storage.Reader) {
+		err := rc.Close()
 		if err != nil {
-			g.logger.Error(err)
-		}
-	}(client)
-	response, err := client.DetectDocumentText(ctx, &image, nil)
-	if err != nil {
-		log.Fatalf("Failed to detect text: %v", err)
-	}
 
-	text := response.Text
-	g.logger.Info(text)
+		}
+	}(rc)
+	var output visionpb.AnnotateFileResponse
+	if err := json.NewDecoder(rc).Decode(&output); err != nil {
+		log.Fatalf("Failed to parse output JSON: %v", err)
+	}
+	responses := output.GetResponses()
+	texts := make([]string, 0)
+	for _, response := range responses {
+		g.logger.Info(response.GetFullTextAnnotation().GetText())
+		texts = append(texts, response.GetFullTextAnnotation().GetText())
+	}
+	text := strings.Join(texts, " ")
 	return text, nil
 }
 
-//func (g *GoogleVision) GetTextFromPdfUrl(url string, target string) (string, error) {
-//ctx := context.Background()
-//client, err := vision.NewImageAnnotatorClient(ctx)
-//
-//if err != nil {
-//	return "", err
-//}
-//
-//defer func(client *vision.ImageAnnotatorClient) {
-//	err := client.Close()
-//	if err != nil {
-//		panic(err)
-//	}
-//}(client)
-//
-////request := &visionpb.AsyncBatchAnnotateFilesRequest{
-////	Requests: []*visionpb.AsyncAnnotateFileRequest{
-////		{
-////			Features: []*visionpb.Feature{
-////				{
-////					Type: visionpb.Feature_DOCUMENT_TEXT_DETECTION,
-////				},
-////			},
-////			InputConfig: &visionpb.InputConfig{
-////				GcsSource: &visionpb.GcsSource{Uri: url},
-////				// Supported MimeTypes are: "application/pdf" and "image/tiff".
-////				MimeType: "application/pdf",
-////			},
-////			OutputConfig: &visionpb.OutputConfig{
-////				GcsDestination: &visionpb.GcsDestination{Uri: target},
-////				// How many pages should be grouped into each json output file.
-////				BatchSize: 20,
-////			},
-////		},
-////	},
-////}
-////g.logger.Info("------------------")
-////operation, err := client.AsyncBatchAnnotateFiles(ctx, request)
-//image := vision.NewImageFromURI(url)
-//response, err := client.DetectDocumentText(ctx, image, nil)
-//
-//g.logger.Info("------------------")
-//if err != nil {
-//	g.logger.Error(err)
-//	return "", err
-//}
-//
-//g.logger.Info("Waiting for the operation to finish.")
-//
-//g.logger.Info(response.Text)
+func (g *GoogleVision) findFile(prefix string) []string {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
 
-//resp, err := operation.Wait(ctx)
-//if err != nil {
-//	return "", err
-//}
-//
-//g.logger.Info(resp.String())
+	if err != nil {
+		g.logger.Error(err)
+	}
 
-//image := vision.NewImageFromURI(url)
-//
-//annotations, err := client.DetectTexts(ctx, image, nil, 10)
-//
-//if err != nil {
-//	return "", err
-//}
-//
-//g.logger.Info(annotations)
-//
-//if len(annotations) == 0 {
-//	return "", nil
-//}
+	defer func(client *storage.Client) {
+		err := client.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(client)
 
-//	return "", nil
-//}
+	bucket := client.Bucket(g.bucket)
+
+	var files []string
+
+	query := &storage.Query{
+		Prefix: prefix,
+	}
+
+	it := bucket.Objects(ctx, query)
+
+	for {
+		objAttrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			g.logger.Error(err)
+		}
+		files = append(files, objAttrs.Name)
+	}
+
+	return files
+}

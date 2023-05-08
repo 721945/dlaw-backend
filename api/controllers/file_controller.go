@@ -30,6 +30,16 @@ func (f FileController) GetFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": dto})
 }
 
+func (f FileController) GetFilesByTags(c *gin.Context) {
+	dto, err := f.fileService.GetFiles()
+	if err != nil {
+		f.logger.Error(err)
+		_ = c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": dto})
+}
 func (f FileController) GetFile(c *gin.Context) {
 	paramId := c.Param("id")
 
@@ -55,6 +65,7 @@ func (f FileController) GetFile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": dto})
 }
+
 func (f FileController) GetPublicFile(c *gin.Context) {
 	paramId := c.Param("id")
 
