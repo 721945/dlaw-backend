@@ -124,7 +124,6 @@ func (ctrl AuthController) ChangePassword(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		_ = c.Error(libs.ErrBadRequest)
-		//c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
