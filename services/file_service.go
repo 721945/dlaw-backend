@@ -360,7 +360,51 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag, fileType, page, l
 }
 
 func (s *FileService) DeleteFile(id uuid.UUID) error {
+	_, err := s.fileRepo.DeleteFileDocument([]string{id.String()})
+	if err != nil {
+		return err
+	}
 	return s.fileRepo.DeleteFile(id)
+}
+
+func (s *FileService) UploadFileNoFolder(
+	file multipart.File,
+	fileName string,
+	fileType string,
+	userId uuid.UUID,
+) (string, error) {
+	casePermissions, err := s.casePermissionRepo.GetCasePermissionsByUserId(userId)
+
+	if err != nil {
+		return "", err
+	}
+
+	caseIds := make([]uuid.UUID, 0)
+	cases := make([]models.Case, 0)
+
+	for _, casePermission := range casePermissions {
+		cases = append(cases, *casePermission.Case)
+		caseIds = append(caseIds, casePermission.CaseId)
+	}
+
+	fileInDb, _ := s.fileRepo.GetFileByCaseId(fileName, caseIds)
+
+	if len(fileInDb) > 0 {
+		return s.uploadReplaceFile(file, fileType, fileInDb[0], userId)
+	}
+
+	mimeTypeString := convertMimeTypeToString(fileType)
+
+	if mimeTypeString != "image" && mimeTypeString != "pdf" {
+		return "", errors.New("there is no old file and we have no clue to identify")
+	}
+	link, err := s.uploadNewFileNoFolder(file, fileName, fileType, userId, cases)
+
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
 
 func (s *FileService) UploadFile(
@@ -394,7 +438,7 @@ func (s *FileService) uploadNewFile(
 		return "", err
 	}
 
-	needConvert := checkNeedConvert(fileType)
+	//needConvert := checkNeedConvert(fileType)
 
 	version, versionPreview := "", ""
 
@@ -408,12 +452,6 @@ func (s *FileService) uploadNewFile(
 	// if type is image do ocr and then add data to Meilisearch
 
 	versionPreview = version
-
-	if needConvert {
-		//	TODO : DO CONVERT
-		//	previewCloudName = generateUniqueName(fileName)
-		//	versionPreview, err = s.storageService.UploadFile(file, previewCloudName)
-	}
 
 	if err != nil {
 		return "", err
@@ -454,9 +492,9 @@ func (s *FileService) uploadNewFile(
 	_, err = s.addMeili(fileRes, mimeTypeToString)
 
 	if mimeTypeToString == "image" {
-		go s.ocrImage(fileRes.ID, previewCloudName, tag)
+		go s.ocrImage(fileRes.ID, previewCloudName, tag, []models.Case{})
 	} else if mimeTypeToString == "pdf" {
-		go s.ocrPdf(fileRes.ID, previewCloudName, tag)
+		go s.ocrPdf(fileRes.ID, previewCloudName, tag, []models.Case{})
 	}
 
 	if err != nil {
@@ -506,9 +544,9 @@ func (s *FileService) uploadReplaceFile(
 	err = s.fileRepo.UpdateFile(fileDb.ID, modelFile)
 	s.logger.Info("TYPE: ", fileType)
 	if typeString == "image" {
-		go s.ocrImage(fileDb.ID, fileDb.CloudName, fileDb.Tags)
+		go s.ocrImage(fileDb.ID, fileDb.CloudName, fileDb.Tags, []models.Case{})
 	} else if typeString == "pdf" {
-		go s.ocrPdf(fileDb.ID, fileDb.CloudName, fileDb.Tags)
+		go s.ocrPdf(fileDb.ID, fileDb.CloudName, fileDb.Tags, []models.Case{})
 	}
 
 	if err != nil {
@@ -771,17 +809,23 @@ func (s *FileService) addMeili(file models.File, mimeTypeToString string) (strin
 	for _, t := range file.Tags {
 		tagString = append(tagString, t.Name)
 	}
-
-	folderTilRoot, err := s.folderRepo.GetFromRootToFolder(*file.FolderId)
-
-	if err != nil {
-		return "", err
-	}
-
 	folderString := make([]string, 0)
 
-	for _, f := range folderTilRoot {
-		folderString = append(folderString, f.ID.String())
+	if file.FolderId != nil {
+		folderTilRoot, err := s.folderRepo.GetFromRootToFolder(*file.FolderId)
+		if err != nil {
+			return "", err
+		}
+		for _, f := range folderTilRoot {
+			folderString = append(folderString, f.ID.String())
+		}
+
+	}
+
+	caseString := ""
+
+	if file.CaseId != nil {
+		caseString = file.CaseId.String()
 	}
 
 	modelMeili := models.MeiliFile{
@@ -790,7 +834,7 @@ func (s *FileService) addMeili(file models.File, mimeTypeToString string) (strin
 		Type:      mimeTypeToString,
 		Tags:      tagString,
 		FolderIds: folderString,
-		CaseId:    file.CaseId.String(),
+		CaseId:    caseString,
 	}
 
 	res, err := s.fileRepo.CreateFileDocument(modelMeili)
@@ -804,100 +848,222 @@ func (s *FileService) addMeili(file models.File, mimeTypeToString string) (strin
 	return "", nil
 }
 
-func (s *FileService) ocrImage(id uuid.UUID, name string, tags []models.Tag) {
+func (s *FileService) updateFolderAndCaseInFile(id uuid.UUID, cases []models.Case, ocrData string) error {
+	if len(cases) > 1 {
+		s.logger.Info("More than one case found")
+		var foundCase models.Case
+		for _, c := range cases {
+			titleSplit := strings.Split(c.Title, " ")
+			for _, t := range titleSplit {
+				if t != "" && strings.Contains(ocrData, t) {
+					s.logger.Info("Found from [TITLE]->", t)
+					foundCase = c
+					break
+				}
+			}
+			if foundCase.ID != uuid.Nil {
+				break
+			}
+			if strings.Contains(ocrData, c.Title) {
+				s.logger.Info("Found from ->", c.Title)
+				foundCase = c
+				break
+			} else if c.RedCaseNumber != "" && strings.Contains(ocrData, c.RedCaseNumber) {
+				s.logger.Info("Found from ->", c.RedCaseNumber)
+				foundCase = c
+				break
+			} else if c.BlackCaseNumber != "" && strings.Contains(ocrData, c.BlackCaseNumber) {
+				s.logger.Info("Found from ->", c.BlackCaseNumber)
+				foundCase = c
+				break
+			}
+		}
+		if foundCase.ID != uuid.Nil {
+			s.logger.Info("Found case ->", foundCase)
+			var file models.File
+			file.CaseId = &foundCase.ID
+			file.FolderId = &foundCase.Folders[0].ID
+
+			err := s.fileRepo.UpdateFile(id, file)
+
+			if err != nil {
+				return err
+			}
+
+			var fileMeili models.MeiliFile
+			fileMeili.CaseId = foundCase.ID.String()
+			fileMeili.Id = id.String()
+			fileMeili.FolderIds = make([]string, 0)
+			fileMeili.FolderIds = append(fileMeili.FolderIds, foundCase.Folders[0].ID.String())
+
+			_, err = s.fileRepo.UpdateFileDocument(fileMeili)
+
+		}
+	}
+	return nil
+}
+
+func (s *FileService) actionAfterOcr(id uuid.UUID, name string, tags []models.Tag, cases []models.Case, ocrData string) error {
+	if ocrData == "" {
+		return nil
+	}
+
+	go func() {
+		err := s.updateFolderAndCaseInFile(id, cases, ocrData)
+
+		if err != nil {
+			s.logger.Error("Error while updating folder and case in file ->", err)
+		}
+
+		newTags := make([]models.Tag, len(tags))
+
+		if strings.Contains(ocrData, "ทะเบียนบ้าน") {
+			// Do nothing , because in home registration
+			// There's id card number
+			// So we need to detect it before to prevent wrong tagging
+		} else if strings.Contains(ocrData, "บัตรประจำตัวประชาชน") {
+			tag, _ := s.tagRepo.GetTagByName("idCard")
+			if !utils.ContainsTag(tags, *tag) {
+				newTags = append(tags, *tag)
+			}
+		}
+
+		tagStrings := make([]string, 0)
+		for _, t := range newTags {
+			tagStrings = append(tagStrings, t.Name)
+		}
+
+		modelMeili := models.MeiliFile{
+			Id:      id.String(),
+			Content: ocrData,
+			Tags:    tagStrings,
+		}
+
+		_, err = s.fileRepo.UpdateFileDocument(modelMeili)
+
+		if err != nil {
+			s.logger.Error(err)
+		}
+
+		if len(newTags) != len(tags) {
+			err = s.fileRepo.UpdateTags(id, newTags)
+
+			if err != nil {
+				s.logger.Error(err)
+			}
+
+			file, err := s.fileRepo.GetFile(id)
+
+			if err != nil {
+				s.logger.Error(err)
+			}
+
+			err = s.updateFolderTagByFolderId(*file.FolderId)
+
+			if err != nil {
+				s.logger.Error(err)
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (s *FileService) ocrImage(id uuid.UUID, name string, tags []models.Tag, cases []models.Case) {
 	ocrData, err := s.ocrService.GetTextFromImageName(name)
 	if err != nil {
 		s.logger.Error(err)
 	}
 
-	if ocrData != "" {
-		go func() {
-			newTags := make([]models.Tag, len(tags))
+	err = s.actionAfterOcr(id, name, tags, cases, ocrData)
 
-			if strings.Contains(ocrData, "ทะเบียนบ้าน") {
-			} else if strings.Contains(ocrData, "บัตรประจำตัวประชาชน") {
-				tag, _ := s.tagRepo.GetTagByName("idCard")
-				if !utils.ContainsTag(tags, *tag) {
-					newTags = append(tags, *tag)
-				}
-			}
-
-			tagStrings := make([]string, 0)
-			for _, t := range newTags {
-				tagStrings = append(tagStrings, t.Name)
-			}
-
-			modelMeili := models.MeiliFile{
-				Id:      id.String(),
-				Content: ocrData,
-				Tags:    tagStrings,
-			}
-
-			_, err := s.fileRepo.UpdateFileDocument(modelMeili)
-
-			if err != nil {
-				s.logger.Error(err)
-			}
-
-			if len(newTags) != len(tags) {
-				err = s.fileRepo.UpdateFileSaveAssociation(id, models.File{
-					Tags: newTags,
-				})
-
-				if err != nil {
-					s.logger.Error(err)
-				}
-			}
-		}()
-
+	if err != nil {
+		s.logger.Error(err)
 	}
 }
 
-func (s *FileService) ocrPdf(id uuid.UUID, name string, tags []models.Tag) {
+func (s *FileService) ocrPdf(id uuid.UUID, name string, tags []models.Tag, cases []models.Case) {
 	ocrData, err := s.ocrService.GetTextFromPdfUrl(name)
+
 	if err != nil {
 		s.logger.Error(err)
 	}
 
-	if ocrData != "" {
-		go func() {
-			newTags := make([]models.Tag, len(tags))
+	err = s.actionAfterOcr(id, name, tags, cases, ocrData)
+}
 
-			if strings.Contains(ocrData, "ทะเบียนบ้าน") {
-			} else if strings.Contains(ocrData, "บัตรประจำตัวประชาชน") {
-				tag, _ := s.tagRepo.GetTagByName("idCard")
-				if !utils.ContainsTag(tags, *tag) {
-					newTags = append(tags, *tag)
-				}
-			}
+func (s *FileService) uploadNewFileNoFolder(
+	file multipart.File,
+	fileName string,
+	fileType string,
+	userId uuid.UUID,
+	cases []models.Case,
+) (string, error) {
 
-			tagStrings := make([]string, 0)
-			for _, t := range newTags {
-				tagStrings = append(tagStrings, t.Name)
-			}
+	mimeTypeToString := convertMimeTypeToString(fileType)
 
-			modelMeili := models.MeiliFile{
-				Id:      id.String(),
-				Content: ocrData,
-				Tags:    tagStrings,
-			}
+	cloudName := generateUniqueName()
 
-			_, err := s.fileRepo.UpdateFileDocument(modelMeili)
+	previewCloudName := cloudName
 
-			if err != nil {
-				s.logger.Error(err)
-			}
+	s.logger.Info(cloudName, previewCloudName)
 
-			//if len(newTags) != len(tags) {
-			//	err = s.fileRepo.UpdateFileSaveAssociation(id, models.File{
-			//		Tags: newTags,
-			//	})
-			//
-			//	if err != nil {
-			//		s.logger.Error(err)
-			//	}
-			//}
-		}()
+	_, err := s.storageService.UploadFile(file, cloudName)
 
+	if err != nil {
+		return "", err
 	}
+
+	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeToString)
+
+	if err != nil {
+		fileT, err = s.fileTypeRepo.GetEtcFileType()
+	}
+
+	tag, err := s.tagRepo.GetTagByNames([]string{mimeTypeToString})
+
+	if err != nil {
+		tagEtc, err := s.tagRepo.GetEtcTag()
+		if err != nil {
+			return "", err
+		}
+		tag = make([]models.Tag, 0)
+		tag = append(tag, *tagEtc)
+	}
+
+	modelFile := models.File{
+		Name:             fileName,
+		TypeId:           &fileT.ID,
+		CloudName:        cloudName,
+		PreviewCloudName: previewCloudName,
+		Tags:             tag,
+	}
+
+	fileRes, err := s.fileRepo.CreateFile(modelFile)
+
+	_, err = s.addMeili(fileRes, mimeTypeToString)
+
+	if mimeTypeToString == "image" {
+		go s.ocrImage(fileRes.ID, previewCloudName, tag, cases)
+	} else if mimeTypeToString == "pdf" {
+		go s.ocrPdf(fileRes.ID, previewCloudName, tag, cases)
+	}
+
+	//if err != nil {
+	//	return "", err
+	//}
+
+	//err = s.addLogs("update", userId, *fileRes.FolderId, fileRes.ID, version, versionPreview)
+
+	//err = s.updateFolderTagByFolderId(folderId)
+
+	if err != nil {
+		return "", err
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return fileRes.ID.String(), nil
 }

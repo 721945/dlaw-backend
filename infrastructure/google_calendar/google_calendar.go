@@ -3,16 +3,19 @@ package google_calendar
 import (
 	"context"
 	"fmt"
+	"github.com/721945/dlaw-backend/infrastructure/smtp"
 	"github.com/721945/dlaw-backend/libs"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
+	"log"
 )
 
 type GoogleCalendar struct {
-	srv *calendar.Service
+	srv  *calendar.Service
+	smtp smtp.SMTP
 }
 
-func NewGoogleCalendar(env libs.Env) GoogleCalendar {
+func NewGoogleCalendar(env libs.Env, smtp smtp.SMTP) GoogleCalendar {
 	srv, err := getCalendarClient(env.GoogleCredPath)
 
 	if err != nil {
@@ -20,7 +23,8 @@ func NewGoogleCalendar(env libs.Env) GoogleCalendar {
 	}
 
 	return GoogleCalendar{
-		srv: srv,
+		srv:  srv,
+		smtp: smtp,
 	}
 }
 
@@ -33,12 +37,41 @@ func getCalendarClient(path string) (*calendar.Service, error) {
 	return srv, nil
 }
 
+//func (c GoogleCalendar) CreateEvent(title, startTime, endTime string, emails []string, location, description *string) (*calendar.Event, error) {
+//	attendees := make([]*calendar.EventAttendee, len(emails))
+//
+//	for i, email := range emails {
+//		attendees[i] = &calendar.EventAttendee{Email: email, ResponseStatus: "needsAction"}
+//	}
+//
+//	event := &calendar.Event{
+//		Summary:     title,
+//		Location:    *location,
+//		Description: *description,
+//		Start:       &calendar.EventDateTime{DateTime: startTime, TimeZone: "Asia/Bangkok"},
+//		End:         &calendar.EventDateTime{DateTime: endTime, TimeZone: "Asia/Bangkok"},
+//		Attendees:   attendees,
+//	}
+//
+//	createdEvent, err := c.srv.Events.Insert("primary", event).Do()
+//	if err != nil {
+//		return nil, fmt.Errorf("unable to create event: %v", err)
+//	}
+//
+//	return createdEvent, nil
+//}
+
 func (c GoogleCalendar) CreateEvent(title, startTime, endTime string, emails []string, location, description *string) (*calendar.Event, error) {
 	attendees := make([]*calendar.EventAttendee, len(emails))
-
 	for i, email := range emails {
-		attendees[i] = &calendar.EventAttendee{Email: email}
+		attendees[i] = &calendar.EventAttendee{
+			Email:          email,
+			ResponseStatus: "needsAction",
+		}
 	}
+
+	// Set the calendar ID to the email address of the service account
+	calendarID := "dlaw-service-2@dlaw-dev.iam.gserviceaccount.com"
 
 	event := &calendar.Event{
 		Summary:     title,
@@ -48,11 +81,13 @@ func (c GoogleCalendar) CreateEvent(title, startTime, endTime string, emails []s
 		End:         &calendar.EventDateTime{DateTime: endTime, TimeZone: "Asia/Bangkok"},
 		Attendees:   attendees,
 	}
-
-	createdEvent, err := c.srv.Events.Insert("primary", event).Do()
+	// Insert the event into the service account's calendar
+	createdEvent, err := c.srv.Events.Insert(calendarID, event).SendUpdates("all").Do()
 	if err != nil {
-		return nil, fmt.Errorf("unable to create event: %v", err)
+		log.Fatalf("Unable to create event: %v", err)
 	}
+
+	fmt.Printf("Event created with ID: %s\n", createdEvent.Id)
 
 	return createdEvent, nil
 }

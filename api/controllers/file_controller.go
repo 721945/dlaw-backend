@@ -204,6 +204,27 @@ func (f FileController) UploadFile(c *gin.Context) {
 
 	formFolderId := c.Request.FormValue("folderId")
 
+	if formFolderId == "" {
+		url, err := f.fileService.UploadFileNoFolder(
+			file,
+			fileHeader.Filename,
+			fileHeader.Header.Get("Content-Type"),
+			userId.(uuid.UUID),
+		)
+
+		if err != nil {
+			f.logger.Error(err)
+			_ = c.Error(err)
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data": url,
+		})
+
+		return
+	}
+
 	folderId, err := uuid.Parse(formFolderId)
 
 	if err != nil {

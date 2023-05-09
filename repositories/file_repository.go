@@ -5,7 +5,6 @@ import (
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
 	"github.com/meilisearch/meilisearch-go"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -34,6 +33,10 @@ func (r *FileRepository) GetFileByName(name string, folderId uuid.UUID) (file *m
 	return file, r.db.DB.Preload("Tags").Where("name = ? AND folder_id = ?", name, folderId).First(&file).Error
 }
 
+func (r *FileRepository) GetFileByCaseId(name string, caseIds []uuid.UUID) (files []models.File, err error) {
+	return files, r.db.DB.Preload("Tags").Where("name = ? AND case_id in (?)", name, caseIds).Find(&files).Error
+}
+
 func (r *FileRepository) GetFileContent(id uuid.UUID) (file *models.File, err error) {
 	return file, r.db.DB.Preload("Tags").Preload("FileType").First(&file, id).Error
 }
@@ -54,9 +57,21 @@ func (r *FileRepository) UpdateFile(id uuid.UUID, file models.File) error {
 	return r.db.DB.Model(&models.File{}).Where("id = ?", id).Updates(file).Error
 }
 
-func (r *FileRepository) UpdateFileSaveAssociation(id uuid.UUID, file models.File) error {
-	return r.db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Model(&models.File{}).Where("id = ?", id).Updates(file).Error
+func (r *FileRepository) UpdateTags(id uuid.UUID, tags []models.Tag) error {
+	model := models.Folder{
+		Base: models.Base{ID: id},
+	}
+	err := r.db.DB.Model(&model).Association("Tags").Clear()
+	if err != nil {
+		r.logger.Info(err)
+		return err
+	}
+	return r.db.DB.Model(&model).Association("Tags").Append(&tags)
 }
+
+//func (r *FileRepository) UpdateFileSaveAssociation(id uuid.UUID, file models.File) error {
+//	return r.db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Model(&models.File{}).Where("id = ?", id).Updates(file).Error
+//}
 
 func (r *FileRepository) UpdateFilePublic(id uuid.UUID, file models.File) error {
 	return r.db.DB.Model(&models.File{}).Where("id = ?", id).Updates(map[string]interface{}{

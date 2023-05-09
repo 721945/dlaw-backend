@@ -89,7 +89,8 @@ func (s *AppointmentService) CreateAppointment(userId uuid.UUID, dto dtos.Create
 	}
 
 	// Create event
-	// event, err := s.calendarService.CreateEvent(dto.Title, dto.DateTime, dto.DateTime, dto.Emails, &dto.Location, &dto.Detail)
+	//_, err = s.calendarService.CreateEvent(dto.Title, dto.DateTime, dto.DateTime, dto.Emails, &dto.Location, &dto.Detail)
+
 	if err != nil {
 		return "", err
 	}
