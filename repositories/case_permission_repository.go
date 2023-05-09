@@ -40,7 +40,7 @@ func (r CasePermissionRepository) GetCasePermissionsByCaseId(id uuid.UUID) (case
 }
 
 func (r CasePermissionRepository) GetCasePermissionsByUserId(id uuid.UUID) (cases []models.CasePermission, err error) {
-	return cases, r.db.DB.Preload("User").Where("user_id = ?", id).Find(&cases).Error
+	return cases, r.db.DB.Preload("Case").Preload("Case.Folders", "parent_folder_id IS NULL").Preload("User").Where("user_id = ?", id).Find(&cases).Error
 }
 
 func (r CasePermissionRepository) GetCaseAndPermissionsByUserId(id uuid.UUID) (cases []models.CasePermission, err error) {
