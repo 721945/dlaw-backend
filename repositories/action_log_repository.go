@@ -42,5 +42,6 @@ func (r *ActionLogRepository) GetActionLogsByFolderId(folderId uuid.UUID) (permi
 		Preload("User").
 		Preload("File").
 		Preload("File.Tags").
+		Order("created_at DESC").
 		Where("folder_id = ?", folderId).Find(&permissionLogs).Error
 }

@@ -152,12 +152,42 @@ func (s *FileService) CreateFile(file models.File) (string, error) {
 	return f.ID.String(), nil
 }
 
-func (s *FileService) UpdateFile(id uuid.UUID, dto dtos.UpdateFileDto) error {
-	model := dto.ToModel()
-	return s.fileRepo.UpdateFile(id, model)
+func (s *FileService) UpdateFile(id uuid.UUID, dto dtos.UpdateFileDto, userId uuid.UUID) error {
+	file, err := s.fileRepo.GetFile(id)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.addLogs("rename", userId, *file.FolderId, id, "", "", &file.Name, &dto.Name)
+
+	file.Name = dto.Name
+
+	return s.fileRepo.UpdateFile(id, *file)
 }
 
 func (s *FileService) MoveFile(id uuid.UUID, dto dtos.MoveFileDto, userId uuid.UUID) error {
+	file, err := s.fileRepo.GetFile(id)
+
+	if err != nil {
+		return err
+	}
+
+	folder, err := s.folderRepo.GetFolder(*file.FolderId)
+
+	if err != nil {
+		return err
+	}
+
+	toFolderId, err := uuid.Parse(dto.TargetFolderId)
+
+	if err != nil {
+		return err
+	}
+
+	toFolder, err := s.folderRepo.GetFolder(toFolderId)
+
+	err = s.addLogs("move", userId, *file.FolderId, id, "", "", &folder.Name, &toFolder.Name)
 
 	model := dto.ToModel()
 
@@ -182,6 +212,23 @@ func (s *FileService) ShareFile(id string, userId uuid.UUID) (string, error) {
 	}
 
 	links, err := s.storageService.GiveAccessPublic(file.CloudName, file.Name)
+
+	isPublic := file.IsPublic
+	isShared := file.IsShared
+
+	fromText := ""
+
+	if isPublic {
+		fromText = "public"
+	} else if isShared {
+		fromText = "have-link"
+	} else {
+		fromText = "private"
+	}
+
+	toText := "private"
+
+	err = s.addLogs("share", userId, *file.FolderId, fileId, "", "", &fromText, &toText)
 
 	if err != nil {
 		return "", err
@@ -213,6 +260,23 @@ func (s *FileService) RemoveShareFile(id string, userId uuid.UUID) error {
 	}
 
 	err = s.storageService.GiveAccessPrivate(file.CloudName)
+
+	isPublic := file.IsPublic
+	isShared := file.IsShared
+
+	fromText := ""
+
+	if isPublic {
+		fromText = "public"
+	} else if isShared {
+		fromText = "have-link"
+	} else {
+		fromText = "private"
+	}
+
+	toText := "private"
+
+	err = s.addLogs("share", userId, *file.FolderId, fileId, "", "", &fromText, &toText)
 
 	if err != nil {
 		return err
@@ -257,6 +321,23 @@ func (s *FileService) PublicFile(id string, userId uuid.UUID) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	isPublic := file.IsPublic
+	isShared := file.IsShared
+
+	fromText := ""
+
+	if isPublic {
+		fromText = "public"
+	} else if isShared {
+		fromText = "have-link"
+	} else {
+		fromText = "private"
+	}
+
+	toText := "public"
+
+	err = s.addLogs("share", userId, *file.FolderId, fileId, "", "", &fromText, &toText)
 
 	return links, nil
 }
@@ -359,8 +440,27 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag, fileType, page, l
 
 }
 
-func (s *FileService) DeleteFile(id uuid.UUID) error {
-	_, err := s.fileRepo.DeleteFileDocument([]string{id.String()})
+func (s *FileService) DeleteFile(id uuid.UUID, userId uuid.UUID) error {
+	file, err := s.fileRepo.GetFile(id)
+
+	if err != nil {
+		return err
+	}
+
+	folder, err := s.folderRepo.GetFolder(*file.FolderId)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.addLogs("delete", userId, *file.FolderId, id, "", "", &folder.Name, nil)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = s.fileRepo.DeleteFileDocument([]string{id.String()})
+
 	if err != nil {
 		return err
 	}
@@ -449,7 +549,6 @@ func (s *FileService) uploadNewFile(
 	s.logger.Info(cloudName, previewCloudName)
 
 	version, err = s.storageService.UploadFile(file, cloudName)
-	// if type is image do ocr and then add data to Meilisearch
 
 	versionPreview = version
 
@@ -459,7 +558,7 @@ func (s *FileService) uploadNewFile(
 
 	fileT, err := s.fileTypeRepo.GetFileTypeByName(mimeTypeToString)
 
-	if err != nil {
+	if err != nil || fileT.ID == uuid.Nil {
 		fileT, err = s.fileTypeRepo.GetEtcFileType()
 	}
 
@@ -501,7 +600,7 @@ func (s *FileService) uploadNewFile(
 		return "", err
 	}
 
-	err = s.addLogs("update", userId, *fileRes.FolderId, fileRes.ID, version, versionPreview)
+	err = s.addLogs("upload", userId, *fileRes.FolderId, fileRes.ID, version, versionPreview, nil, nil)
 
 	err = s.updateFolderTagByFolderId(folderId)
 
@@ -553,11 +652,7 @@ func (s *FileService) uploadReplaceFile(
 		return "", err
 	}
 
-	if err != nil {
-		return "", err
-	}
-
-	err = s.addLogs("update", userId, *fileDb.FolderId, fileDb.ID, version, versionPreview)
+	err = s.addLogs("update", userId, *fileDb.FolderId, fileDb.ID, version, versionPreview, nil, nil)
 
 	return "updated", nil
 }
@@ -778,7 +873,7 @@ func (s *FileService) GetRecentFileOpened(userId uuid.UUID) ([]dtos.FileDto, err
 	return dto, nil
 }
 
-func (s *FileService) addLogs(actionName string, userId, folderId, fileId uuid.UUID, version, previewVersion string) error {
+func (s *FileService) addLogs(actionName string, userId, folderId, fileId uuid.UUID, version, previewVersion string, from, to *string) error {
 	action, err := s.actionRepo.GetActionByName(actionName)
 
 	if err != nil {
@@ -792,6 +887,8 @@ func (s *FileService) addLogs(actionName string, userId, folderId, fileId uuid.U
 		ActionId:             action.ID,
 		FileVersionId:        &version,
 		FilePreviewVersionId: &previewVersion,
+		From:                 from,
+		To:                   to,
 	}
 
 	if err != nil {
@@ -880,10 +977,12 @@ func (s *FileService) updateFolderAndCaseInFile(id uuid.UUID, cases []models.Cas
 		}
 		if foundCase.ID != uuid.Nil {
 			s.logger.Info("Found case ->", foundCase)
+
+			//mCase, err := s.fileRepo.GetFileByName(name, foundCase.Folders[0].ID)
+
 			var file models.File
 			file.CaseId = &foundCase.ID
 			file.FolderId = &foundCase.Folders[0].ID
-
 			err := s.fileRepo.UpdateFile(id, file)
 
 			if err != nil {
@@ -1006,9 +1105,9 @@ func (s *FileService) uploadNewFileNoFolder(
 
 	previewCloudName := cloudName
 
-	s.logger.Info(cloudName, previewCloudName)
+	version, err := s.storageService.UploadFile(file, cloudName)
 
-	_, err := s.storageService.UploadFile(file, cloudName)
+	previewVersion := version
 
 	if err != nil {
 		return "", err
@@ -1053,7 +1152,7 @@ func (s *FileService) uploadNewFileNoFolder(
 	//	return "", err
 	//}
 
-	//err = s.addLogs("update", userId, *fileRes.FolderId, fileRes.ID, version, versionPreview)
+	err = s.addLogs("upload", userId, *fileRes.FolderId, fileRes.ID, version, previewVersion, nil, nil)
 
 	//err = s.updateFolderTagByFolderId(folderId)
 

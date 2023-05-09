@@ -107,6 +107,15 @@ func (f FileController) CreateFile(c *gin.Context) {
 }
 
 func (f FileController) UpdateFile(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	user := userId.(uuid.UUID)
+
 	paramId := c.Param("id")
 	id, err := uuid.Parse(paramId)
 
@@ -123,7 +132,7 @@ func (f FileController) UpdateFile(c *gin.Context) {
 		return
 	}
 
-	err = f.fileService.UpdateFile(id, input)
+	err = f.fileService.UpdateFile(id, input, user)
 
 	if err != nil {
 		f.logger.Error(err)
@@ -137,6 +146,15 @@ func (f FileController) UpdateFile(c *gin.Context) {
 }
 
 func (f FileController) DeleteFile(c *gin.Context) {
+	userId, isExist := c.Get("id")
+
+	if !isExist {
+		_ = c.Error(libs.ErrUnauthorized)
+		return
+	}
+
+	user := userId.(uuid.UUID)
+
 	paramId := c.Param("id")
 	id, err := uuid.Parse(paramId)
 
@@ -146,7 +164,7 @@ func (f FileController) DeleteFile(c *gin.Context) {
 		return
 	}
 
-	err = f.fileService.DeleteFile(id)
+	err = f.fileService.DeleteFile(id, user)
 	if err != nil {
 		f.logger.Error(err)
 		_ = c.Error(err)
