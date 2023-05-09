@@ -10,6 +10,8 @@ type ActionLogDto struct {
 	User       UserDto           `json:"user"`
 	CreatedAt  string            `json:"createdAt"`
 	File       *FileActionLogDto `json:"file,omitempty"`
+	From       *string           `json:"from"`
+	To         *string           `json:"to"`
 }
 
 type FileActionLogDto struct {
@@ -27,6 +29,8 @@ func ToActionLogDto(actionLog models.ActionLog, file *FileActionLogDto) ActionLo
 		User:       *ToUserDto(actionLog.User),
 		CreatedAt:  actionLog.CreatedAt.Format("2006-01-02 15:04:05"),
 		File:       file,
+		From:       actionLog.From,
+		To:         actionLog.To,
 	}
 }
 

@@ -29,6 +29,10 @@ func (r *FileRepository) GetFile(id uuid.UUID) (file *models.File, err error) {
 	return file, r.db.DB.First(&file, id).Error
 }
 
+func (r *FileRepository) GetFileAndFolder(id uuid.UUID) (file *models.File, err error) {
+	return file, r.db.DB.Preload("Folder").First(&file, id).Error
+}
+
 func (r *FileRepository) GetFileByName(name string, folderId uuid.UUID) (file *models.File, err error) {
 	return file, r.db.DB.Preload("Tags").Where("name = ? AND folder_id = ?", name, folderId).First(&file).Error
 }

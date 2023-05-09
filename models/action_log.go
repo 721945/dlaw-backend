@@ -14,4 +14,6 @@ type ActionLog struct {
 	Action               *Action
 	FilePreviewVersionId *string
 	FileVersionId        *string
+	From                 *string
+	To                   *string
 }

@@ -133,7 +133,7 @@ func (s *FolderService) CreateFolder(dto dtos.CreateFolderDto, userId uuid.UUID)
 		return nil, err
 	}
 
-	err = s.addActionLog("create", folder.ID, userId)
+	err = s.addActionLog("create", folder.ID, userId, nil, nil)
 
 	if err != nil {
 		return nil, err
@@ -150,19 +150,32 @@ func (s *FolderService) UpdateFolder(id uuid.UUID, dto dtos.UpdateFolderDto, use
 		return err
 	}
 
-	checkFolder, err := s.folderRepo.GetFolder(id)
+	checkFolder, err := s.folderRepo.GetFolderWithParent(id)
 
 	if err != nil {
 		return err
 	}
 
 	if checkFolder.ParentFolderId == nil {
-		return fmt.Errorf("Can not update root folder")
+		return fmt.Errorf("can not update root folder")
 	}
 
-	folder := dto.ToModel()
+	if dto.Name != "" {
+		err = s.addActionLog("rename", checkFolder.ID, userId, &checkFolder.Name, &dto.Name)
+	}
 
-	err = s.addActionLog("update", folder.ID, userId)
+	if dto.ParentFolderId != "" {
+		targetFolderId, err := uuid.Parse(dto.ParentFolderId)
+
+		if err != nil {
+			return err
+		}
+
+		targetFolder, err := s.folderRepo.GetFolder(targetFolderId)
+
+		err = s.addActionLog("move", checkFolder.ID, userId, &checkFolder.ParentFolder.Name, &targetFolder.Name)
+	}
+	folder := dto.ToModel()
 
 	return s.folderRepo.UpdateFolder(id, folder)
 }
@@ -187,16 +200,33 @@ func (s *FolderService) MoveFolder(id uuid.UUID, dto dtos.MoveFolderDto, userId 
 
 	folder := dto.ToModel()
 
-	return s.folderRepo.UpdateFolder(id, folder)
-}
-
-func (s *FolderService) DeleteFolder(id uuid.UUID, userId uuid.UUID) error {
-
-	err := s.checkPermission(userId, id)
+	targetFolderId, err := uuid.Parse(dto.TargetFolderId)
 
 	if err != nil {
 		return err
 	}
+
+	targetFolder, err := s.folderRepo.GetFolder(targetFolderId)
+
+	err = s.addActionLog("move", checkFolder.ID, userId, &checkFolder.ParentFolder.Name, &targetFolder.Name)
+
+	return s.folderRepo.UpdateFolder(id, folder)
+}
+
+func (s *FolderService) DeleteFolder(id uuid.UUID, userId uuid.UUID) error {
+	folder, err := s.folderRepo.GetFolder(id)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.checkPermission(userId, id)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.addActionLog("delete", id, userId, &folder.Name, nil)
 
 	return s.folderRepo.DeleteFolder(id)
 }
@@ -357,7 +387,7 @@ func (s *FolderService) GetFileInTagId(folderId, tagId, userId uuid.UUID) (*dtos
 	return &dto, nil
 }
 
-func (s *FolderService) addActionLog(actionName string, folderId, userId uuid.UUID) error {
+func (s *FolderService) addActionLog(actionName string, folderId, userId uuid.UUID, from, to *string) error {
 	action, err := s.actionRepo.GetActionByName(actionName)
 
 	if err != nil {
@@ -368,6 +398,8 @@ func (s *FolderService) addActionLog(actionName string, folderId, userId uuid.UU
 		FolderId: folderId,
 		UserId:   userId,
 		ActionId: action.ID,
+		From:     from,
+		To:       to,
 	}
 
 	if err != nil {
