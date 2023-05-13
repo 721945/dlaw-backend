@@ -8,6 +8,7 @@ import (
 	"github.com/721945/dlaw-backend/infrastructure/google_vision"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
+	"google.golang.org/api/option"
 	"io"
 	"log"
 	"mime/multipart"
@@ -24,6 +25,7 @@ type GoogleStorage struct {
 	vision      google_vision.GoogleVision
 	clientEmail string
 	privateKey  string
+	credPath    string
 }
 
 func NewGoogleStorage(
@@ -37,13 +39,14 @@ func NewGoogleStorage(
 		vision:      vision,
 		clientEmail: env.GoogleCloudStorageClientEmail,
 		privateKey:  env.GoogleCloudStoragePrivateKey,
+		credPath:    env.GoogleCredPath,
 	}
 }
 
 func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string, error) {
 	/// Now we are doing for put all file in the bucket and use database to collect all information
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(g.credPath))
 	g.logger.Info("Start of upload file")
 	if err != nil {
 		return "", err
@@ -85,7 +88,7 @@ func (g GoogleStorage) UploadFile(file multipart.File, fileName string) (string,
 
 func (g GoogleStorage) GiveAccessPublic(name, fileName string) (string, error) {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(g.credPath))
 
 	if err != nil {
 		return "", err
@@ -111,7 +114,7 @@ func (g GoogleStorage) GiveAccessPublic(name, fileName string) (string, error) {
 
 func (g GoogleStorage) GiveAccessPrivate(name string) error {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(g.credPath))
 
 	if err != nil {
 		return err
@@ -146,7 +149,7 @@ func (g GoogleStorage) GiveAccessPrivate(name string) error {
 
 func (g GoogleStorage) GetFileSize(name, version string) (int64, error) {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(g.credPath))
 
 	if err != nil {
 		return 0, err
@@ -239,7 +242,7 @@ func (g GoogleStorage) GetSignedFileUrls(files []models.File) (fileUrls []models
 
 func (g GoogleStorage) getSignedUrls(names, versions, fileNames []string, isShared []bool) ([]string, error) {
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(g.credPath))
 
 	if err != nil {
 		return []string{}, err
