@@ -85,7 +85,7 @@ func (r *FileRepository) UpdateFilePublic(id uuid.UUID, file models.File) error 
 }
 
 func (r *FileRepository) DeleteFile(id uuid.UUID) error {
-	return r.db.DB.Delete(&models.File{}, id).Error
+	return r.db.DB.Select(clause.Associations).Delete(&models.File{}, id).Error
 }
 
 func (r *FileRepository) GetFilesByCaseIds(caseIds []uuid.UUID) (files []models.File, err error) {

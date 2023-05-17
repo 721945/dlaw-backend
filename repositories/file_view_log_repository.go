@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 type FileViewLogRepository struct {
@@ -40,9 +41,9 @@ func (r *FileViewLogRepository) UpdateFileViewLog(id uuid.UUID, log models.FileV
 }
 
 func (r *FileViewLogRepository) DeleteFileViewLog(id uuid.UUID) error {
-	return r.db.DB.Delete(&models.FileViewLog{}, id).Error
+	return r.db.DB.Select(clause.Associations).Delete(&models.FileViewLog{}, id).Error
 }
 
 func (r *FileViewLogRepository) GetFileViewLogsForUser(userId uuid.UUID) (logs []models.FileViewLog, err error) {
-	return logs, r.db.DB.Preload("File.FileType").Preload("File").Order("updated_at DESC").Distinct().Limit(10).Where("user_id = ?", userId).Find(&logs).Error
+	return logs, r.db.DB.Preload("File.FileType").Preload("File", "is_").Order("updated_at DESC").Distinct().Limit(10).Where("user_id = ?", userId).Find(&logs).Error
 }
