@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 type FolderRepository struct {
@@ -54,7 +55,7 @@ func (r *FolderRepository) UpdateFolder(id uuid.UUID, folder models.Folder) erro
 }
 
 func (r *FolderRepository) DeleteFolder(id uuid.UUID) error {
-	return r.db.DB.Delete(&models.Folder{}, id).Error
+	return r.db.DB.Select(clause.Associations).Delete(&models.Folder{}, id).Error
 }
 
 func (r *FolderRepository) ArchiveFolder(id uuid.UUID) error {

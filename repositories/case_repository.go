@@ -4,6 +4,7 @@ import (
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm/clause"
 )
 
 type CaseRepository struct {
@@ -32,7 +33,7 @@ func (r *CaseRepository) UpdateCase(id uuid.UUID, mCase models.Case) error {
 }
 
 func (r *CaseRepository) DeleteCase(id uuid.UUID) error {
-	return r.db.DB.Delete(&models.Case{}, id).Error
+	return r.db.DB.Select(clause.Associations).Delete(&models.Case{}, id).Error
 }
 
 func (r *CaseRepository) GetCasesByIds(caseIds []uuid.UUID, isArchive bool) (cases []models.Case, err error) {
@@ -58,7 +59,7 @@ func (r *CaseRepository) GetCasesSortedByFrequency(userId uuid.UUID) (cases []mo
 }
 
 func (r *CaseRepository) GetCasesWhichFileIsPublic() (cases []models.Case, err error) {
-	subQuery := r.db.DB.Table("files").Select("1").Where("files.case_id = cases.id AND files.is_public = ?", true)
+	subQuery := r.db.DB.Table("files").Select("1").Where("files.case_id = cases.id AND files.is_public = ? AND files.deleted_at IS NULL", true)
 
 	return cases, r.db.DB.Preload("Files", "is_public = true").Preload("Files.FileType").Where("EXISTS (?)", subQuery).Find(&cases).Error
 }

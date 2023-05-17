@@ -364,11 +364,11 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag, fileType, page, l
 			return nil, pagination, errors.New("invalid folder id")
 		}
 
-		filters = append(filters, "folder_id = \""+folderId+"\"")
+		filters = append(filters, "folder_ids = \""+folderId+"\"")
 	}
 
 	if tag != "" {
-		filters = append(filters, "tag = \""+tag+"\"")
+		filters = append(filters, "tags = \""+tag+"\"")
 	}
 
 	if fileType != "" {
@@ -854,6 +854,8 @@ func (s *FileService) GetRecentFileOpened(userId uuid.UUID) ([]dtos.FileDto, err
 	}
 
 	files := make([]models.File, len(fileViews))
+
+	s.logger.Info(fileViews)
 
 	for i, fileView := range fileViews {
 		files[i] = *fileView.File
