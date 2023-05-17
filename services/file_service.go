@@ -542,7 +542,7 @@ func (s *FileService) uploadNewFile(
 
 	version, versionPreview := "", ""
 
-	cloudName := generateUniqueName()
+	cloudName := generateUniqueName(fileName)
 
 	previewCloudName := cloudName
 
@@ -553,6 +553,7 @@ func (s *FileService) uploadNewFile(
 	versionPreview = version
 
 	if err != nil {
+		s.logger.Error("Error: ", err)
 		return "", err
 	}
 
@@ -661,11 +662,12 @@ func (s *FileService) getFileByNameInFolderId(name string, folderId uuid.UUID) (
 	return s.fileRepo.GetFileByName(name, folderId)
 }
 
-func generateUniqueName() string {
+func generateUniqueName(fileName string) string {
 	id := uuid.New().String()
 	timestamp := time.Now().UnixNano()
+	fileType := fileName[strings.LastIndex(fileName, ".")+1:]
 
-	return fmt.Sprintf("%s-%d", id, timestamp)
+	return fmt.Sprintf("%s-%d.%s", id, timestamp, fileType)
 }
 
 func checkNeedConvert(fileType string) bool {
@@ -1101,7 +1103,7 @@ func (s *FileService) uploadNewFileNoFolder(
 
 	mimeTypeToString := convertMimeTypeToString(fileType)
 
-	cloudName := generateUniqueName()
+	cloudName := generateUniqueName(fileName)
 
 	previewCloudName := cloudName
 
