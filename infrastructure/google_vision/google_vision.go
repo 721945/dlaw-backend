@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	fmt "fmt"
+	"github.com/721945/dlaw-backend/api/utils"
 	"github.com/721945/dlaw-backend/libs"
 	"google.golang.org/api/iterator"
 	"log"
@@ -65,7 +66,7 @@ func (g *GoogleVision) GetTextFromImageName(name string) (string, error) {
 		return "", nil
 	}
 
-	return annotations[0].Description, nil
+	return utils.ConvertThaiNumToEngNum(annotations[0].Description), nil
 }
 
 func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
@@ -161,7 +162,7 @@ func (g *GoogleVision) GetTextFromPdfUrl(name string) (string, error) {
 
 	text := strings.Join(texts, " ")
 
-	return text, nil
+	return utils.ConvertThaiNumToEngNum(text), nil
 }
 
 func (g *GoogleVision) deleteFile(fileName string, bucket *storage.BucketHandle) error {
