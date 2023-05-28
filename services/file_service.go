@@ -346,7 +346,7 @@ func (s *FileService) SearchFiles(word, caseId, folderId, tag, fileType, page, l
 	var pagination dtos.PaginationResponse
 
 	word = utils.ConvertThaiNumToEngNum(word)
-	
+
 	if word == "" && caseId == "" && folderId == "" && tag == "" && fileType == "" {
 		return nil, pagination, errors.New("invalid search params")
 	}
@@ -645,8 +645,8 @@ func (s *FileService) uploadReplaceFile(
 	typeString := convertMimeTypeToString(fileType)
 
 	err = s.fileRepo.UpdateFile(fileDb.ID, modelFile)
-	s.logger.Info("TYPE: ", fileType)
 	if typeString == "image" {
+		s.logger.Info("TAGS : ", fileDb.Tags)
 		go s.ocrImage(fileDb.ID, fileDb.CloudName, fileDb.Tags, []models.Case{})
 	} else if typeString == "pdf" {
 		go s.ocrPdf(fileDb.ID, fileDb.CloudName, fileDb.Tags, []models.Case{})
@@ -1022,6 +1022,8 @@ func (s *FileService) actionAfterOcr(id uuid.UUID, name string, tags []models.Ta
 		}
 
 		newTags := make([]models.Tag, len(tags))
+
+		copy(newTags, tags)
 
 		if strings.Contains(ocrData, "ทะเบียนบ้าน") {
 			// Do nothing , because in home registration
