@@ -13,7 +13,8 @@ type ActionDto struct {
 }
 
 type CreateActionDto struct {
-	Name string `json:"name"`
+	Name     string   `json:"name"`
+	NameList []string `json:"nameList"`
 }
 
 func ToActionDto(action models.Action) ActionDto {
@@ -29,6 +30,17 @@ func (c CreateActionDto) ToModel() models.Action {
 	return models.Action{
 		Name: c.Name,
 	}
+}
+func (c CreateActionDto) ToModelList() []models.Action {
+	actions := make([]models.Action, len(c.NameList))
+
+	for i, name := range c.NameList {
+		actions[i] = models.Action{
+			Name: name,
+		}
+	}
+
+	return actions
 }
 
 type UpdateActionDto struct {

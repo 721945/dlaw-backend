@@ -89,6 +89,31 @@ func (a ActionController) CreateAction(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": dtos.ToActionDto(action)})
 }
 
+func (a ActionController) CreateActions(c *gin.Context) {
+	var input dtos.CreateActionDto
+	if err := c.ShouldBindJSON(&input); err != nil {
+		a.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	actions := input.ToModelList()
+
+	ids := make([]string, len(actions))
+
+	for i, action := range actions {
+		id, err := a.actionService.CreateAction(action)
+		ids[i] = id.ID.String()
+		if err != nil {
+			a.logger.Error(err)
+			_ = c.Error(err)
+			return
+		}
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": ids})
+}
+
 func (a ActionController) UpdateAction(c *gin.Context) {
 	var input dtos.UpdateActionDto
 	if err := c.ShouldBindJSON(&input); err != nil {

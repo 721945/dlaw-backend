@@ -45,5 +45,5 @@ func (r *FileViewLogRepository) DeleteFileViewLog(id uuid.UUID) error {
 }
 
 func (r *FileViewLogRepository) GetFileViewLogsForUser(userId uuid.UUID) (logs []models.FileViewLog, err error) {
-	return logs, r.db.DB.Preload("File.FileType").Preload("File", "is_").Order("updated_at DESC").Distinct().Limit(10).Where("user_id = ?", userId).Find(&logs).Error
+	return logs, r.db.DB.Preload("File.FileType").Preload("File", "deleted_at IS NULL").Order("updated_at DESC").Distinct().Limit(10).Where("user_id = ?", userId).Find(&logs).Error
 }

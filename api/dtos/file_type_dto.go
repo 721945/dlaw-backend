@@ -13,6 +13,10 @@ type CreateFileTypeDto struct {
 	Name string `json:"name" binding:"required"`
 }
 
+type CreateFileTypesDto struct {
+	NameList []string `json:"nameList" binding:"required"`
+}
+
 type UpdateFileTypeDto struct {
 	Name string `json:"name" binding:"required"`
 }

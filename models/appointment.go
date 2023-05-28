@@ -8,7 +8,7 @@ import (
 type Appointment struct {
 	Base
 	CaseId      uuid.UUID
-	Case        *Case
+	Case        *Case `gorm:"foreignKey:CaseId"`
 	EventId     string
 	Title       string
 	Detail      string
