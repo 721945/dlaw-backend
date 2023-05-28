@@ -5,36 +5,42 @@ import (
 )
 
 type TagDto struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
 }
 
 type TagCountDto struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Count int    `json:"count"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Count       int    `json:"count"`
 }
 
 type CreateTagDto struct {
-	Name string `json:"name" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	DisplayName string `json:"displayName" binding:"required"`
 }
 
 type UpdateTagDto struct {
-	Name string `json:"name" binding:"required"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
 }
 
 func ToTagCountDto(tag models.TagCount) TagCountDto {
 	return TagCountDto{
-		ID:    tag.ID.String(),
-		Name:  tag.Name,
-		Count: tag.Count,
+		ID:          tag.ID.String(),
+		Name:        tag.Name,
+		DisplayName: tag.DisplayName,
+		Count:       tag.Count,
 	}
 }
 
 func ToTagDto(tag models.Tag) TagDto {
 	return TagDto{
-		ID:   tag.ID.String(),
-		Name: tag.Name,
+		ID:          tag.ID.String(),
+		Name:        tag.Name,
+		DisplayName: tag.DisplayName,
 	}
 }
 
@@ -50,12 +56,14 @@ func ToTagDtos(tags []models.Tag) []TagDto {
 
 func (dto CreateTagDto) ToModel() models.Tag {
 	return models.Tag{
-		Name: dto.Name,
+		Name:        dto.Name,
+		DisplayName: dto.DisplayName,
 	}
 }
 
 func (dto UpdateTagDto) ToModel() models.Tag {
 	return models.Tag{
-		Name: dto.Name,
+		Name:        dto.Name,
+		DisplayName: dto.DisplayName,
 	}
 }

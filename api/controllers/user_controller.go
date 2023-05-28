@@ -93,7 +93,7 @@ func (u UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": user})
+	c.JSON(http.StatusCreated, gin.H{"data": user.ID.String()})
 }
 
 func (u UserController) GetUsers(c *gin.Context) {

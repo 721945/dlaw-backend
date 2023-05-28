@@ -21,6 +21,7 @@ func (r ActionRoute) Setup() {
 	{
 		api.GET("", r.ctrl.GetActions)
 		api.POST("", r.ctrl.CreateAction)
+		api.POST("/all", r.ctrl.CreateActions)
 		api.GET("/:id", r.ctrl.GetAction)
 		api.DELETE("", r.ctrl.DeleteAction)
 		api.PUT("", r.ctrl.UpdateAction)

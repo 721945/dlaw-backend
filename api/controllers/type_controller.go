@@ -73,6 +73,31 @@ func (t TypeController) CreateType(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"data": fileType})
 }
+func (t TypeController) CreateTypes(c *gin.Context) {
+	var input dtos.CreateFileTypesDto
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		t.logger.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ids := make([]string, len(input.NameList))
+
+	for i, name := range input.NameList {
+		id, err := t.fileService.CreateFileType(dtos.CreateFileTypeDto{Name: name})
+
+		if err != nil {
+			t.logger.Error(err)
+			_ = c.Error(err)
+			return
+		}
+
+		ids[i] = id
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": ids})
+}
 
 func (t TypeController) UpdateType(c *gin.Context) {
 	var input dtos.UpdateFileTypeDto

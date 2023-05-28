@@ -21,6 +21,7 @@ func (r FileTypeRoute) Setup() {
 	{
 		api.GET("", r.ctrl.GetTypes)
 		api.POST("", r.ctrl.CreateType)
+		api.POST("/all", r.ctrl.CreateTypes)
 		api.GET("/:id", r.ctrl.GetType)
 		api.DELETE("/:id", r.ctrl.DeleteType)
 		api.PUT("/:id", r.ctrl.UpdateType)
