@@ -20,8 +20,8 @@ type FileDto struct {
 	UpdatedAt  string   `json:"updatedAt"`
 	Type       string   `json:"type,omitempty"`
 	Size       string   `json:"size,omitempty"`
-	IsPublic   bool     `json:"isPublic,omitempty"`
-	IsShare    bool     `json:"isShare,omitempty"`
+	IsPublic   bool     `json:"isPublic"`
+	IsShare    bool     `json:"isShare"`
 }
 
 type FilePublicDto struct {
