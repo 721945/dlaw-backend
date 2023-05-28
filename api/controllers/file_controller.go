@@ -374,7 +374,7 @@ func (f FileController) SearchFiles(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": files, "pagination": pagination})
+	c.JSON(http.StatusOK, gin.H{"data": files, "pagination": pagination})
 }
 
 func (f FileController) ShareFile(c *gin.Context) {
