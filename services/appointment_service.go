@@ -125,7 +125,13 @@ func (s *AppointmentService) UpdateAppointment(id uuid.UUID, dto dtos.UpdateAppo
 }
 
 func (s *AppointmentService) DeleteAppointment(id uuid.UUID, userId uuid.UUID) error {
-	caseId, err := s.getCaseByUserIdAndCaseId(userId, id)
+	appointment, err := s.appointmentRepo.GetAppointment(id)
+
+	if err != nil {
+		return err
+	}
+
+	caseId, err := s.getCaseByUserIdAndCaseId(userId, appointment.CaseId)
 
 	if err != nil {
 		return err

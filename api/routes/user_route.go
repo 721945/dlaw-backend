@@ -36,6 +36,6 @@ func (u UserRoute) Setup() {
 		private.GET("/:id", u.userController.GetUser)
 		private.GET("/me", u.authMiddleware.Handler(), u.userController.GetMe)
 		private.PATCH("/:id", u.userController.UpdateUser)
-		private.PATCH("/me", u.authMiddleware.Handler(), u.userController.UpdateUser)
+		private.PATCH("/me", u.authMiddleware.Handler(), u.userController.UpdateCurrentUser)
 	}
 }

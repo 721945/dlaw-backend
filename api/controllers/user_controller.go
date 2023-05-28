@@ -3,13 +3,11 @@ package controllers
 import (
 	"github.com/721945/dlaw-backend/api/dtos"
 	"github.com/721945/dlaw-backend/api/utils"
-	"github.com/721945/dlaw-backend/constants"
 	"github.com/721945/dlaw-backend/libs"
 	"github.com/721945/dlaw-backend/models"
 	"github.com/721945/dlaw-backend/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -125,72 +123,70 @@ func (u UserController) GetUsers(c *gin.Context) {
 
 func (u UserController) UpdateUser(c *gin.Context) {
 	var input dtos.UpdateUserDto
-	trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
+	//trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
 	if err := c.ShouldBindJSON(&input); err != nil {
 		//u.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	// Get id from jwt token
-	us, existed := c.Get("id")
+	paramId := c.Param("id")
 
-	if existed {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing id in jwt token"})
-		return
-	}
-
-	id := us.(uuid.UUID)
-
-	user := models.User{
-		Email:     input.Email,
-		Password:  input.Password,
-		Firstname: input.FirstName,
-		Lastname:  input.LastName,
-	}
-
-	err := (u.service).WithTrx(trxHandle).UpdateUser(id, user)
+	id, err := uuid.Parse(paramId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	user := models.User{
+		Email:     input.Email,
+		Firstname: input.FirstName,
+		Lastname:  input.LastName,
+	}
+
+	err = (u.service).UpdateUser(id, user)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
 // UpdateCurrentUser
 
 func (u UserController) UpdateCurrentUser(c *gin.Context) {
 	var input dtos.UpdateUserDto
-	trxHandle := c.MustGet(constants.DBTransaction).(*gorm.DB)
 	if err := c.ShouldBindJSON(&input); err != nil {
 		//u.logger.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// Get id from jwt token
-	us, existed := c.Get("id")
 
-	if existed {
+	// Get id from jwt token
+	authId, existed := c.Get("id")
+
+	if !existed {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing id in jwt token"})
 		return
 	}
 
-	id := us.(uuid.UUID)
+	id := authId.(uuid.UUID)
 
 	user := models.User{
 		Email:     input.Email,
-		Password:  input.Password,
 		Firstname: input.FirstName,
 		Lastname:  input.LastName,
 	}
 
-	err := (u.service).WithTrx(trxHandle).UpdateUser(id, user)
+	err := (u.service).UpdateUser(id, user)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
