@@ -60,8 +60,6 @@ func (g *GoogleVision) GetTextFromImageName(name string) (string, error) {
 		return "", err
 	}
 
-	g.logger.Info(annotations)
-
 	if len(annotations) == 0 {
 		return "", nil
 	}
