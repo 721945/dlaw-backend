@@ -71,7 +71,7 @@ func (r *TagRepository) CountFilesInTags(fileIds []uuid.UUID) (tags []models.Tag
 func (r *TagRepository) CountFilesInTagsByFolderId(folderId uuid.UUID) (tags []models.TagCount, err error) {
 	return tags, r.db.DB.Table("tags").
 		Select("tags.id, tags.name,tags.display_name, COALESCE(file_counts.count, 0) as count").
-		Joins("LEFT JOIN (SELECT file_tags.tag_id, COUNT(DISTINCT file_tags.file_id) as count FROM file_tags JOIN files ON file_tags.file_id = files.id WHERE files.folder_id = ? GROUP BY file_tags.tag_id) as file_counts ON tags.id = file_counts.tag_id", folderId).
+		Joins("LEFT JOIN (SELECT file_tags.tag_id, COUNT(DISTINCT file_tags.file_id) as count FROM file_tags JOIN files ON file_tags.file_id = files.id WHERE files.folder_id = ? AND files.deleted_at IS NULL GROUP BY file_tags.tag_id) as file_counts ON tags.id = file_counts.tag_id", folderId).
 		Where("tags.show_menu = TRUE").
 		Find(&tags).Error
 	//Select("tags.id, tags.name, COUNT(DISTINCT file_tags.file_id) as count").
