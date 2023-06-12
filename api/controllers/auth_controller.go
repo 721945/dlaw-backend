@@ -29,9 +29,16 @@ func (ctrl AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	ctrl.logger.Info(input.Email)
+	organization := c.GetHeader("x-organization")
 
-	user, err := ctrl.userService.GetUserByEmail(input.Email)
+	if organization == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	ctrl.logger.Info(organization)
+
+	user, err := ctrl.userService.GetUserByEmailAndOrganization(input.Email, organization)
 
 	if err != nil {
 		_ = c.Error(libs.ErrUnauthorized)
@@ -63,7 +70,14 @@ func (ctrl AuthController) ForgetPassword(c *gin.Context) {
 		return
 	}
 
-	err := ctrl.userService.ForgetPassword(input.Email)
+	organization := c.GetHeader("x-organization")
+
+	if organization == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	err := ctrl.userService.ForgetPassword(input.Email, organization)
 
 	if err != nil {
 		_ = c.Error(err)
@@ -83,7 +97,14 @@ func (ctrl AuthController) CheckOtp(c *gin.Context) {
 		return
 	}
 
-	err := ctrl.userService.VerifyOTP(email, otp)
+	organization := c.GetHeader("x-organization")
+
+	if organization == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	err := ctrl.userService.VerifyOTP(email, organization, otp)
 
 	if err != nil {
 		_ = c.Error(err)
@@ -102,7 +123,14 @@ func (ctrl AuthController) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	err := ctrl.userService.ResetPassword(input.Email, input.Otp, input.Password)
+	organization := c.GetHeader("x-organization")
+
+	if organization == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	err := ctrl.userService.ResetPassword(input.Email, organization, input.Otp, input.Password)
 
 	if err != nil {
 		_ = c.Error(err)

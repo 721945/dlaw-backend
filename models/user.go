@@ -10,6 +10,7 @@ type User struct {
 	Password             string
 	OtpSecret            *string
 	OtpExpiredAt         *time.Time
+	Organization         string
 	CasePermissions      []CasePermission    `gorm:"foreignKey:UserId"`
 	ActionLogs           []ActionLog         `gorm:"foreignKey:UserId"`
 	ActorPermissionLogs  []CasePermissionLog `gorm:"foreignKey:ActorUserId"`

@@ -14,7 +14,9 @@ type UserRepository interface {
 	DeleteUser(id uuid.UUID) error
 	GetUser(id uuid.UUID) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
+	GetUserByEmailAndOrganization(email, organization string) (user *models.User, err error)
 	GetUsers() ([]models.User, error)
+	GetUsersByOrganization(organization string) ([]models.User, error)
 }
 
 type userRepository struct {
@@ -54,7 +56,14 @@ func (r *userRepository) GetUser(id uuid.UUID) (user *models.User, err error) {
 func (r *userRepository) GetUsers() (users []models.User, err error) {
 	return users, r.db.DB.Find(&users).Error
 }
+func (r *userRepository) GetUsersByOrganization(organization string) (users []models.User, err error) {
+	return users, r.db.DB.Where("organization = ?", organization).Find(&users).Error
+}
 
 func (r *userRepository) GetUserByEmail(email string) (user *models.User, err error) {
 	return user, r.db.DB.Where("email = ?", email).First(&user).Error
+}
+
+func (r *userRepository) GetUserByEmailAndOrganization(email, organization string) (user *models.User, err error) {
+	return user, r.db.DB.Where("email = ? AND organization = ?", email, organization).First(&user).Error
 }
