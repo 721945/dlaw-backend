@@ -20,11 +20,12 @@ type UserService interface {
 	UpdateUser(id uuid.UUID, user models.User) error
 	DeleteUser(id uuid.UUID) error
 	GetUser(id uuid.UUID) (*dtos.UserDto, error)
-	GetUsers() ([]models.User, error)
+	GetUsers(organization string) ([]models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
-	ForgetPassword(email string) error
-	VerifyOTP(email string, otp string) error
-	ResetPassword(email string, otp string, newPassword string) error
+	GetUserByEmailAndOrganization(email, organization string) (*models.User, error)
+	ForgetPassword(email, organization string) error
+	VerifyOTP(email, organization string, otp string) error
+	ResetPassword(email, organization, otp, newPassword string) error
 	ChangedPassword(id uuid.UUID, current string, newPassword string) error
 }
 
@@ -74,16 +75,22 @@ func (u userService) GetUser(id uuid.UUID) (*dtos.UserDto, error) {
 	}, nil
 }
 
-func (u userService) GetUsers() ([]models.User, error) {
+func (u userService) GetUsers(organization string) ([]models.User, error) {
+	if organization != "" {
+		return u.userRepo.GetUsersByOrganization(organization)
+	}
 	return u.userRepo.GetUsers()
 }
 
 func (u userService) GetUserByEmail(email string) (user *models.User, err error) {
 	return u.userRepo.GetUserByEmail(email)
 }
+func (u userService) GetUserByEmailAndOrganization(email, organization string) (user *models.User, err error) {
+	return u.userRepo.GetUserByEmail(email)
+}
 
-func (u userService) ForgetPassword(email string) error {
-	user, err := u.userRepo.GetUserByEmail(email)
+func (u userService) ForgetPassword(email, org string) error {
+	user, err := u.userRepo.GetUserByEmailAndOrganization(email, org)
 
 	if err != nil {
 		return err
@@ -135,13 +142,13 @@ func (u userService) ChangedPassword(id uuid.UUID, current string, new string) e
 
 }
 
-func (u userService) VerifyOTP(email string, otp string) error {
-	_, err := u.verifyOtp(email, otp)
+func (u userService) VerifyOTP(email, organization, otp string) error {
+	_, err := u.verifyOtp(email, organization, otp)
 	return err
 }
 
-func (u userService) ResetPassword(email string, otp string, newPassword string) error {
-	user, err := u.verifyOtp(email, otp)
+func (u userService) ResetPassword(email, organization, otp, newPassword string) error {
+	user, err := u.verifyOtp(email, organization, otp)
 
 	if err != nil {
 		return err
@@ -158,8 +165,8 @@ func (u userService) ResetPassword(email string, otp string, newPassword string)
 	return u.userRepo.UpdateUser(user.ID, *user)
 }
 
-func (u userService) verifyOtp(email, otp string) (*models.User, error) {
-	user, err := u.userRepo.GetUserByEmail(email)
+func (u userService) verifyOtp(email, organization, otp string) (*models.User, error) {
+	user, err := u.userRepo.GetUserByEmailAndOrganization(email, organization)
 
 	if err != nil {
 		return nil, err

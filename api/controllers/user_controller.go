@@ -71,6 +71,13 @@ func (u UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
+	organization := c.GetHeader("x-organization")
+
+	if organization == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
 	hashPassword, err := utils.HashPassword(input.Password)
 
 	if err != nil {
@@ -79,10 +86,11 @@ func (u UserController) CreateUser(c *gin.Context) {
 	}
 
 	user := models.User{
-		Email:     input.Email,
-		Password:  hashPassword,
-		Firstname: input.FirstName,
-		Lastname:  input.LastName,
+		Email:        input.Email,
+		Password:     hashPassword,
+		Firstname:    input.FirstName,
+		Lastname:     input.LastName,
+		Organization: organization,
 	}
 
 	user, err = (u.service).CreateUser(user)
@@ -97,7 +105,14 @@ func (u UserController) CreateUser(c *gin.Context) {
 }
 
 func (u UserController) GetUsers(c *gin.Context) {
-	users, err := (u.service).GetUsers()
+	organization := c.GetHeader("x-organization")
+
+	if organization == "" {
+		_ = c.Error(libs.ErrBadRequest)
+		return
+	}
+
+	users, err := (u.service).GetUsers(organization)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
